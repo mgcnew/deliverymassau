@@ -1,0 +1,70 @@
+import 'server-only'
+
+import { cache } from 'react'
+import { redirect } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
+
+import { createClient } from '@/lib/supabase/server'
+import type { PermissionCode } from '@/lib/permissions'
+import type { Profile } from '@/lib/types'
+
+export type Staff = {
+  user: User
+  profile: Profile
+  permissions: Set<string>
+}
+
+/** cache() = uma unica ida ao banco por request, mesmo com varios componentes perguntando. */
+export const getStaff = cache(async (): Promise<Staff | null> => {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (!profile || !profile.is_active) return null
+
+  const { data: codes } = await supabase.rpc('my_permissions')
+
+  return {
+    user,
+    profile: profile as Profile,
+    permissions: new Set<string>((codes as string[] | null) ?? []),
+  }
+})
+
+export async function requireStaff(): Promise<Staff> {
+  const staff = await getStaff()
+  if (!staff) redirect('/painel/login')
+  return staff
+}
+
+/** Guarda de pagina. A RLS/RPC continua sendo a barreira real. */
+export async function requirePermission(code: PermissionCode): Promise<Staff> {
+  const staff = await requireStaff()
+  if (!staff.permissions.has(code)) redirect(`/painel/sem-acesso?p=${encodeURIComponent(code)}`)
+  return staff
+}
+
+export function can(staff: Staff | null, code: PermissionCode): boolean {
+  return staff?.permissions.has(code) ?? false
+}
+
+/** "Ultimo acesso" da tela de Equipe, sem escrever no banco a cada clique. */
+export async function touchLastSeen(staff: Staff): Promise<void> {
+  const last = staff.profile.last_seen_at ? new Date(staff.profile.last_seen_at).getTime() : 0
+  if (Date.now() - last < 5 * 60 * 1000) return
+
+  const supabase = await createClient()
+  await supabase
+    .from('profiles')
+    .update({ last_seen_at: new Date().toISOString() })
+    .eq('id', staff.profile.id)
+}

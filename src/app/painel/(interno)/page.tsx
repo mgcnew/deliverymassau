@@ -1,0 +1,71 @@
+import Link from 'next/link'
+
+import { requireStaff } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
+import { Card } from '@/components/ui/card'
+import { PERMISSIONS } from '@/lib/permissions'
+
+export const metadata = { title: 'Painel | Mercado Massa 24h' }
+
+const ATALHOS = [
+  { href: '/painel/pedidos', titulo: 'Pedidos', texto: 'Receber, separar e despachar', permission: PERMISSIONS.pedidosVer },
+  { href: '/painel/entregas', titulo: 'Entregas', texto: 'Fila e minhas entregas', permission: PERMISSIONS.entregasVer },
+  { href: '/painel/produtos', titulo: 'Produtos', texto: 'Disponibilidade e cadastro', permission: PERMISSIONS.produtosVer },
+  { href: '/painel/equipe', titulo: 'Equipe', texto: 'Funcionarios e permissoes', permission: PERMISSIONS.equipeVer },
+  { href: '/painel/configuracoes', titulo: 'Configuracoes', texto: 'Entrega, pagamento e mercado', permission: PERMISSIONS.configAcessar },
+]
+
+export default async function PainelHome() {
+  const staff = await requireStaff()
+  const supabase = await createClient()
+
+  const { data: settings } = await supabase
+    .from('settings')
+    .select('market_name, delivery_enabled')
+    .eq('id', 1)
+    .maybeSingle()
+
+  const atalhos = ATALHOS.filter((a) => staff.permissions.has(a.permission))
+
+  return (
+    <div className="mx-auto w-full max-w-5xl space-y-5">
+      <div>
+        <h1 className="text-2xl font-black">Ola, {staff.profile.name.split(' ')[0]}</h1>
+        <p className="text-muted">{settings?.market_name ?? 'Mercado Massa 24h'}</p>
+      </div>
+
+      <Card className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-muted">Delivery</p>
+          <p className="text-lg font-bold">
+            {settings?.delivery_enabled ? 'Aberto para pedidos' : 'Fechado temporariamente'}
+          </p>
+        </div>
+        <span
+          className={`rounded-full px-3 py-1 text-sm font-bold ${
+            settings?.delivery_enabled
+              ? 'bg-emerald-100 text-emerald-900'
+              : 'bg-rose-100 text-rose-900'
+          }`}
+        >
+          {settings?.delivery_enabled ? 'ON' : 'OFF'}
+        </span>
+      </Card>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {atalhos.map((a) => (
+          <Link key={a.href} href={a.href}>
+            <Card className="h-full transition hover:border-brand">
+              <p className="text-lg font-bold">{a.titulo}</p>
+              <p className="text-muted">{a.texto}</p>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      <p className="text-sm text-muted">
+        Indicadores do dia (faturamento, ticket medio, tempos) entram na etapa do dashboard.
+      </p>
+    </div>
+  )
+}

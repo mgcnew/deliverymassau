@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/*
+  Paleta do Mercado Massa 24h.
+  Operacao 24h: alto contraste, sem cinza claro em texto, alvos grandes de toque.
+*/
+:root {
+  --background: #f6f6f7;
+  --surface: #ffffff;
+  --foreground: #14141a;
+  --muted: #5b5b66;
+  --border: #dededf;
+  --brand: #d61f2b;
+  --brand-strong: #a8121c;
+  --brand-foreground: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-foreground: var(--brand-foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Nunca esconder o foco: o painel e muito usado por teclado no balcao. */
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
