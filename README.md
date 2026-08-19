@@ -51,6 +51,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0012` | Bucket `produtos` no Storage, com escrita amarrada nas permissões |
 | `0013` | Correções encontradas testando permissões granulares (grant de `normalize_text`, guardas ignoradas sem sessão) |
 | `0014` | Auditoria de produtos e categorias |
+| `0015` | Cidade do mercado (links de navegação e cabeçalho da impressão) |
 
 ## Estado das etapas
 
@@ -61,7 +62,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 - [x] **5** Carrinho e checkout
 - [x] **6** Criação e gestão de pedidos
 - [x] **7** Separação e produtos por peso
-- [ ] **8** Entregas / motoboy
+- [x] **8** Entregas / motoboy
 - [ ] **9** Impressão
 - [ ] **10** Dashboard e configurações
 - [ ] **11** Testes e refinamento
