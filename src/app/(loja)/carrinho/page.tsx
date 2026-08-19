@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { LinkVoltar } from '@/components/ui/link-voltar'
 
 import { getConfiguracaoPublica } from '@/lib/loja/catalogo'
 import { CarrinhoCliente } from './carrinho-cliente'
@@ -10,9 +10,7 @@ export default async function CarrinhoPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl space-y-4 p-4">
-      <Link href="/" className="text-sm font-semibold text-muted">
-        &lsaquo; Continuar comprando
-      </Link>
+      <LinkVoltar href="/">Continuar comprando</LinkVoltar>
       <h1 className="text-2xl font-black">Seu carrinho</h1>
 
       <CarrinhoCliente

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { LinkVoltar } from '@/components/ui/link-voltar'
 import { notFound, redirect } from 'next/navigation'
 
 import { PERMISSIONS } from '@/lib/permissions'
@@ -34,9 +34,7 @@ export default async function SeparacaoPage({
   return (
     <div className="w-full space-y-4">
       <div>
-        <Link href={`/painel/pedidos/${id}`} className="text-sm font-semibold text-muted">
-          &lsaquo; Pedido #{pedido.order_number}
-        </Link>
+        <LinkVoltar href={`/painel/pedidos/${id}`}>Pedido #{pedido.order_number}</LinkVoltar>
         <h1 className="text-2xl font-black">Separacao do #{pedido.order_number}</h1>
         <p className="text-muted">
           {pedido.customer_name} - {pedido.address_district}

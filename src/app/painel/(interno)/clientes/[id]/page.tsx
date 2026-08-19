@@ -1,4 +1,6 @@
 import Link from 'next/link'
+
+import { LinkVoltar } from '@/components/ui/link-voltar'
 import { notFound } from 'next/navigation'
 
 import { PERMISSIONS } from '@/lib/permissions'
@@ -45,9 +47,7 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
   return (
     <div className="w-full space-y-4">
       <div>
-        <Link href="/painel/clientes" className="text-sm font-semibold text-muted">
-          &lsaquo; Clientes
-        </Link>
+        <LinkVoltar href="/painel/clientes">Clientes</LinkVoltar>
         <h1 className="text-2xl font-black">{cliente.name}</h1>
         <a
           href={linkWhatsapp(cliente.phone)}

@@ -171,7 +171,7 @@ export function CardEntrega({
 
       <Link
         href={`/painel/pedidos/${entrega.id}`}
-        className="block text-center text-sm font-semibold text-muted underline"
+        className="flex h-11 items-center justify-center text-sm font-semibold text-muted underline"
       >
         Ver itens do pedido
       </Link>

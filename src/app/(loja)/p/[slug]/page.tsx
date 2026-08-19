@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { LinkVoltar } from '@/components/ui/link-voltar'
 import { notFound } from 'next/navigation'
 
 import { BotaoAdicionar } from '@/components/carrinho/botao-adicionar'
@@ -26,9 +26,9 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
 
   return (
     <main className="mx-auto w-full max-w-3xl space-y-4 p-4">
-      <Link href={categoria ? `/c/${categoria.slug}` : '/'} className="text-sm font-semibold text-muted">
-        &lsaquo; {categoria?.name ?? 'Voltar'}
-      </Link>
+      <LinkVoltar href={categoria ? `/c/${categoria.slug}` : '/'}>
+        {categoria?.name ?? 'Voltar'}
+      </LinkVoltar>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="aspect-square overflow-hidden rounded-2xl border border-line bg-black/[0.04]">

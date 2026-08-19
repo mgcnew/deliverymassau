@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { LinkVoltar } from '@/components/ui/link-voltar'
 import { redirect } from 'next/navigation'
 
 import { getBairrosAtendidos, getConfiguracaoPublica } from '@/lib/loja/catalogo'
@@ -14,9 +14,7 @@ export default async function CheckoutPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl space-y-4 p-4">
-      <Link href="/carrinho" className="text-sm font-semibold text-muted">
-        &lsaquo; Voltar ao carrinho
-      </Link>
+      <LinkVoltar href="/carrinho">Voltar ao carrinho</LinkVoltar>
       <h1 className="text-2xl font-black">Finalizar pedido</h1>
 
       <CheckoutForm

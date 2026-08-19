@@ -28,15 +28,15 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
           <p className="truncate text-sm font-bold">{staff.profile.name}</p>
         </div>
         <form action={logoutAction}>
-          <button className="rounded-lg px-3 py-2 text-sm font-semibold text-muted hover:bg-black/5">
+          <button className="h-11 rounded-lg px-3 text-sm font-semibold text-muted hover:bg-black/5">
             Sair
           </button>
         </form>
       </header>
 
-      <div className="flex flex-1">
+      <div className="flex min-w-0 flex-1">
         <Nav items={items} />
-        <main className="flex-1 p-4 pb-24 md:p-6 md:pb-6">{children}</main>
+        <main className="min-w-0 flex-1 p-4 pb-24 md:p-6 md:pb-6">{children}</main>
       </div>
     </div>
   )

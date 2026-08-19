@@ -87,7 +87,7 @@ export function EntregasCliente({
             : 'Nenhuma entrega esperando agora.'}
         </Empty>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {lista.map((entrega) => (
             <CardEntrega
               key={entrega.id}

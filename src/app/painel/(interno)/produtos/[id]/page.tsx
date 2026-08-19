@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { LinkVoltar } from '@/components/ui/link-voltar'
 import { notFound } from 'next/navigation'
 
 import { PERMISSIONS } from '@/lib/permissions'
@@ -27,9 +27,7 @@ export default async function ProdutoPage({ params }: PageProps<'/painel/produto
   return (
     <div className="w-full space-y-4">
       <div>
-        <Link href="/painel/produtos" className="text-sm font-semibold text-muted">
-          &lsaquo; Produtos
-        </Link>
+        <LinkVoltar href="/painel/produtos">Produtos</LinkVoltar>
         <h1 className="text-2xl font-black">{produto.name}</h1>
       </div>
 

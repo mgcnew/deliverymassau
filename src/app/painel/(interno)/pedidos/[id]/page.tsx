@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { LinkVoltar } from '@/components/ui/link-voltar'
 import { notFound } from 'next/navigation'
 
 import { PERMISSIONS } from '@/lib/permissions'
@@ -38,9 +38,7 @@ export default async function PedidoDetalhePage({ params }: PageProps<'/painel/p
   return (
     <div className="w-full space-y-4">
       <div>
-        <Link href="/painel/pedidos" className="text-sm font-semibold text-muted">
-          &lsaquo; Pedidos
-        </Link>
+        <LinkVoltar href="/painel/pedidos">Pedidos</LinkVoltar>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-black">#{pedido.order_number}</h1>
           <span className={`rounded-full border px-3 py-1 text-sm font-bold ${status.tone}`}>

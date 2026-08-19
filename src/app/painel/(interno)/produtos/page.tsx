@@ -52,7 +52,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-black">Produtos</h1>
         <div className="flex gap-2">
           <ButtonLink href="/painel/categorias" variant="secondary">
@@ -71,9 +71,9 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
           name="q"
           defaultValue={busca}
           placeholder="Buscar produto"
-          className="h-12 flex-1 rounded-xl border border-line bg-surface px-3 text-base"
+          className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-base"
         />
-        <button className="h-12 rounded-xl border border-line bg-surface px-4 font-semibold">
+        <button className="h-12 shrink-0 rounded-xl border border-line bg-surface px-4 font-semibold">
           Buscar
         </button>
       </form>
@@ -83,7 +83,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
           <Link
             key={f.valor}
             href={link({ f: f.valor })}
-            className={`rounded-full px-4 py-2 text-sm font-bold ${
+            className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-bold ${
               filtro === f.valor ? 'bg-brand text-brand-foreground' : 'bg-surface border border-line'
             }`}
           >
@@ -92,7 +92,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
         ))}
         <Link
           href={link({ c: '' })}
-          className={`rounded-full px-4 py-2 text-sm font-bold ${
+          className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-bold ${
             categoria ? 'bg-surface border border-line' : 'bg-foreground/10'
           }`}
         >
@@ -102,7 +102,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
           <Link
             key={c.id}
             href={link({ c: c.id })}
-            className={`rounded-full px-4 py-2 text-sm font-bold ${
+            className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-bold ${
               categoria === c.id ? 'bg-brand text-brand-foreground' : 'bg-surface border border-line'
             }`}
           >

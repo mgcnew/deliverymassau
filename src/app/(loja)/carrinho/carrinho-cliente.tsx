@@ -24,7 +24,10 @@ export function CarrinhoCliente({
     return (
       <Card className="space-y-3 text-center">
         <p className="text-lg font-bold">Seu carrinho esta vazio</p>
-        <Link href="/" className="inline-block font-semibold text-brand underline">
+        <Link
+          href="/"
+          className="mx-auto flex h-12 max-w-xs items-center justify-center rounded-xl bg-brand font-bold text-brand-foreground"
+        >
           Ver produtos
         </Link>
       </Card>

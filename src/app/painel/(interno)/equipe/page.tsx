@@ -33,7 +33,7 @@ export default async function EquipePage() {
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-black">Equipe</h1>
         {staff.permissions.has(PERMISSIONS.equipeCadastrar) ? (
           <ButtonLink href="/painel/equipe/novo">Novo funcionario</ButtonLink>

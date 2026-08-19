@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
+import { LinkVoltar } from '@/components/ui/link-voltar'
 
 import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
@@ -52,9 +52,7 @@ export default async function FuncionarioPage({ params }: PageProps<'/painel/equ
   return (
     <div className="w-full space-y-4">
       <div>
-        <Link href="/painel/equipe" className="text-sm font-semibold text-muted">
-          &lsaquo; Equipe
-        </Link>
+        <LinkVoltar href="/painel/equipe">Equipe</LinkVoltar>
         <h1 className="text-2xl font-black">{perfil.name}</h1>
         <p className="text-muted">
           {perfil.is_active ? 'Ativo' : 'Inativo'}

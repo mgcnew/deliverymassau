@@ -38,9 +38,9 @@ export default async function ClientesPage({ searchParams }: PageProps<'/painel/
           name="q"
           defaultValue={busca}
           placeholder="Buscar por nome ou telefone"
-          className="h-12 flex-1 rounded-xl border border-line bg-surface px-3 text-base"
+          className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-base"
         />
-        <button className="h-12 rounded-xl border border-line bg-surface px-4 font-semibold">
+        <button className="h-12 shrink-0 rounded-xl border border-line bg-surface px-4 font-semibold">
           Buscar
         </button>
       </form>

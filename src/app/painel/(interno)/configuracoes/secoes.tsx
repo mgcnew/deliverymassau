@@ -330,7 +330,7 @@ function ZonaLinha({ zona }: { zona: ZonaComBairros }) {
         {zona.bairros.map((b) => (
           <span
             key={b.id}
-            className="flex items-center gap-2 rounded-full border border-line bg-background px-3 py-1.5 text-sm font-semibold"
+            className="flex h-10 items-center gap-1 rounded-full border border-line bg-background pl-3 text-sm font-semibold"
           >
             {b.name}
             <button
@@ -343,7 +343,7 @@ function ZonaLinha({ zona }: { zona: ZonaComBairros }) {
                   setErro(r.erro ?? null)
                 })
               }
-              className="text-muted hover:text-rose-700"
+              className="flex size-10 items-center justify-center rounded-full text-lg text-muted hover:bg-rose-50 hover:text-rose-700"
             >
               ×
             </button>
