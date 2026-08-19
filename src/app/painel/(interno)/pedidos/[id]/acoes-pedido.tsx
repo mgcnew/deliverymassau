@@ -85,7 +85,7 @@ export function AcoesPedido({
 
         {podeImprimir ? (
           <Link
-            href={`/painel/pedidos/${orderId}/imprimir`}
+            href={`/painel/pedidos/${orderId}/imprimir?auto=1`}
             className="flex h-14 items-center justify-center rounded-xl border border-line bg-surface px-6 font-bold"
           >
             Imprimir

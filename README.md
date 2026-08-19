@@ -63,7 +63,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 - [x] **6** Criação e gestão de pedidos
 - [x] **7** Separação e produtos por peso
 - [x] **8** Entregas / motoboy
-- [ ] **9** Impressão
+- [x] **9** Impressão
 - [ ] **10** Dashboard e configurações
 - [ ] **11** Testes e refinamento
 
