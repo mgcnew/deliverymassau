@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
 
-import { useCarrinho } from '@/components/carrinho/carrinho-provider'
+import { useCarrinho } from '@/components/carrinho/use-carrinho'
 import { Button } from '@/components/ui/button'
 import { Alert, Card } from '@/components/ui/card'
 import { Field, Input, Select, Textarea } from '@/components/ui/field'
 import { moeda, quantidade as formatarQuantidade } from '@/lib/format'
-import { CHAVE_PEDIDOS, subtotalItem } from '@/lib/carrinho/tipos'
+import { guardarPedido } from '@/lib/carrinho/store'
+import { subtotalItem } from '@/lib/carrinho/tipos'
 import type { PaymentMethod } from '@/lib/types'
 import { criarPedido } from './actions'
 
@@ -114,7 +115,7 @@ export function CheckoutForm({
       })
 
       if (resultado.pedido) {
-        guardarPedidoNoAparelho(resultado.pedido.token, resultado.pedido.numero)
+        guardarPedido(resultado.pedido.token, resultado.pedido.numero)
         limpar()
         router.push(`/pedido/${resultado.pedido.token}?novo=1`)
         return
@@ -371,18 +372,4 @@ export function CheckoutForm({
       </Card>
     </div>
   )
-}
-
-/** Sem conta e sem senha: o aparelho guarda os links dos proprios pedidos. */
-function guardarPedidoNoAparelho(token: string, numero: number) {
-  try {
-    const bruto = localStorage.getItem(CHAVE_PEDIDOS)
-    const lista = bruto ? (JSON.parse(bruto) as Array<{ token: string; numero: number }>) : []
-    localStorage.setItem(
-      CHAVE_PEDIDOS,
-      JSON.stringify([{ token, numero, em: new Date().toISOString() }, ...lista].slice(0, 30)),
-    )
-  } catch {
-    // sem storage o cliente ainda tem o link na barra de enderecos
-  }
 }

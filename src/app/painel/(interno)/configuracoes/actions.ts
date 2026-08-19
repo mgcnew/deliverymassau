@@ -10,6 +10,13 @@ import { paraNumero } from '@/lib/format'
 
 export type ConfigState = { erro?: string; ok?: string }
 
+/**
+ * UPDATE barrado pela RLS nao levanta erro: ele simplesmente afeta zero linhas.
+ * Sem conferir o retorno, a tela diria "salvo" sem ter salvo nada. Por isso todo
+ * update aqui usa .select() e checa se alguma linha voltou.
+ */
+const BLOQUEADO = 'O banco recusou a alteracao: voce nao tem essa permissao.'
+
 async function exigir(code: string): Promise<ConfigState> {
   const staff = await getStaff()
   if (!staff) return { erro: 'Sessao expirada. Entre novamente.' }
@@ -51,8 +58,9 @@ export async function salvarMercado(_prev: ConfigState, formData: FormData): Pro
     dados.market_logo_path = caminho
   }
 
-  const { error } = await supabase.from('settings').update(dados).eq('id', 1)
+  const { data, error } = await supabase.from('settings').update(dados).eq('id', 1).select('id')
   if (error) return { erro: error.message }
+  if (!data?.length) return { erro: BLOQUEADO }
 
   depois()
   return { ok: 'Dados do mercado salvos.' }
@@ -87,8 +95,9 @@ export async function salvarDelivery(_prev: ConfigState, formData: FormData): Pr
     if (Number.isFinite(tolerancia) && tolerancia > 0) dados.weight_tolerance_pct = tolerancia
   }
 
-  const { error } = await supabase.from('settings').update(dados).eq('id', 1)
+  const { data, error } = await supabase.from('settings').update(dados).eq('id', 1).select('id')
   if (error) return { erro: error.message }
+  if (!data?.length) return { erro: BLOQUEADO }
 
   depois()
   return { ok: 'Configuracoes de entrega salvas.' }
@@ -99,15 +108,17 @@ export async function salvarPix(_prev: ConfigState, formData: FormData): Promise
   if (guard.erro) return guard
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('settings')
     .update({
       pix_key: String(formData.get('pix_key') ?? '').trim() || null,
       pix_receiver_name: String(formData.get('pix_receiver_name') ?? '').trim() || null,
     })
     .eq('id', 1)
+    .select('id')
 
   if (error) return { erro: error.message }
+  if (!data?.length) return { erro: BLOQUEADO }
 
   depois()
   return { ok: 'Dados do PIX salvos.' }
@@ -128,12 +139,14 @@ export async function alternarPagamento(code: string, ativo: boolean): Promise<C
     if ((count ?? 0) <= 1) return { erro: 'Deixe pelo menos uma forma de pagamento ativa.' }
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('payment_methods')
     .update({ is_active: ativo })
     .eq('code', code)
+    .select('code')
 
   if (error) return { erro: error.message }
+  if (!data?.length) return { erro: BLOQUEADO }
 
   depois()
   return {}
@@ -153,11 +166,13 @@ export async function salvarZona(_prev: ConfigState, formData: FormData): Promis
   const supabase = await createClient()
 
   if (id) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('delivery_zones')
       .update({ name: nome, fee: taxa })
       .eq('id', id)
+      .select('id')
     if (error) return { erro: error.message }
+    if (!data?.length) return { erro: BLOQUEADO }
   } else {
     const { error } = await supabase.from('delivery_zones').insert({ name: nome, fee: taxa })
     if (error) return { erro: error.message }
@@ -172,8 +187,13 @@ export async function alternarZona(id: string, ativa: boolean): Promise<ConfigSt
   if (guard.erro) return guard
 
   const supabase = await createClient()
-  const { error } = await supabase.from('delivery_zones').update({ is_active: ativa }).eq('id', id)
+  const { data, error } = await supabase
+    .from('delivery_zones')
+    .update({ is_active: ativa })
+    .eq('id', id)
+    .select('id')
   if (error) return { erro: error.message }
+  if (!data?.length) return { erro: BLOQUEADO }
 
   depois()
   return {}

@@ -12,6 +12,9 @@ import type { UnitType } from '@/lib/types'
 
 export type FormState = { error?: string; ok?: string }
 
+/** UPDATE barrado pela RLS afeta zero linhas sem levantar erro. Ver actions de configuracoes. */
+const BLOQUEADO = 'O banco recusou a alteracao: voce nao tem essa permissao.'
+
 const UNIDADES: UnitType[] = ['unidade', 'pacote', 'caixa', 'kg', 'g']
 
 async function exigir(code: string): Promise<FormState> {
@@ -27,8 +30,13 @@ export async function alternarDisponibilidade(id: string, disponivel: boolean): 
   if (guard.error) return guard
 
   const supabase = await createClient()
-  const { error } = await supabase.from('products').update({ is_available: disponivel }).eq('id', id)
+  const { data, error } = await supabase
+    .from('products')
+    .update({ is_available: disponivel })
+    .eq('id', id)
+    .select('id')
   if (error) return { error: error.message }
+  if (!data?.length) return { error: BLOQUEADO }
 
   revalidatePath('/painel/produtos')
   revalidatePath('/')
@@ -40,8 +48,13 @@ export async function alternarAtivo(id: string, ativo: boolean): Promise<FormSta
   if (guard.error) return guard
 
   const supabase = await createClient()
-  const { error } = await supabase.from('products').update({ is_active: ativo }).eq('id', id)
+  const { data, error } = await supabase
+    .from('products')
+    .update({ is_active: ativo })
+    .eq('id', id)
+    .select('id')
   if (error) return { error: error.message }
+  if (!data?.length) return { error: BLOQUEADO }
 
   revalidatePath('/painel/produtos')
   revalidatePath('/')
@@ -129,8 +142,13 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
     .eq('id', id)
     .maybeSingle()
 
-  const { error } = await supabase.from('products').update(dados).eq('id', id)
+  const { data: atualizado, error } = await supabase
+    .from('products')
+    .update(dados)
+    .eq('id', id)
+    .select('id')
   if (error) return { error: error.message }
+  if (!atualizado?.length) return { error: BLOQUEADO }
 
   // Troca de foto: apaga a antiga para nao acumular lixo no bucket.
   if (imagePath && anterior?.image_path && anterior.image_path !== imagePath) {

@@ -9,6 +9,9 @@ import { slugify } from '@/lib/format'
 
 export type FormState = { error?: string; ok?: string }
 
+/** UPDATE barrado pela RLS afeta zero linhas sem levantar erro. Ver actions de configuracoes. */
+const BLOQUEADO = 'O banco recusou a alteracao: voce nao tem essa permissao.'
+
 async function exigirGerenciar(): Promise<FormState> {
   const staff = await getStaff()
   if (!staff) return { error: 'Sessao expirada. Entre novamente.' }
@@ -59,8 +62,13 @@ export async function renomearCategoria(_prev: FormState, formData: FormData): P
   if (!id || !name) return { error: 'Informe o nome.' }
 
   const supabase = await createClient()
-  const { error } = await supabase.from('categories').update({ name }).eq('id', id)
+  const { data, error } = await supabase
+    .from('categories')
+    .update({ name })
+    .eq('id', id)
+    .select('id')
   if (error) return { error: error.message }
+  if (!data?.length) return { error: BLOQUEADO }
 
   revalidatePath('/painel/categorias')
   revalidatePath('/painel/produtos')
@@ -72,8 +80,13 @@ export async function alternarCategoriaAtiva(id: string, ativa: boolean): Promis
   if (guard.error) return guard
 
   const supabase = await createClient()
-  const { error } = await supabase.from('categories').update({ is_active: ativa }).eq('id', id)
+  const { data, error } = await supabase
+    .from('categories')
+    .update({ is_active: ativa })
+    .eq('id', id)
+    .select('id')
   if (error) return { error: error.message }
+  if (!data?.length) return { error: BLOQUEADO }
 
   revalidatePath('/painel/categorias')
   revalidatePath('/painel/produtos')

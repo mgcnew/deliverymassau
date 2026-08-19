@@ -6,6 +6,9 @@
 -- checa EXECUTE na criacao do trigger, nao a cada disparo.
 -- Resultado: anon so enxerga get_public_settings, create_public_order,
 -- get_order_by_token e resolve_delivery_fee.
+--
+-- ATENCAO: isto vale so para as funcoes existentes hoje. Toda funcao NOVA nasce
+-- com EXECUTE para PUBLIC - a migration que a criar precisa revogar de novo.
 -- =============================================================================
 
 revoke all on all functions in schema public from public;

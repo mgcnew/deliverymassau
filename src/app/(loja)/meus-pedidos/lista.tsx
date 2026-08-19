@@ -1,24 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 
 import { Card, Empty } from '@/components/ui/card'
-import { CHAVE_PEDIDOS } from '@/lib/carrinho/tipos'
-
-type PedidoSalvo = { token: string; numero: number; em?: string }
+import { assinarPedidos, lerPedidos, lerPedidosNoServidor } from '@/lib/carrinho/store'
 
 export function ListaMeusPedidos() {
-  const [pedidos, setPedidos] = useState<PedidoSalvo[] | null>(null)
-
-  useEffect(() => {
-    try {
-      const bruto = localStorage.getItem(CHAVE_PEDIDOS)
-      setPedidos(bruto ? (JSON.parse(bruto) as PedidoSalvo[]) : [])
-    } catch {
-      setPedidos([])
-    }
-  }, [])
+  const pedidos = useSyncExternalStore(assinarPedidos, lerPedidos, lerPedidosNoServidor)
 
   if (pedidos === null) return <Empty>Carregando...</Empty>
   if (pedidos.length === 0) return <Empty>Voce ainda nao fez pedidos neste aparelho.</Empty>

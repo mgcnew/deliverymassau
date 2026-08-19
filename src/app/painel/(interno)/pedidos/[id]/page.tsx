@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { PERMISSIONS } from '@/lib/permissions'
-import { requirePermission } from '@/lib/auth'
+import { requireStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardTitle } from '@/components/ui/card'
 import { moeda, quantidade as formatarQuantidade } from '@/lib/format'
@@ -15,7 +15,9 @@ export const metadata = { title: 'Pedido | Mercado Massa 24h' }
 
 export default async function PedidoDetalhePage({ params }: PageProps<'/painel/pedidos/[id]'>) {
   const { id } = await params
-  const staff = await requirePermission(PERMISSIONS.pedidosVer)
+  // Nao exige pedidos.ver: quem enxerga o pedido e a RLS. Assim o entregador
+  // abre os itens da entrega que assumiu sem precisar da permissao do balcao.
+  const staff = await requireStaff()
   const supabase = await createClient()
 
   const [{ data: pedido }, { data: itens }, { data: historico }] = await Promise.all([

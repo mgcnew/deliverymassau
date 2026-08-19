@@ -10,6 +10,9 @@ import { createClient } from '@/lib/supabase/server'
 
 export type FormState = { error?: string; ok?: string }
 
+/** UPDATE barrado pela RLS afeta zero linhas sem levantar erro. Ver actions de configuracoes. */
+const BLOQUEADO = 'O banco recusou a alteracao: voce nao tem essa permissao.'
+
 async function exigir(code: string): Promise<{ error?: string }> {
   const staff = await getStaff()
   if (!staff) return { error: 'Sessao expirada. Entre novamente.' }
@@ -95,12 +98,14 @@ export async function salvarDadosFuncionario(
   if (!id || !name) return { error: 'Informe o nome.' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .update({ name, phone: phone || null })
     .eq('id', id)
+    .select('id')
 
   if (error) return { error: error.message }
+  if (!data?.length) return { error: BLOQUEADO }
 
   revalidatePath('/painel/equipe')
   return { ok: 'Dados salvos.' }
@@ -114,7 +119,11 @@ export async function alterarAtivacao(_prev: FormState, formData: FormData): Pro
   const ativar = String(formData.get('ativar') ?? '') === '1'
 
   const supabase = await createClient()
-  const { error } = await supabase.from('profiles').update({ is_active: ativar }).eq('id', id)
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ is_active: ativar })
+    .eq('id', id)
+    .select('id')
 
   // Trava do banco: nunca deixar o sistema sem administrador ativo.
   if (error) {
@@ -124,6 +133,7 @@ export async function alterarAtivacao(_prev: FormState, formData: FormData): Pro
         : error.message,
     }
   }
+  if (!data?.length) return { error: BLOQUEADO }
 
   revalidatePath('/painel/equipe')
   return { ok: ativar ? 'Funcionario reativado.' : 'Funcionario desativado.' }

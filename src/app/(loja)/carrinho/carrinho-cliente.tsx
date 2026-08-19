@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Minus, Plus, Trash2 } from 'lucide-react'
 
-import { useCarrinho } from '@/components/carrinho/carrinho-provider'
+import { useCarrinho } from '@/components/carrinho/use-carrinho'
 import { Card, Empty } from '@/components/ui/card'
 import { moeda, quantidade as formatarQuantidade } from '@/lib/format'
 import { subtotalItem } from '@/lib/carrinho/tipos'

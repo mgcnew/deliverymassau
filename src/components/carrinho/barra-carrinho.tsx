@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { ShoppingCart } from 'lucide-react'
 
 import { moeda } from '@/lib/format'
-import { useCarrinho } from './carrinho-provider'
+import { useCarrinho } from './use-carrinho'
 
 const ESCONDER_EM = ['/carrinho', '/checkout']
 

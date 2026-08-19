@@ -5,7 +5,7 @@ import { Minus, Plus } from 'lucide-react'
 import { moeda } from '@/lib/format'
 import type { ProdutoVitrine } from '@/lib/loja/catalogo'
 import type { ItemCarrinho } from '@/lib/carrinho/tipos'
-import { useCarrinho } from './carrinho-provider'
+import { useCarrinho } from './use-carrinho'
 
 function paraItem(produto: ProdutoVitrine, quantidade: number): ItemCarrinho {
   return {

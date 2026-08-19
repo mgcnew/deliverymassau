@@ -40,7 +40,8 @@ export function AcoesPedido({
         router.refresh()
         return
       }
-      depois ? depois() : router.refresh()
+      if (depois) depois()
+      else router.refresh()
     })
   }
 

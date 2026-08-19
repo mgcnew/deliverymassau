@@ -53,6 +53,8 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0014` | Auditoria de produtos e categorias |
 | `0015` | Cidade do mercado (links de navegação e cabeçalho da impressão) |
 | `0016` | Indicadores do dia no fuso do mercado e upload da logo |
+| `0017` | Índices de chave estrangeira e policies de escrita separadas da leitura |
+| `0018` | Fecha `dashboard_hoje()` para o visitante anônimo |
 
 ## Estado das etapas
 
@@ -66,8 +68,12 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 - [x] **8** Entregas / motoboy
 - [x] **9** Impressão
 - [x] **10** Dashboard e configurações
-- [ ] **11** Testes e refinamento
+- [x] **11** Testes e refinamento
 
 ## Antes do go-live
 
-Limpar os dados de exemplo: 3 zonas de entrega, 3 bairros e 4 produtos de teste.
+1. Trocar os dados de exemplo: 3 regiões de entrega, 3 bairros e 4 produtos.
+2. Preencher em `/painel/configuracoes` o nome, WhatsApp, endereço, **cidade/UF**,
+   pedido mínimo e chave PIX reais.
+3. Ligar a proteção contra senha vazada no Supabase (Authentication → Password).
+4. Conferir o fuso horário — o dashboard usa ele para saber o que é "hoje".

@@ -527,17 +527,49 @@ Realtime respeita RLS. Publicação limitada a `orders`, `order_items` e `order_
 
 > **Dados de exemplo a limpar antes do go-live:** as 3 zonas de entrega, os 3 bairros e os 4 produtos de teste (Alcatra, Coca-Cola 2L, Queijo mussarela, Arroz 5kg).
 
-## 18. Próximas etapas (após validação)
+## 18. Estado da implementação (19/08/2026)
 
-| Etapa | Entrega |
+Todas as 11 etapas do plano foram implementadas. O que existe hoje:
+
+| Etapa | Entrega | Onde |
+|---|---|---|
+| 1 | Este documento | `docs/ARQUITETURA.md` |
+| 2 | Banco completo (18 migrations), autenticação e permissões granulares | `supabase/migrations/`, `/painel/equipe` |
+| 3 | Categorias e produtos com disponibilidade de um toque | `/painel/produtos`, `/painel/categorias` |
+| 4 | Portal público do cliente | `/`, `/c/[slug]`, `/p/[slug]`, `/busca` |
+| 5 | Carrinho, checkout e área do cliente | `/carrinho`, `/checkout`, `/pedido/[token]`, `/meus-pedidos` |
+| 6 | Tela operacional em tempo real e detalhe do pedido | `/painel/pedidos` |
+| 7 | Separação com pesagem em gramas | `/painel/pedidos/[id]/separacao` |
+| 8 | Painel do motoboy com Maps e Waze | `/painel/entregas` |
+| 9 | Impressão 80mm e A4 | `/painel/pedidos/[id]/imprimir` |
+| 10 | Dashboard no fuso do mercado e configurações | `/painel`, `/painel/configuracoes` |
+| 11 | Revisão de segurança, advisors e refino | migrations `0017`–`0018` |
+
+### Riscos do §16 e como ficaram
+
+| # | Situação |
 |---|---|
-| 2 | Migrations completas (tabelas, enums, triggers, funções, RLS), seed de permissões/presets, autenticação e tela de equipe |
-| 3 | Categorias e produtos (CRUD + disponibilidade rápida) |
-| 4 | Portal público (catálogo, busca, categorias) |
-| 5 | Carrinho e checkout (taxa, mínimo, pagamento, troco) |
-| 6 | Criação e gestão de pedidos + tela operacional em tempo real + área do cliente |
-| 7 | Separação e produtos por peso |
-| 8 | Painel do motoboy |
-| 9 | Impressão |
-| 10 | Dashboard e configurações |
-| 11 | Testes (policies, cálculo por peso, concorrência) e refinamento |
+| R1 | Resolvido. `has_permission` é `SECURITY DEFINER`; nenhuma recursão de RLS apareceu |
+| R2 | Resolvido e testado. Não se concede o que não se tem; a última conta de administrador não pode ser desativada (a trava disparou no teste) |
+| R3 | Resolvido e testado. Segunda tentativa de assumir a mesma entrega recebe `ENTREGA_JA_ASSUMIDA` |
+| R4 | Resolvido. `sequence` dedicada com `UNIQUE` |
+| R5 | Resolvido. Todo cálculo em `numeric`, arredondado uma única vez no banco |
+| R6 | Resolvido. `expected_total` faz o banco recusar e a tela pede confirmação com o novo valor |
+| R7 | Resolvido de forma diferente do previsto: o cliente **não** usa Realtime — a página do pedido lê por token a cada visita. Realtime ficou só no painel interno, onde há sessão |
+| R8 | Resolvido. Normalização com `unaccent` e select de bairros no checkout |
+| R9 | Resolvido. A página do produto explica a pesagem antes da compra e o acompanhamento mostra "estimado" x "final" |
+| R10 | Parcial. Storage com limite de 3 MB e tipos restritos; falta redimensionar no upload |
+| R11 | Resolvido. `dashboard_hoje()` calcula o dia no fuso de `settings.timezone` |
+| R12 | Resolvido. Histórico e auditoria com autor desde o primeiro dia |
+| R13 | Resolvido. Fechar o delivery bloqueia só pedidos novos |
+| R14 | Preparado. Layout em `mm`, sem cor nem imagem |
+| R15 | Resolvido. `service_role` só em Server Action, usada apenas para criar conta de funcionário |
+| R16 | **Em aberto** — ambiente único. Os dados de exemplo precisam sair antes do go-live |
+
+### Pendências conhecidas
+
+1. **Dados de exemplo no banco**: 3 regiões, 3 bairros e 4 produtos. Substituir em Configurações e Produtos.
+2. **Proteção contra senha vazada** (Supabase Auth → Password): desligada. Vale ligar antes de cadastrar a equipe.
+3. **Redimensionar imagem no upload** (R10): hoje o limite é só de tamanho de arquivo.
+4. **Retirada no balcão**: o schema já tem `orders.fulfillment`, a interface ainda não.
+5. **Cliente sem realtime**: se o acompanhamento precisar atualizar sozinho, o caminho é polling na página do token.
