@@ -44,3 +44,16 @@ export function slugify(texto: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 60)
 }
+
+/** 75988887777 -> (75) 98888-7777 */
+export function telefone(digitos: string | null | undefined): string {
+  const n = (digitos ?? '').replace(/\D/g, '')
+  if (n.length === 11) return `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`
+  if (n.length === 10) return `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`
+  return n
+}
+
+/** Data curta com hora, no formato que a operacao le rapido. */
+export function dataHora(iso: string | null | undefined): string {
+  return iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-'
+}
