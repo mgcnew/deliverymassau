@@ -59,8 +59,8 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 - [x] **3** Produtos e categorias
 - [x] **4** Portal público
 - [x] **5** Carrinho e checkout
-- [ ] **6** Criação e gestão de pedidos
-- [ ] **7** Separação e produtos por peso
+- [x] **6** Criação e gestão de pedidos
+- [x] **7** Separação e produtos por peso
 - [ ] **8** Entregas / motoboy
 - [ ] **9** Impressão
 - [ ] **10** Dashboard e configurações
