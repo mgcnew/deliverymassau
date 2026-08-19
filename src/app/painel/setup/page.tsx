@@ -6,6 +6,10 @@ import { SetupForm } from './setup-form'
 
 export const metadata = { title: 'Primeiro acesso | Mercado Massa 24h' }
 
+// Faz uma consulta ao banco a cada acesso (existe admin?). Sem isso o Next
+// pre-renderiza essa checagem uma unica vez no build e ela fica congelada.
+export const dynamic = 'force-dynamic'
+
 export default async function SetupPage() {
   let semChave = false
   let jaTemEquipe = false

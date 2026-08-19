@@ -34,6 +34,41 @@ Ela **nunca** pode ganhar o prefixo `NEXT_PUBLIC_`.
 2. Abra `/painel/setup` e crie o administrador (nome, e-mail e senha).
 3. A tela some sozinha depois disso — daí em diante os cadastros saem de `/painel/equipe`.
 
+## Deploy na Vercel
+
+1. **Importe o repositório** [`mgcnew/deliverymassau`](https://github.com/mgcnew/deliverymassau)
+   em [vercel.com/new](https://vercel.com/new). O Next.js é detectado automaticamente —
+   não é preciso configurar build command nem output directory.
+
+2. **Configure as variáveis de ambiente** em Project Settings → Environment Variables
+   (aplicar em Production, Preview e Development):
+
+   | Nome | Valor | Onde pegar |
+   |---|---|---|
+   | `NEXT_PUBLIC_SUPABASE_URL` | `https://btycibxmcsjgcibcosvk.supabase.co` | Supabase → Project Settings → API |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_Qj16imN7jDYTNfKjUc-gLQ_krRSP_Ms` | Supabase → Project Settings → API Keys |
+   | `SUPABASE_SERVICE_ROLE_KEY` | *(secreta — não commitar)* | Supabase → Project Settings → API Keys → `service_role` |
+
+   As duas primeiras não são segredo (são a URL pública e a chave anônima, protegidas
+   pela RLS). A `service_role` **ignora RLS** — nunca prefixar com `NEXT_PUBLIC_`, nunca
+   colar em código, só cadastrar como env var.
+
+3. **Domínio**: a Vercel já entrega um `*.vercel.app` de graça. Se for usar domínio
+   próprio, aponte-o em Project Settings → Domains — nenhum código depende de URL fixa
+   (o botão "Compartilhar loja" monta o link a partir de `window.location.origin`).
+
+4. **Depois do primeiro deploy**: como o banco já tem administrador cadastrado
+   (`Marcelo`), `/painel/setup` redireciona sozinho para `/painel/login` — não precisa
+   passar pelo assistente de primeiro acesso de novo.
+
+5. **Supabase Auth → URL Configuration**: adicione a URL da Vercel (`https://SEU-APP.vercel.app`)
+   em *Site URL* e *Redirect URLs*. Não é bloqueante para o login com senha usado hoje,
+   mas evita problemas se recuperação de senha ou links de convite forem usados depois.
+
+Nenhum `vercel.json` é necessário — a única configuração especial do projeto é o Proxy
+(`src/proxy.ts`, equivalente ao antigo middleware), que a Vercel já reconhece nativamente
+em qualquer projeto Next.js com App Router.
+
 ## Migrations
 
 Ficam em `supabase/migrations/` e são aplicadas no projeto Supabase pelo MCP
