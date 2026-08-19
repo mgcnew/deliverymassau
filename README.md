@@ -52,6 +52,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0013` | Correções encontradas testando permissões granulares (grant de `normalize_text`, guardas ignoradas sem sessão) |
 | `0014` | Auditoria de produtos e categorias |
 | `0015` | Cidade do mercado (links de navegação e cabeçalho da impressão) |
+| `0016` | Indicadores do dia no fuso do mercado e upload da logo |
 
 ## Estado das etapas
 
@@ -64,7 +65,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 - [x] **7** Separação e produtos por peso
 - [x] **8** Entregas / motoboy
 - [x] **9** Impressão
-- [ ] **10** Dashboard e configurações
+- [x] **10** Dashboard e configurações
 - [ ] **11** Testes e refinamento
 
 ## Antes do go-live

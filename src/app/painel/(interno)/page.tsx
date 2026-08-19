@@ -4,6 +4,7 @@ import { requireStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { PERMISSIONS } from '@/lib/permissions'
+import { PainelIndicadores, type Indicadores } from './indicadores'
 
 export const metadata = { title: 'Painel | Mercado Massa 24h' }
 
@@ -19,11 +20,12 @@ export default async function PainelHome() {
   const staff = await requireStaff()
   const supabase = await createClient()
 
-  const { data: settings } = await supabase
-    .from('settings')
-    .select('market_name, delivery_enabled')
-    .eq('id', 1)
-    .maybeSingle()
+  const [{ data: settings }, indicadores] = await Promise.all([
+    supabase.from('settings').select('market_name, delivery_enabled').eq('id', 1).maybeSingle(),
+    staff.permissions.has(PERMISSIONS.dashboardVer)
+      ? supabase.rpc('dashboard_hoje').then(({ data }) => data as Indicadores | null)
+      : Promise.resolve(null),
+  ])
 
   const atalhos = ATALHOS.filter((a) => staff.permissions.has(a.permission))
 
@@ -52,6 +54,8 @@ export default async function PainelHome() {
         </span>
       </Card>
 
+      {indicadores ? <PainelIndicadores dados={indicadores} /> : null}
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {atalhos.map((a) => (
           <Link key={a.href} href={a.href}>
@@ -63,9 +67,6 @@ export default async function PainelHome() {
         ))}
       </div>
 
-      <p className="text-sm text-muted">
-        Indicadores do dia (faturamento, ticket medio, tempos) entram na etapa do dashboard.
-      </p>
     </div>
   )
 }
