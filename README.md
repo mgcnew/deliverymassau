@@ -48,12 +48,15 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0008` | RLS de todas as tabelas + publicação de realtime |
 | `0009` | Seed de permissões, presets, categorias e dados de exemplo |
 | `0010`–`0011` | Endurecimento: `search_path` fixo e superfície mínima de API |
+| `0012` | Bucket `produtos` no Storage, com escrita amarrada nas permissões |
+| `0013` | Correções encontradas testando permissões granulares (grant de `normalize_text`, guardas ignoradas sem sessão) |
+| `0014` | Auditoria de produtos e categorias |
 
 ## Estado das etapas
 
 - [x] **1** Arquitetura (documento validado)
 - [x] **2** Banco, autenticação e permissões
-- [ ] **3** Produtos e categorias
+- [x] **3** Produtos e categorias
 - [ ] **4** Portal público
 - [ ] **5** Carrinho e checkout
 - [ ] **6** Criação e gestão de pedidos
