@@ -43,7 +43,7 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
   const ultimo = enderecos?.[0]
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4">
+    <div className="w-full space-y-4">
       <div>
         <Link href="/painel/clientes" className="text-sm font-semibold text-muted">
           &lsaquo; Clientes

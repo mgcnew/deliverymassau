@@ -22,7 +22,7 @@ export default async function NovoFuncionarioPage() {
   )
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-4">
+    <div className="w-full space-y-4">
       <h1 className="text-2xl font-black">Novo funcionario</h1>
       <Card>
         <NovoFuncionarioForm presets={presets} />

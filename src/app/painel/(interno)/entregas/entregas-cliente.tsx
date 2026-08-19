@@ -59,7 +59,7 @@ export function EntregasCliente({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex gap-2 md:max-w-md">
         <button
           type="button"
           onClick={() => setAba('disponiveis')}
@@ -87,7 +87,7 @@ export function EntregasCliente({
             : 'Nenhuma entrega esperando agora.'}
         </Empty>
       ) : (
-        <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {lista.map((entrega) => (
             <CardEntrega
               key={entrega.id}

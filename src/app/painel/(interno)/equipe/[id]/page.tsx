@@ -50,7 +50,7 @@ export default async function FuncionarioPage({ params }: PageProps<'/painel/equ
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4">
+    <div className="w-full space-y-4">
       <div>
         <Link href="/painel/equipe" className="text-sm font-semibold text-muted">
           &lsaquo; Equipe

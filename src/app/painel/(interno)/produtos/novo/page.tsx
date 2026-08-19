@@ -17,7 +17,7 @@ export default async function NovoProdutoPage() {
     .order('sort_order')
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-4">
+    <div className="w-full space-y-4">
       <h1 className="text-2xl font-black">Novo produto</h1>
       <Card>
         <ProdutoForm

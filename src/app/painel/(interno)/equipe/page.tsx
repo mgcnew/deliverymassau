@@ -32,7 +32,7 @@ export default async function EquipePage() {
   const nomePreset = new Map((presets ?? []).map((p) => [p.id, p.name]))
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4">
+    <div className="w-full space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-black">Equipe</h1>
         {staff.permissions.has(PERMISSIONS.equipeCadastrar) ? (

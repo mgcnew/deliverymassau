@@ -30,10 +30,10 @@ export default async function ClientesPage({ searchParams }: PageProps<'/painel/
   const { data: clientes } = await query
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4">
+    <div className="w-full space-y-4">
       <h1 className="text-2xl font-black">Clientes</h1>
 
-      <form className="flex gap-2" action="/painel/clientes">
+      <form className="flex gap-2 lg:max-w-xl" action="/painel/clientes">
         <input
           name="q"
           defaultValue={busca}

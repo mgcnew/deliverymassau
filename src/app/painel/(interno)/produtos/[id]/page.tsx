@@ -25,7 +25,7 @@ export default async function ProdutoPage({ params }: PageProps<'/painel/produto
   if (!produto) notFound()
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-4">
+    <div className="w-full space-y-4">
       <div>
         <Link href="/painel/produtos" className="text-sm font-semibold text-muted">
           &lsaquo; Produtos

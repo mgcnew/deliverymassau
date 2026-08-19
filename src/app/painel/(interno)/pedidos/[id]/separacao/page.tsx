@@ -32,7 +32,7 @@ export default async function SeparacaoPage({
   const pendentes = lista.filter((i) => i.item_status === 'pendente').length
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4">
+    <div className="w-full space-y-4">
       <div>
         <Link href={`/painel/pedidos/${id}`} className="text-sm font-semibold text-muted">
           &lsaquo; Pedido #{pedido.order_number}

@@ -35,7 +35,7 @@ export default async function ConfiguracoesPage() {
   const pode = (code: string) => staff.permissions.has(code)
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4">
+    <div className="w-full space-y-4">
       <h1 className="text-2xl font-black">Configuracoes</h1>
 
       {pode(PERMISSIONS.configMercado) && config ? (

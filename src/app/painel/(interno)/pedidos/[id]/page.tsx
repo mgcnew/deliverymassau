@@ -36,7 +36,7 @@ export default async function PedidoDetalhePage({ params }: PageProps<'/painel/p
   const whatsapp = `https://wa.me/55${pedido.customer_phone}`
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4">
+    <div className="w-full space-y-4">
       <div>
         <Link href="/painel/pedidos" className="text-sm font-semibold text-muted">
           &lsaquo; Pedidos

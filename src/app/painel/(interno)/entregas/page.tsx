@@ -27,7 +27,7 @@ export default async function EntregasPage() {
   ])
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-4">
+    <div className="w-full space-y-4">
       <h1 className="text-2xl font-black">Entregas</h1>
 
       <EntregasCliente

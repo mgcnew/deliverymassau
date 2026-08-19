@@ -30,7 +30,7 @@ export default async function PainelHome() {
   const atalhos = ATALHOS.filter((a) => staff.permissions.has(a.permission))
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5">
+    <div className="w-full space-y-5">
       <div>
         <h1 className="text-2xl font-black">Ola, {staff.profile.name.split(' ')[0]}</h1>
         <p className="text-muted">{settings?.market_name ?? 'Mercado Massa 24h'}</p>

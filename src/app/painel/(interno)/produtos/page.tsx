@@ -51,7 +51,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4">
+    <div className="w-full space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-black">Produtos</h1>
         <div className="flex gap-2">
@@ -64,7 +64,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
         </div>
       </div>
 
-      <form className="flex gap-2" action="/painel/produtos">
+      <form className="flex gap-2 lg:max-w-xl" action="/painel/produtos">
         <input type="hidden" name="f" value={filtro} />
         {categoria ? <input type="hidden" name="c" value={categoria} /> : null}
         <input
