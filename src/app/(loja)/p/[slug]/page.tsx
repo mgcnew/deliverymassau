@@ -26,7 +26,7 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
 
   return (
     <main className="mx-auto w-full max-w-3xl space-y-4 p-4">
-      <LinkVoltar href={categoria ? `/c/${categoria.slug}` : '/'}>
+      <LinkVoltar href={categoria ? `/c/${categoria.slug}` : '/loja'}>
         {categoria?.name ?? 'Voltar'}
       </LinkVoltar>
 

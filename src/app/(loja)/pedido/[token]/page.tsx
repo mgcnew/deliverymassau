@@ -211,7 +211,7 @@ export default async function PedidoPage({ params, searchParams }: PageProps<'/p
 
       <div className="flex gap-2">
         <Link
-          href="/"
+          href="/loja"
           className="flex h-12 flex-1 items-center justify-center rounded-xl border border-line bg-surface font-semibold"
         >
           Voltar a loja

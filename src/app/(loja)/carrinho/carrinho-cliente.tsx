@@ -25,7 +25,7 @@ export function CarrinhoCliente({
       <Card className="space-y-3 text-center">
         <p className="text-lg font-bold">Seu carrinho esta vazio</p>
         <Link
-          href="/"
+          href="/loja"
           className="mx-auto flex h-12 max-w-xs items-center justify-center rounded-xl bg-brand font-bold text-brand-foreground"
         >
           Ver produtos
@@ -137,7 +137,7 @@ export function CarrinhoCliente({
             <p className="font-semibold text-brand">
               Faltam {moeda(falta)} para atingir o pedido minimo de {moeda(pedidoMinimo)}.
             </p>
-            <Link href="/" className="inline-block font-semibold underline">
+            <Link href="/loja" className="inline-block font-semibold underline">
               Continuar comprando
             </Link>
           </div>

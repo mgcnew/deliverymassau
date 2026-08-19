@@ -61,7 +61,7 @@ export function CheckoutForm({
     return (
       <Card className="space-y-2 text-center">
         <p className="font-bold">Seu carrinho esta vazio.</p>
-        <Button type="button" variant="secondary" onClick={() => router.push('/')}>
+        <Button type="button" variant="secondary" onClick={() => router.push('/loja')}>
           Ver produtos
         </Button>
       </Card>
@@ -74,7 +74,7 @@ export function CheckoutForm({
         <p className="font-bold">
           Faltam {moeda(pedidoMinimo - subtotal)} para o pedido minimo de {moeda(pedidoMinimo)}.
         </p>
-        <Button type="button" variant="secondary" onClick={() => router.push('/')}>
+        <Button type="button" variant="secondary" onClick={() => router.push('/loja')}>
           Continuar comprando
         </Button>
       </Card>

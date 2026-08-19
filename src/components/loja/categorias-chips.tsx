@@ -14,7 +14,7 @@ export function CategoriasChips({
       <ul className="flex w-max gap-2 pb-1">
         <li>
           <Link
-            href="/"
+            href="/loja"
             className={`block rounded-full px-4 py-2.5 text-sm font-bold ${
               ativa ? 'border border-line bg-surface' : 'bg-brand text-brand-foreground'
             }`}

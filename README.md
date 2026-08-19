@@ -3,6 +3,10 @@
 Aplicação web do delivery do Mercado Massa 24h: portal público para o cliente (sem login)
 e painel interno da equipe com permissões granulares por usuário.
 
+A raiz do domínio (`/`) é a entrada da equipe (pede login). A loja do cliente
+vive em `/loja` — um link fixo, sempre disponível, que a equipe compartilha
+pelo botão no cabeçalho do painel.
+
 - Documento de arquitetura: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)
 - Stack: Next.js 16 (App Router) · React 19 · TypeScript · Tailwind 4 · Supabase (Postgres + Auth + RLS)
 - Banco: projeto Supabase `massau` (`btycibxmcsjgcibcosvk`, `sa-east-1`)

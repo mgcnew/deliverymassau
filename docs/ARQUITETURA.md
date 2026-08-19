@@ -65,7 +65,7 @@ src/
 
 | Rota | Conteúdo | Observações |
 |---|---|---|
-| `/` | Identidade, busca, categorias, destaques, grade de produtos, carrinho flutuante | Mobile-first; SSR + cache curto |
+| `/loja` | Identidade, busca, categorias, destaques, grade de produtos, carrinho flutuante | Mobile-first; SSR + cache curto |
 | `/c/[categoria]` | Produtos da categoria | |
 | `/busca?q=` | Resultado de pesquisa | Busca por nome + descrição |
 | `/p/[slug]` | Detalhe do produto (foto, descrição, unidade, observação) | Também disponível como bottom-sheet sem trocar de rota |
@@ -134,6 +134,18 @@ ENTREGA (painel mobile do motoboy)
 Em qualquer ponto antes de ENTREGUE: CANCELADO (permissão pedidos.cancelar + motivo obrigatório)
 Cada transição grava order_status_history. O cliente vê tudo em /pedido/[token] via Realtime.
 ```
+
+### 3.0 Decisão tomada em 19/08/2026: raiz do domínio ≠ loja
+
+A raiz (`/`) deixou de ser a loja: ela redireciona para a entrada da equipe
+(`/painel`, que por sua vez pede login). A loja pública mudou para **`/loja`**
+— um link fixo e sempre disponível, exatamente como pede o requisito original,
+só que não é mais o primeiro lugar que qualquer visitante do domínio cai.
+A equipe compartilha esse link com o cliente por um botão dedicado no
+cabeçalho do painel (copia o link / abre o compartilhamento nativo do
+aparelho). A página do pedido (`/pedido/[token]`) não mostra mais o atalho
+"Sou da equipe" — ela é puramente self-service e pode ser repassada por
+WhatsApp sem expor a porta de entrada da equipe.
 
 ### 3.1 Área do cliente (detalhe pedido explicitamente)
 
@@ -536,7 +548,7 @@ Todas as 11 etapas do plano foram implementadas. O que existe hoje:
 | 1 | Este documento | `docs/ARQUITETURA.md` |
 | 2 | Banco completo (18 migrations), autenticação e permissões granulares | `supabase/migrations/`, `/painel/equipe` |
 | 3 | Categorias e produtos com disponibilidade de um toque | `/painel/produtos`, `/painel/categorias` |
-| 4 | Portal público do cliente | `/`, `/c/[slug]`, `/p/[slug]`, `/busca` |
+| 4 | Portal público do cliente | `/loja`, `/c/[slug]`, `/p/[slug]`, `/busca` |
 | 5 | Carrinho, checkout e área do cliente | `/carrinho`, `/checkout`, `/pedido/[token]`, `/meus-pedidos` |
 | 6 | Tela operacional em tempo real e detalhe do pedido | `/painel/pedidos` |
 | 7 | Separação com pesagem em gramas | `/painel/pedidos/[id]/separacao` |

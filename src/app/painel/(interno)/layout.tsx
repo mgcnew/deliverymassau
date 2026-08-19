@@ -1,6 +1,8 @@
 import { PERMISSIONS } from '@/lib/permissions'
 import { requireStaff, touchLastSeen } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 import { logoutAction } from '../login/actions'
+import { CompartilharLoja } from './compartilhar-loja'
 import { Nav, type NavItem } from './nav'
 
 const MENU: Array<NavItem & { permission: string }> = [
@@ -17,6 +19,13 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
   const staff = await requireStaff()
   await touchLastSeen(staff)
 
+  const supabase = await createClient()
+  const { data: config } = await supabase
+    .from('settings')
+    .select('market_name')
+    .eq('id', 1)
+    .maybeSingle()
+
   // O menu mostra somente o que a pessoa pode acessar.
   const items = MENU.filter((item) => staff.permissions.has(item.permission))
 
@@ -27,11 +36,14 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
           <p className="text-xs font-semibold uppercase tracking-wide text-brand">Massa 24h</p>
           <p className="truncate text-sm font-bold">{staff.profile.name}</p>
         </div>
-        <form action={logoutAction}>
-          <button className="h-11 rounded-lg px-3 text-sm font-semibold text-muted hover:bg-black/5">
-            Sair
-          </button>
-        </form>
+        <div className="flex shrink-0 items-center gap-2">
+          <CompartilharLoja nomeMercado={config?.market_name ?? 'Mercado Massa 24h'} />
+          <form action={logoutAction}>
+            <button className="h-11 rounded-lg px-3 text-sm font-semibold text-muted hover:bg-black/5">
+              Sair
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="flex min-w-0 flex-1">

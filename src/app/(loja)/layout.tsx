@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { BarraCarrinho } from '@/components/carrinho/barra-carrinho'
+import { RodapeEquipe } from '@/components/loja/rodape-equipe'
 
 import { getConfiguracaoPublica } from '@/lib/loja/catalogo'
 import { urlImagemProduto } from '@/lib/supabase/storage'
@@ -18,7 +19,7 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logo} alt="" className="size-10 rounded-lg bg-white/20 object-cover" />
           ) : null}
-          <Link href="/" className="min-w-0">
+          <Link href="/loja" className="min-w-0">
             <p className="truncate text-lg font-black leading-tight">
               {config?.market_name ?? 'Mercado Massa 24h'}
             </p>
@@ -44,11 +45,7 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
             Pedido minimo de {moeda(config?.min_order_value ?? 0)} em produtos, sem contar a taxa de
             entrega.
           </p>
-          <p className="pt-2">
-            <Link href="/painel" className="font-semibold underline">
-              Sou da equipe
-            </Link>
-          </p>
+          <RodapeEquipe />
         </div>
       </footer>
 

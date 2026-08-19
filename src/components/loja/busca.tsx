@@ -14,7 +14,7 @@ export function CampoBusca({ inicial = '' }: { inicial?: string }) {
       onSubmit={(e) => {
         e.preventDefault()
         const q = texto.trim()
-        router.push(q ? `/busca?q=${encodeURIComponent(q)}` : '/')
+        router.push(q ? `/busca?q=${encodeURIComponent(q)}` : '/loja')
       }}
       className="relative"
     >

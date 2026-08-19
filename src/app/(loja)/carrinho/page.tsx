@@ -10,7 +10,7 @@ export default async function CarrinhoPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl space-y-4 p-4">
-      <LinkVoltar href="/">Continuar comprando</LinkVoltar>
+      <LinkVoltar href="/loja">Continuar comprando</LinkVoltar>
       <h1 className="text-2xl font-black">Seu carrinho</h1>
 
       <CarrinhoCliente
