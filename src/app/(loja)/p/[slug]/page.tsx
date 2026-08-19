@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { BotaoAdicionar } from '@/components/carrinho/botao-adicionar'
 import { Card } from '@/components/ui/card'
 import { moeda, precoPorUnidade, UNIT_LABEL } from '@/lib/format'
 import { getCategorias, getProdutoPorSlug } from '@/lib/loja/catalogo'
@@ -65,6 +66,8 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
             Vendido por {UNIT_LABEL[produto.unit_type]}
             {produto.sold_by_weight ? ` - pedido minimo de ${(pesoMinimo * 1000).toFixed(0)} g` : ''}.
           </p>
+
+          <BotaoAdicionar produto={produto} tamanho="lg" />
         </div>
       </div>
 

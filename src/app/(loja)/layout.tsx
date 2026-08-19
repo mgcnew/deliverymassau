@@ -1,5 +1,8 @@
 import Link from 'next/link'
 
+import { BarraCarrinho } from '@/components/carrinho/barra-carrinho'
+import { CarrinhoProvider } from '@/components/carrinho/carrinho-provider'
+
 import { getConfiguracaoPublica } from '@/lib/loja/catalogo'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 import { moeda } from '@/lib/format'
@@ -9,7 +12,8 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
   const logo = urlImagemProduto(config?.market_logo_path)
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <CarrinhoProvider>
+      <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-20 border-b border-line bg-brand text-brand-foreground">
         <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3">
           {logo ? (
@@ -49,6 +53,9 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
           </p>
         </div>
       </footer>
-    </div>
+
+        <BarraCarrinho />
+      </div>
+    </CarrinhoProvider>
   )
 }

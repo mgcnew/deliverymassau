@@ -58,7 +58,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 - [x] **2** Banco, autenticação e permissões
 - [x] **3** Produtos e categorias
 - [x] **4** Portal público
-- [ ] **5** Carrinho e checkout
+- [x] **5** Carrinho e checkout
 - [ ] **6** Criação e gestão de pedidos
 - [ ] **7** Separação e produtos por peso
 - [ ] **8** Entregas / motoboy
