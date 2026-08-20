@@ -106,7 +106,7 @@ export function AcoesPedido({
       </div>
 
       {cancelando ? (
-        <div className="space-y-2 rounded-xl border border-rose-200 bg-rose-50 p-3">
+        <div className="space-y-2 rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-800 dark:bg-rose-950/40">
           <p className="font-semibold text-rose-900">Por que o pedido esta sendo cancelado?</p>
           <Textarea
             value={motivo}

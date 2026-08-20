@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* dark: liga pela classe .dark na <html> (ver theme-script.tsx), nao so pelo
+   SO -- assim o toggle manual e o "seguir o sistema" usam a mesma fonte de
+   verdade e nao ha flash de tema errado no primeiro paint. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
   Paleta do Mercado Massa 24h.
   Operacao 24h: alto contraste, sem cinza claro em texto, alvos grandes de toque.
@@ -13,6 +18,41 @@
   --brand: #d61f2b;
   --brand-strong: #a8121c;
   --brand-foreground: #ffffff;
+
+  --tone-info-bg: #eff6ff;
+  --tone-info-fg: #1e3a8a;
+  --tone-info-border: #bfdbfe;
+  --tone-error-bg: #fff1f2;
+  --tone-error-fg: #881337;
+  --tone-error-border: #fecdd3;
+  --tone-success-bg: #ecfdf5;
+  --tone-success-fg: #064e3b;
+  --tone-success-border: #a7f3d0;
+
+  color-scheme: light;
+}
+
+:root.dark {
+  --background: #101014;
+  --surface: #1a1a20;
+  --foreground: #f2f2f4;
+  --muted: #a8a8b3;
+  --border: #303038;
+  --brand: #ef4a53;
+  --brand-strong: #d61f2b;
+  --brand-foreground: #ffffff;
+
+  --tone-info-bg: #16233b;
+  --tone-info-fg: #bfdbfe;
+  --tone-info-border: #2c5282;
+  --tone-error-bg: #3a0d18;
+  --tone-error-fg: #fecdd3;
+  --tone-error-border: #7f1d3d;
+  --tone-success-bg: #062619;
+  --tone-success-fg: #a7f3d0;
+  --tone-success-border: #14532d;
+
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -42,7 +82,8 @@ body {
 /* =============================================================================
    Via de impressao do pedido
    Papel comum (A4) e impressora termica (80mm). Sem cor de fundo, sem cinza
-   claro e sem imagem: termica so imprime preto e branco.
+   claro e sem imagem: termica so imprime preto e branco -- sempre, mesmo no
+   modo noturno.
    ============================================================================= */
 .via {
   font-family: ui-monospace, "Courier New", monospace;

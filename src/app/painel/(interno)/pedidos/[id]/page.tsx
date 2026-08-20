@@ -73,7 +73,7 @@ export default async function PedidoDetalhePage({ params }: PageProps<'/painel/p
           <p className="text-muted">Ref: {pedido.address_reference}</p>
         ) : null}
         {pedido.customer_note ? (
-          <p className="mt-3 rounded-xl bg-amber-100 px-3 py-2 font-semibold text-amber-900">
+          <p className="mt-3 rounded-xl bg-amber-100 px-3 py-2 font-semibold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
             {pedido.customer_note}
           </p>
         ) : null}

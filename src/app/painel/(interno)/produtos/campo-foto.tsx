@@ -68,7 +68,7 @@ export function CampoFoto({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={miniatura} alt="" className="size-16 shrink-0 rounded-xl object-cover" />
         ) : (
-          <span className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-black/5 text-2xl">
+          <span className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-foreground/5 text-2xl">
             🛒
           </span>
         )}

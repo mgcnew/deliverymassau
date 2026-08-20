@@ -136,7 +136,7 @@ export function ImportarForm() {
                     <td className="p-3">
                       {l.categoria}
                       {l.categoria_nova ? (
-                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900">
+                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
                           nova
                         </span>
                       ) : null}
@@ -149,11 +149,11 @@ export function ImportarForm() {
                     </td>
                     <td className="p-3">
                       {l.status === 'novo' ? (
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-900">
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200">
                           novo
                         </span>
                       ) : (
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-900">
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-900 dark:bg-blue-900/50 dark:text-blue-200">
                           atualizar
                         </span>
                       )}
@@ -161,13 +161,13 @@ export function ImportarForm() {
                   </tr>
                 ))}
                 {previa.erros.map((e) => (
-                  <tr key={`erro-${e.linha}`} className="bg-rose-50">
+                  <tr key={`erro-${e.linha}`} className="bg-rose-50 dark:bg-rose-950/30">
                     <td className="p-3 text-muted">{e.linha}</td>
                     <td className="p-3 font-semibold text-rose-900" colSpan={3}>
                       {e.motivo}
                     </td>
                     <td className="p-3">
-                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-900">
+                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-900 dark:bg-rose-900/50 dark:text-rose-200">
                         erro
                       </span>
                     </td>

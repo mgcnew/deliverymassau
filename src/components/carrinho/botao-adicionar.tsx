@@ -39,7 +39,7 @@ export function BotaoAdicionar({
 
   if (!produto.is_available) {
     return (
-      <p className={`flex ${altura} items-center justify-center rounded-xl bg-black/5 font-bold text-muted`}>
+      <p className={`flex ${altura} items-center justify-center rounded-xl bg-foreground/5 font-bold text-muted`}>
         Indisponivel
       </p>
     )

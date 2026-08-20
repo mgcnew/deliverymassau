@@ -99,7 +99,7 @@ export function PainelPedidos({
                   {ORDER_STATUS[status].short}
                   <span
                     className={`rounded-full px-1.5 text-xs ${
-                      aba === status ? 'bg-white/25' : 'bg-black/10'
+                      aba === status ? 'bg-white/25' : 'bg-foreground/10'
                     }`}
                   >
                     {total}
@@ -144,7 +144,7 @@ export function PainelPedidos({
               <section key={status} className="space-y-2">
                 <h2 className="flex items-center justify-center gap-2 text-sm font-black uppercase tracking-wide">
                   {ORDER_STATUS[status].short}
-                  <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs">{lista.length}</span>
+                  <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-xs">{lista.length}</span>
                 </h2>
                 <div className="space-y-2">
                   {lista.map((p) => (
@@ -158,7 +158,7 @@ export function PainelPedidos({
           <section className="space-y-2">
             <h2 className="flex items-center justify-center gap-2 text-sm font-black uppercase tracking-wide">
               Finalizados
-              <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs">
+              <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-xs">
                 {finalizados.length}
               </span>
             </h2>

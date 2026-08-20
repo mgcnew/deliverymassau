@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { BarraCarrinho } from '@/components/carrinho/barra-carrinho'
 import { RodapeEquipe } from '@/components/loja/rodape-equipe'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 import { getConfiguracaoPublica } from '@/lib/loja/catalogo'
 import { urlImagemProduto } from '@/lib/supabase/storage'
@@ -26,17 +27,18 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
               className="size-10 rounded-lg bg-white/20 object-cover"
             />
           ) : null}
-          <Link href="/loja" className="min-w-0">
+          <Link href="/loja" className="min-w-0 flex-1">
             <p className="truncate text-lg font-black leading-tight">
               {config?.market_name ?? 'Mercado Massa 24h'}
             </p>
             <p className="text-xs font-semibold opacity-90">Delivery aberto 24 horas</p>
           </Link>
+          <ThemeToggle inverso />
         </div>
       </header>
 
       {!config?.delivery_enabled ? (
-        <p className="bg-amber-100 px-4 py-3 text-center text-sm font-bold text-amber-900">
+        <p className="bg-amber-100 px-4 py-3 text-center text-sm font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
           {config?.delivery_closed_message ?? 'Delivery temporariamente indisponivel.'}
         </p>
       ) : null}

@@ -57,7 +57,7 @@ export function CarrinhoCliente({
                     className="size-16 shrink-0 rounded-xl object-cover"
                   />
                 ) : (
-                  <span className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-black/5 text-2xl">
+                  <span className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-foreground/5 text-2xl">
                     🛒
                   </span>
                 )}
@@ -76,7 +76,7 @@ export function CarrinhoCliente({
                   type="button"
                   aria-label={`Remover ${item.name}`}
                   onClick={() => remover(item.productId)}
-                  className="h-10 rounded-lg px-2 text-muted hover:bg-black/5"
+                  className="h-10 rounded-lg px-2 text-muted hover:bg-foreground/5"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -137,7 +137,7 @@ export function CarrinhoCliente({
 
         {falta > 0 ? (
           <div className="space-y-2">
-            <div className="h-2 overflow-hidden rounded-full bg-black/10">
+            <div className="h-2 overflow-hidden rounded-full bg-foreground/10">
               <div className="h-full bg-brand" style={{ width: `${progresso * 100}%` }} />
             </div>
             <p className="font-semibold text-brand">
@@ -148,7 +148,7 @@ export function CarrinhoCliente({
             </Link>
           </div>
         ) : !deliveryAberto ? (
-          <p className="rounded-xl bg-amber-100 px-4 py-3 font-semibold text-amber-900">
+          <p className="rounded-xl bg-amber-100 px-4 py-3 font-semibold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
             O delivery esta fechado no momento. Seu carrinho fica guardado.
           </p>
         ) : (

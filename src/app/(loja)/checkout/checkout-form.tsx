@@ -131,7 +131,7 @@ export function CheckoutForm({
       <ol className="flex gap-1" aria-label="Etapas do pedido">
         {ETAPAS.map((rotulo, i) => (
           <li key={rotulo} className="flex-1">
-            <div className={`h-1.5 rounded-full ${i <= etapa ? 'bg-brand' : 'bg-black/10'}`} />
+            <div className={`h-1.5 rounded-full ${i <= etapa ? 'bg-brand' : 'bg-foreground/10'}`} />
             <span className={`text-xs font-semibold ${i === etapa ? 'text-brand' : 'text-muted'}`}>
               {rotulo}
             </span>

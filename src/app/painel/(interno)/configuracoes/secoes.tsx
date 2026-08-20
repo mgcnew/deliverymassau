@@ -349,7 +349,7 @@ function ZonaLinha({ zona }: { zona: ZonaComBairros }) {
                   setErro(r.erro ?? null)
                 })
               }
-              className="flex size-10 items-center justify-center rounded-full text-lg text-muted hover:bg-rose-50 hover:text-rose-700"
+              className="flex size-10 items-center justify-center rounded-full text-lg text-muted hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
             >
               ×
             </button>

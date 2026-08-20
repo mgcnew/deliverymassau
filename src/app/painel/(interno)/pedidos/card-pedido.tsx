@@ -57,14 +57,14 @@ export function CardPedido({
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-bold">
-        <span className="rounded-full bg-black/5 px-2 py-0.5">
+        <span className="rounded-full bg-foreground/5 px-2 py-0.5">
           {pedido.itens} {pedido.itens === 1 ? 'item' : 'itens'}
         </span>
-        <span className="rounded-full bg-black/5 px-2 py-0.5">
+        <span className="rounded-full bg-foreground/5 px-2 py-0.5">
           {PAGAMENTO_CURTO[pedido.payment_method]}
         </span>
         {pedido.needs_change ? (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900">
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
             troco {moeda(Number(pedido.change_amount ?? 0))}
           </span>
         ) : null}

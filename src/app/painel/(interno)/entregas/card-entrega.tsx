@@ -71,12 +71,12 @@ export function CardEntrega({
         <p className="text-muted">Ref: {entrega.address_reference}</p>
       ) : null}
       {entrega.customer_note ? (
-        <p className="rounded-xl bg-amber-100 px-3 py-2 font-semibold text-amber-900">
+        <p className="rounded-xl bg-amber-100 px-3 py-2 font-semibold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
           {entrega.customer_note}
         </p>
       ) : null}
 
-      <div className="rounded-xl bg-black/[0.04] p-3">
+      <div className="rounded-xl bg-foreground/[0.04] p-3">
         <p className="text-sm text-muted">Receber na entrega</p>
         <p className="text-2xl font-black">{moeda(Number(entrega.total))}</p>
         <p className="font-bold">{PAGAMENTO_CURTO[entrega.payment_method]}</p>

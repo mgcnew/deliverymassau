@@ -51,13 +51,13 @@ export default async function EquipePage() {
               <li key={p.id}>
                 <Link
                   href={`/painel/equipe/${p.id}`}
-                  className="flex items-center justify-between gap-3 py-3 hover:bg-black/[0.02]"
+                  className="flex items-center justify-between gap-3 py-3 hover:bg-foreground/[0.02]"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold">
                       {p.name}
                       {!p.is_active ? (
-                        <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-900">
+                        <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-900 dark:bg-rose-900/50 dark:text-rose-200">
                           inativo
                         </span>
                       ) : null}

@@ -1,6 +1,6 @@
 /** Placeholder cinza pulsante para loading.tsx - so aparece durante a busca de dados. */
 export function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-black/[0.06] ${className}`} />
+  return <div className={`animate-pulse rounded-xl bg-foreground/[0.06] ${className}`} />
 }
 
 export function SkeletonLista({ linhas = 6 }: { linhas?: number }) {

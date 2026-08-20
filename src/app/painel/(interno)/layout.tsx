@@ -1,6 +1,7 @@
 import { PERMISSIONS } from '@/lib/permissions'
 import { requireStaff, touchLastSeen } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { logoutAction } from '../login/actions'
 import { CompartilharLoja } from './compartilhar-loja'
 import { Nav, type NavItem } from './nav'
@@ -37,9 +38,10 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
           <p className="truncate text-sm font-bold">{staff.profile.name}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <ThemeToggle />
           <CompartilharLoja nomeMercado={config?.market_name ?? 'Mercado Massa 24h'} />
           <form action={logoutAction}>
-            <button className="h-11 rounded-lg px-3 text-sm font-semibold text-muted hover:bg-black/5">
+            <button className="h-11 rounded-lg px-3 text-sm font-semibold text-muted hover:bg-foreground/5">
               Sair
             </button>
           </form>

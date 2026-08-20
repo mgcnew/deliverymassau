@@ -145,7 +145,7 @@ export function CampoCodigoBarras({
       ) : null}
 
       {duplicado ? (
-        <p className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900">
+        <p className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
           Ja existe um produto com este codigo: {duplicado.name}
         </p>
       ) : null}

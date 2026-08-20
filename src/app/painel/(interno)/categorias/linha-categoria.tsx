@@ -71,7 +71,7 @@ export function LinhaCategoria({
             aria-label="Subir"
             disabled={primeira || transicao}
             onClick={() => rodar(() => moverCategoria(id, 'cima'))}
-            className="flex size-10 items-center justify-center rounded-lg hover:bg-black/5 disabled:opacity-30"
+            className="flex size-10 items-center justify-center rounded-lg hover:bg-foreground/5 disabled:opacity-30"
           >
             <ChevronUp size={18} />
           </button>
@@ -80,7 +80,7 @@ export function LinhaCategoria({
             aria-label="Descer"
             disabled={ultima || transicao}
             onClick={() => rodar(() => moverCategoria(id, 'baixo'))}
-            className="flex size-10 items-center justify-center rounded-lg hover:bg-black/5 disabled:opacity-30"
+            className="flex size-10 items-center justify-center rounded-lg hover:bg-foreground/5 disabled:opacity-30"
           >
             <ChevronDown size={18} />
           </button>

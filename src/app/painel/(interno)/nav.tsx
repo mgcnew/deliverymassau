@@ -41,7 +41,7 @@ export function Nav({ items }: { items: NavItem[] }) {
               key={item.href}
               href={item.href}
               className={`flex items-center gap-3 rounded-xl px-3 py-3 font-semibold ${
-                isActive(item.href) ? 'bg-brand text-brand-foreground' : 'hover:bg-black/5'
+                isActive(item.href) ? 'bg-brand text-brand-foreground' : 'hover:bg-foreground/5'
               }`}
             >
               <Icon size={20} aria-hidden />

@@ -13,7 +13,7 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-line bg-surface">
       <Link href={`/p/${produto.slug}`} className={indisponivel ? 'opacity-60' : ''}>
-        <div className="relative aspect-square bg-black/[0.04]">
+        <div className="relative aspect-square bg-foreground/[0.04]">
           {imagem ? (
             <Image
               src={imagem}

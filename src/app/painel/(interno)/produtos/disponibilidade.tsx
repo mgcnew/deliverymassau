@@ -22,7 +22,7 @@ export function BotaoDisponibilidade({
     return (
       <span
         className={`rounded-full px-3 py-1 text-sm font-bold ${
-          disponivel ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'
+          disponivel ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200' : 'bg-rose-100 text-rose-900 dark:bg-rose-900/50 dark:text-rose-200'
         }`}
       >
         {disponivel ? 'Disponivel' : 'Acabou'}

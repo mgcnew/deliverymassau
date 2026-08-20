@@ -109,7 +109,7 @@ export function PermissoesForm({
                   <label
                     key={p.code}
                     className={`flex items-start gap-3 rounded-lg px-2 py-2 ${
-                      bloqueada ? 'opacity-50' : 'hover:bg-black/[0.03]'
+                      bloqueada ? 'opacity-50' : 'hover:bg-foreground/[0.03]'
                     }`}
                   >
                     <input
@@ -123,7 +123,7 @@ export function PermissoesForm({
                       <span className="block font-semibold">
                         {p.label}
                         {diferente ? (
-                          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+                          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
                             ajustado
                           </span>
                         ) : null}

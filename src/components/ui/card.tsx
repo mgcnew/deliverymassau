@@ -34,9 +34,10 @@ export function Alert({
   children: ReactNode
 }) {
   const tones = {
-    info: 'bg-blue-50 text-blue-900 border-blue-200',
-    error: 'bg-rose-50 text-rose-900 border-rose-200',
-    success: 'bg-emerald-50 text-emerald-900 border-emerald-200',
+    info: 'bg-[var(--tone-info-bg)] text-[var(--tone-info-fg)] border-[var(--tone-info-border)]',
+    error: 'bg-[var(--tone-error-bg)] text-[var(--tone-error-fg)] border-[var(--tone-error-border)]',
+    success:
+      'bg-[var(--tone-success-bg)] text-[var(--tone-success-fg)] border-[var(--tone-success-border)]',
   }
   return (
     <p className={`rounded-xl border px-4 py-3 text-sm font-medium ${tones[tone]}`}>{children}</p>

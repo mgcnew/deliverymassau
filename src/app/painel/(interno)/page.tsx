@@ -46,8 +46,8 @@ export default async function PainelHome() {
         <span
           className={`rounded-full px-3 py-1 text-sm font-bold ${
             settings?.delivery_enabled
-              ? 'bg-emerald-100 text-emerald-900'
-              : 'bg-rose-100 text-rose-900'
+              ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200'
+              : 'bg-rose-100 text-rose-900 dark:bg-rose-900/50 dark:text-rose-200'
           }`}
         >
           {settings?.delivery_enabled ? 'ON' : 'OFF'}

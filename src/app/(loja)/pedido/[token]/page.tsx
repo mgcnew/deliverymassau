@@ -101,7 +101,7 @@ export default async function PedidoPage({ params, searchParams }: PageProps<'/p
                 <li key={status} className="flex items-center gap-3">
                   <span
                     className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                      feito ? 'bg-brand text-brand-foreground' : 'bg-black/10 text-muted'
+                      feito ? 'bg-brand text-brand-foreground' : 'bg-foreground/10 text-muted'
                     }`}
                   >
                     {i + 1}

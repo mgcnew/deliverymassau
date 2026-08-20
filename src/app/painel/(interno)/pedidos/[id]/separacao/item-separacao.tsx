@@ -62,9 +62,9 @@ export function ItemSeparacao({
     <li
       className={`space-y-3 rounded-2xl border p-4 ${
         emFalta
-          ? 'border-rose-200 bg-rose-50'
+          ? 'border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/40'
           : separado
-            ? 'border-emerald-200 bg-emerald-50'
+            ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/40'
             : 'border-line bg-surface'
       }`}
     >
@@ -81,7 +81,7 @@ export function ItemSeparacao({
                 )}`}
           </p>
           {item.note ? (
-            <p className="mt-1 rounded-lg bg-amber-100 px-2 py-1 text-sm font-semibold text-amber-900">
+            <p className="mt-1 rounded-lg bg-amber-100 px-2 py-1 text-sm font-semibold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
               {item.note}
             </p>
           ) : null}
@@ -110,7 +110,7 @@ export function ItemSeparacao({
           </div>
 
           {confirmarDivergencia ? (
-            <p className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-bold text-amber-900">
+            <p className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
               {digitado} g e {Math.round(divergencia * 100)}% diferente do que o cliente pediu (
               {pedidoGramas} g). Confira a balanca e toque de novo para confirmar.
             </p>

@@ -33,7 +33,7 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
       </LinkVoltar>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-2xl border border-line bg-black/[0.04]">
+        <div className="relative aspect-square overflow-hidden rounded-2xl border border-line bg-foreground/[0.04]">
           {imagem ? (
             <Image
               src={imagem}
@@ -61,11 +61,11 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
           </p>
 
           {produto.is_available ? (
-            <p className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-900">
+            <p className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200">
               Disponivel agora
             </p>
           ) : (
-            <p className="inline-block rounded-full bg-rose-100 px-3 py-1 text-sm font-bold text-rose-900">
+            <p className="inline-block rounded-full bg-rose-100 px-3 py-1 text-sm font-bold text-rose-900 dark:bg-rose-900/50 dark:text-rose-200">
               Acabou por enquanto
             </p>
           )}
@@ -80,7 +80,7 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
       </div>
 
       {produto.sold_by_weight ? (
-        <Card className="space-y-1 bg-amber-50">
+        <Card className="space-y-1 bg-amber-50 dark:bg-amber-900/20">
           <p className="font-bold">Como funciona a venda por peso</p>
           <p className="text-sm">
             Voce escolhe o peso aproximado e nos usamos ele para estimar o valor. Na separacao a

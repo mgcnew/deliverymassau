@@ -12,7 +12,7 @@ export function LinkVoltar({
 }: ComponentProps<typeof Link> & { children: ReactNode }) {
   return (
     <Link
-      className={`-ml-1 inline-flex h-10 items-center gap-1 rounded-lg px-1 text-sm font-semibold text-muted hover:bg-black/5 ${className}`}
+      className={`-ml-1 inline-flex h-10 items-center gap-1 rounded-lg px-1 text-sm font-semibold text-muted hover:bg-foreground/5 ${className}`}
       {...props}
     >
       <span aria-hidden>&lsaquo;</span>

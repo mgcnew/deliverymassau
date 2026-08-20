@@ -37,7 +37,7 @@ export function CompartilharLoja({ nomeMercado }: { nomeMercado: string }) {
     <button
       type="button"
       onClick={compartilhar}
-      className="flex h-11 shrink-0 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm font-semibold text-foreground hover:bg-black/5"
+      className="flex h-11 shrink-0 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm font-semibold text-foreground hover:bg-foreground/5"
     >
       {copiado ? <Check size={18} className="text-emerald-600" aria-hidden /> : <Share2 size={18} aria-hidden />}
       <span className="hidden sm:inline">{copiado ? 'Link copiado!' : 'Compartilhar loja'}</span>

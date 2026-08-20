@@ -152,14 +152,14 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
                       className="size-14 shrink-0 rounded-xl object-cover"
                     />
                   ) : (
-                    <span className="size-14 shrink-0 rounded-xl bg-black/5" />
+                    <span className="size-14 shrink-0 rounded-xl bg-foreground/5" />
                   )}
 
                   <Link href={`/painel/produtos/${p.id}`} className="min-w-0 flex-1">
                     <p className="truncate font-semibold">
                       {p.name}
                       {!p.is_active ? (
-                        <span className="ml-2 rounded-full bg-black/10 px-2 py-0.5 text-xs font-bold">
+                        <span className="ml-2 rounded-full bg-foreground/10 px-2 py-0.5 text-xs font-bold">
                           inativo
                         </span>
                       ) : null}
