@@ -94,6 +94,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0016` | Indicadores do dia no fuso do mercado e upload da logo |
 | `0017` | Índices de chave estrangeira e policies de escrita separadas da leitura |
 | `0018` | Fecha `dashboard_hoje()` para o visitante anônimo |
+| `0019` | `import_products()` — importação de produtos por CSV (mesma função serve prévia e confirmação) |
 
 ## Estado das etapas
 

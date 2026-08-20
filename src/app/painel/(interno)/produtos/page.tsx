@@ -59,7 +59,12 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
             Categorias
           </ButtonLink>
           {staff.permissions.has(PERMISSIONS.produtosCriar) ? (
-            <ButtonLink href="/painel/produtos/novo">Novo</ButtonLink>
+            <>
+              <ButtonLink href="/painel/produtos/importar" variant="secondary">
+                Importar
+              </ButtonLink>
+              <ButtonLink href="/painel/produtos/novo">Novo</ButtonLink>
+            </>
           ) : null}
         </div>
       </div>
