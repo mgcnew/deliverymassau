@@ -81,6 +81,25 @@ export const getProdutos = cache(
   },
 )
 
+/** original_price preenchido ja garante > price (check constraint do banco). */
+export const getProdutosEmPromocao = cache(
+  async (opcoes?: { excluirId?: string; limite?: number }): Promise<ProdutoVitrine[]> => {
+    const supabase = await createClient()
+    let query = supabase
+      .from('products')
+      .select(CAMPOS_PRODUTO)
+      .not('original_price', 'is', null)
+      .eq('is_available', true)
+      .order('sort_order')
+
+    if (opcoes?.excluirId) query = query.neq('id', opcoes.excluirId)
+    if (opcoes?.limite) query = query.limit(opcoes.limite)
+
+    const { data } = await query
+    return (data ?? []) as ProdutoVitrine[]
+  },
+)
+
 export const getProdutoPorSlug = cache(async (slug: string): Promise<ProdutoVitrine | null> => {
   const supabase = await createClient()
   const { data } = await supabase.from('products').select(CAMPOS_PRODUTO).eq('slug', slug).maybeSingle()
