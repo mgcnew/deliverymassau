@@ -1,4 +1,10 @@
-import { CHAVE_CARRINHO, CHAVE_PEDIDOS, type ItemCarrinho } from './tipos'
+import {
+  CHAVE_CARRINHO,
+  CHAVE_DADOS_CHECKOUT,
+  CHAVE_PEDIDOS,
+  type DadosCheckoutSalvos,
+  type ItemCarrinho,
+} from './tipos'
 
 /**
  * O carrinho vive no localStorage do aparelho (sem conta, sem login).
@@ -119,4 +125,59 @@ export function guardarPedido(token: string, numero: number) {
     // sem storage o cliente ainda tem o link na barra de enderecos
   }
   ouvintesPedidos.forEach((f) => f())
+}
+
+// ---------------------------------------------------------------------------
+// Dados do checkout (nome, telefone, endereco) guardados apos um pedido dar
+// certo, para o proximo checkout neste aparelho ja vir preenchido.
+// ---------------------------------------------------------------------------
+let dadosCheckout: DadosCheckoutSalvos | null | undefined
+const ouvintesDadosCheckout = new Set<() => void>()
+
+function lerDadosCheckoutDoAparelho(): DadosCheckoutSalvos | null {
+  try {
+    const bruto = localStorage.getItem(CHAVE_DADOS_CHECKOUT)
+    return bruto ? (JSON.parse(bruto) as DadosCheckoutSalvos) : null
+  } catch {
+    return null
+  }
+}
+
+export function assinarDadosCheckout(avisar: () => void) {
+  ouvintesDadosCheckout.add(avisar)
+
+  const aoMudarStorage = (evento: StorageEvent) => {
+    if (evento.key === CHAVE_DADOS_CHECKOUT) {
+      dadosCheckout = lerDadosCheckoutDoAparelho()
+      ouvintesDadosCheckout.forEach((f) => f())
+    }
+  }
+  window.addEventListener('storage', aoMudarStorage)
+
+  return () => {
+    ouvintesDadosCheckout.delete(avisar)
+    window.removeEventListener('storage', aoMudarStorage)
+  }
+}
+
+export function lerDadosCheckout(): DadosCheckoutSalvos | null {
+  if (dadosCheckout === undefined && typeof window !== 'undefined') {
+    dadosCheckout = lerDadosCheckoutDoAparelho()
+  }
+  return dadosCheckout ?? null
+}
+
+/** No servidor nao ha aparelho: sempre null, o preenchimento acontece so no cliente. */
+export function lerDadosCheckoutNoServidor(): DadosCheckoutSalvos | null {
+  return null
+}
+
+export function salvarDadosCheckout(dados: DadosCheckoutSalvos) {
+  dadosCheckout = dados
+  try {
+    localStorage.setItem(CHAVE_DADOS_CHECKOUT, JSON.stringify(dados))
+  } catch {
+    // sem storage nao da pra lembrar no proximo pedido, sem problema
+  }
+  ouvintesDadosCheckout.forEach((f) => f())
 }

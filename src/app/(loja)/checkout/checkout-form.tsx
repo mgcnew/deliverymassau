@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore, useTransition } from 'react'
 import { Loader2 } from 'lucide-react'
 
 import { useCarrinho } from '@/components/carrinho/use-carrinho'
@@ -9,7 +9,13 @@ import { Button } from '@/components/ui/button'
 import { Alert, Card } from '@/components/ui/card'
 import { Field, Input, Select, Textarea } from '@/components/ui/field'
 import { moeda, normalizarComparacao, quantidade as formatarQuantidade } from '@/lib/format'
-import { guardarPedido } from '@/lib/carrinho/store'
+import {
+  assinarDadosCheckout,
+  guardarPedido,
+  lerDadosCheckout,
+  lerDadosCheckoutNoServidor,
+  salvarDadosCheckout,
+} from '@/lib/carrinho/store'
 import { subtotalItem } from '@/lib/carrinho/tipos'
 import { buscarEnderecoPorCep } from '@/lib/loja/cep'
 import type { PaymentMethod } from '@/lib/types'
@@ -53,6 +59,42 @@ export function CheckoutForm({
   const [trocoPara, setTrocoPara] = useState('')
   const [observacao, setObservacao] = useState('')
 
+  // Dados do ultimo pedido feito neste aparelho (nome, telefone, endereco).
+  // No servidor sempre null -- o preenchimento acontece so depois de hidratar.
+  const dadosSalvos = useSyncExternalStore(
+    assinarDadosCheckout,
+    lerDadosCheckout,
+    lerDadosCheckoutNoServidor,
+  )
+  const [pessoalPreenchido, setPessoalPreenchido] = useState(false)
+  const [enderecoPreenchido, setEnderecoPreenchido] = useState(false)
+
+  // Ajuste de estado durante a renderizacao (nao em efeito): assim que os
+  // dados salvos aparecerem (so no cliente, apos hidratar), preenche os
+  // campos de uma vez, sem flash visivel. So roda uma vez por secao -- se o
+  // cliente limpar pra digitar outro, a flag ja true nao deixa preencher de novo.
+  if (dadosSalvos && !pessoalPreenchido) {
+    setPessoalPreenchido(true)
+    setNome(dadosSalvos.nome)
+    setTelefone(dadosSalvos.telefone)
+  }
+  if (dadosSalvos?.endereco && !enderecoPreenchido) {
+    const bairroValido = bairros.some((b) => b.bairro === dadosSalvos.endereco.bairro)
+    setEnderecoPreenchido(true)
+    setCep(dadosSalvos.endereco.cep)
+    setRua(dadosSalvos.endereco.rua)
+    setNumero(dadosSalvos.endereco.numero)
+    setBairro(bairroValido ? dadosSalvos.endereco.bairro : '')
+    setComplemento(dadosSalvos.endereco.complemento)
+    setReferencia(dadosSalvos.endereco.referencia)
+    // O bairro salvo ja foi conferido contra a lista atual (acima) -- nao
+    // precisa consultar o CEP de novo so porque o campo foi preenchido.
+    const digitosSalvos = dadosSalvos.endereco.cep.replace(/\D/g, '')
+    if (digitosSalvos.length === 8) {
+      setResultadoCep({ digitos: digitosSalvos, status: bairroValido ? 'encontrado' : 'sem_cobertura' })
+    }
+  }
+
   const taxa = useMemo(
     () => bairros.find((b) => b.bairro === bairro)?.taxa ?? 0,
     [bairro, bairros],
@@ -75,6 +117,9 @@ export function CheckoutForm({
   // trava o formulario -- o cliente sempre pode escolher/digitar na mao.
   useEffect(() => {
     if (digitosCep.length !== 8) return
+    // Ja tem resultado pra esses digitos (busca anterior ou preenchimento
+    // automatico do ultimo pedido) -- nao consulta de novo.
+    if (resultadoCep?.digitos === digitosCep) return
 
     let cancelado = false
     const temporizador = setTimeout(async () => {
@@ -170,6 +215,18 @@ export function CheckoutForm({
 
       if (resultado.pedido) {
         guardarPedido(resultado.pedido.token, resultado.pedido.numero)
+        salvarDadosCheckout({
+          nome: nome.trim(),
+          telefone,
+          endereco: {
+            cep,
+            rua: rua.trim(),
+            numero: numero.trim(),
+            bairro,
+            complemento: complemento.trim(),
+            referencia: referencia.trim(),
+          },
+        })
         limpar()
         router.push(`/pedido/${resultado.pedido.token}?novo=1`)
         return
@@ -196,6 +253,21 @@ export function CheckoutForm({
       <Card className="space-y-4">
         {etapa === 0 ? (
           <>
+            {pessoalPreenchido ? (
+              <div className="flex items-center justify-between gap-2 rounded-lg bg-foreground/5 px-3 py-2 text-xs text-muted">
+                <span>Preenchido com os dados do seu ultimo pedido.</span>
+                <button
+                  type="button"
+                  className="shrink-0 font-semibold text-brand underline"
+                  onClick={() => {
+                    setNome('')
+                    setTelefone('')
+                  }}
+                >
+                  Nao sou eu
+                </button>
+              </div>
+            ) : null}
             <Field label="Seu nome">
               <Input value={nome} onChange={(e) => setNome(e.target.value)} autoFocus />
             </Field>
@@ -212,6 +284,25 @@ export function CheckoutForm({
 
         {etapa === 1 ? (
           <>
+            {enderecoPreenchido ? (
+              <div className="flex items-center justify-between gap-2 rounded-lg bg-foreground/5 px-3 py-2 text-xs text-muted">
+                <span>Endereco do seu ultimo pedido.</span>
+                <button
+                  type="button"
+                  className="shrink-0 font-semibold text-brand underline"
+                  onClick={() => {
+                    setCep('')
+                    setRua('')
+                    setNumero('')
+                    setBairro('')
+                    setComplemento('')
+                    setReferencia('')
+                  }}
+                >
+                  Usar outro endereco
+                </button>
+              </div>
+            ) : null}
             <Field
               label="CEP (opcional)"
               hint="Preenchendo o CEP a gente tenta achar o bairro e a rua sozinho."

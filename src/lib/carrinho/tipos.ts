@@ -19,6 +19,22 @@ export type ItemCarrinho = {
 
 export const CHAVE_CARRINHO = 'massa24h:carrinho:v1'
 export const CHAVE_PEDIDOS = 'massa24h:pedidos:v1'
+export const CHAVE_DADOS_CHECKOUT = 'massa24h:checkout-dados:v1'
+
+/** Nome, telefone e endereco do ultimo pedido feito neste aparelho, para
+ *  nao pedir tudo de novo no proximo. Guardado so apos um pedido dar certo. */
+export type DadosCheckoutSalvos = {
+  nome: string
+  telefone: string
+  endereco: {
+    cep: string
+    rua: string
+    numero: string
+    bairro: string
+    complemento: string
+    referencia: string
+  }
+}
 
 export function subtotalItem(item: ItemCarrinho): number {
   return Math.round(item.quantity * item.price * 100) / 100
