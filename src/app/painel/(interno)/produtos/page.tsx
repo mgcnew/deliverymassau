@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { PERMISSIONS } from '@/lib/permissions'
@@ -12,6 +13,8 @@ import { BotaoDisponibilidade } from './disponibilidade'
 
 export const metadata = { title: 'Produtos | Mercado Massa 24h' }
 
+const POR_PAGINA = 30
+
 const FILTROS = [
   { valor: 'disponiveis', label: 'Disponiveis' },
   { valor: 'indisponiveis', label: 'Indisponiveis' },
@@ -25,28 +28,43 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
   const filtro = typeof params.f === 'string' ? params.f : 'disponiveis'
   const busca = typeof params.q === 'string' ? params.q.trim() : ''
   const categoria = typeof params.c === 'string' ? params.c : ''
+  const pagina = Math.max(1, Number(params.p) || 1)
 
   const supabase = await createClient()
 
+  // Sem limite aqui, um CSV de algumas centenas de linhas (Fase A) faria a
+  // pagina inteira baixar e renderizar tudo de uma vez. Pagina de 30 em 30,
+  // com contagem total pra mostrar "pagina X de Y" e habilitar/desabilitar
+  // os botoes de navegar.
   let query = supabase
     .from('products')
-    .select('id, name, price, unit_type, sold_by_weight, is_active, is_available, image_path, category_id')
+    .select('id, name, price, unit_type, sold_by_weight, is_active, is_available, image_path, category_id', {
+      count: 'exact',
+    })
     .order('sort_order')
     .order('name')
+    .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1)
 
   if (filtro === 'disponiveis') query = query.eq('is_available', true).eq('is_active', true)
   if (filtro === 'indisponiveis') query = query.eq('is_available', false)
   if (busca) query = query.ilike('name', `%${busca}%`)
   if (categoria) query = query.eq('category_id', categoria)
 
-  const [{ data: produtos }, { data: categorias }] = await Promise.all([
+  const [{ data: produtos, count: total }, { data: categorias }] = await Promise.all([
     query,
     supabase.from('categories').select('id, name').order('sort_order'),
   ])
 
+  const totalPaginas = Math.max(1, Math.ceil((total ?? 0) / POR_PAGINA))
+
   const nomeCategoria = new Map((categorias ?? []).map((c) => [c.id, c.name]))
   const link = (patch: Record<string, string>) => {
-    const sp = new URLSearchParams({ f: filtro, ...(busca ? { q: busca } : {}), ...(categoria ? { c: categoria } : {}), ...patch })
+    const sp = new URLSearchParams({
+      f: filtro,
+      ...(busca ? { q: busca } : {}),
+      ...(categoria ? { c: categoria } : {}),
+      ...patch,
+    })
     return `/painel/produtos?${sp.toString()}`
   }
 
@@ -87,7 +105,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
         {FILTROS.map((f) => (
           <Link
             key={f.valor}
-            href={link({ f: f.valor })}
+            href={link({ f: f.valor, p: '1' })}
             className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-bold ${
               filtro === f.valor ? 'bg-brand text-brand-foreground' : 'bg-surface border border-line'
             }`}
@@ -96,7 +114,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
           </Link>
         ))}
         <Link
-          href={link({ c: '' })}
+          href={link({ c: '', p: '1' })}
           className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-bold ${
             categoria ? 'bg-surface border border-line' : 'bg-foreground/10'
           }`}
@@ -106,7 +124,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
         {(categorias ?? []).map((c) => (
           <Link
             key={c.id}
-            href={link({ c: c.id })}
+            href={link({ c: c.id, p: '1' })}
             className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-bold ${
               categoria === c.id ? 'bg-brand text-brand-foreground' : 'bg-surface border border-line'
             }`}
@@ -126,8 +144,13 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
               return (
                 <li key={p.id} className="flex items-center gap-3 py-3">
                   {img ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={img} alt="" className="size-14 shrink-0 rounded-xl object-cover" />
+                    <Image
+                      src={img}
+                      alt=""
+                      width={56}
+                      height={56}
+                      className="size-14 shrink-0 rounded-xl object-cover"
+                    />
                   ) : (
                     <span className="size-14 shrink-0 rounded-xl bg-black/5" />
                   )}
@@ -159,6 +182,32 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
           </ul>
         )}
       </Card>
+
+      {totalPaginas > 1 ? (
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href={link({ p: String(pagina - 1) })}
+            aria-disabled={pagina <= 1}
+            className={`flex h-11 items-center rounded-xl border border-line bg-surface px-4 font-semibold ${
+              pagina <= 1 ? 'pointer-events-none opacity-40' : ''
+            }`}
+          >
+            Anterior
+          </Link>
+          <p className="text-sm text-muted">
+            Pagina {pagina} de {totalPaginas} - {total} {total === 1 ? 'produto' : 'produtos'}
+          </p>
+          <Link
+            href={link({ p: String(pagina + 1) })}
+            aria-disabled={pagina >= totalPaginas}
+            className={`flex h-11 items-center rounded-xl border border-line bg-surface px-4 font-semibold ${
+              pagina >= totalPaginas ? 'pointer-events-none opacity-40' : ''
+            }`}
+          >
+            Proxima
+          </Link>
+        </div>
+      ) : null}
 
       <p className="text-sm text-muted">
         <strong>Acabou</strong> tira o produto do carrinho na hora, sem apagar o cadastro.

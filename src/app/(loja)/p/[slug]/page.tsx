@@ -1,5 +1,7 @@
-import { LinkVoltar } from '@/components/ui/link-voltar'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
+
+import { LinkVoltar } from '@/components/ui/link-voltar'
 
 import { BotaoAdicionar } from '@/components/carrinho/botao-adicionar'
 import { Card } from '@/components/ui/card'
@@ -31,10 +33,16 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
       </LinkVoltar>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="aspect-square overflow-hidden rounded-2xl border border-line bg-black/[0.04]">
+        <div className="relative aspect-square overflow-hidden rounded-2xl border border-line bg-black/[0.04]">
           {imagem ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={imagem} alt="" className="size-full object-cover" />
+            <Image
+              src={imagem}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 100vw, 50vw"
+              priority
+              className="object-cover"
+            />
           ) : (
             <span className="flex size-full items-center justify-center text-5xl">🛒</span>
           )}

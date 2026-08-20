@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { BarraCarrinho } from '@/components/carrinho/barra-carrinho'
@@ -16,8 +17,14 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
       <header className="sticky top-0 z-20 border-b border-line bg-brand text-brand-foreground">
         <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3">
           {logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt="" className="size-10 rounded-lg bg-white/20 object-cover" />
+            <Image
+              src={logo}
+              alt=""
+              width={40}
+              height={40}
+              priority
+              className="size-10 rounded-lg bg-white/20 object-cover"
+            />
           ) : null}
           <Link href="/loja" className="min-w-0">
             <p className="truncate text-lg font-black leading-tight">

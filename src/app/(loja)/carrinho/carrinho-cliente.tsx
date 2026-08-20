@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { Minus, Plus, Trash2 } from 'lucide-react'
 
@@ -48,8 +49,13 @@ export function CarrinhoCliente({
             <div key={item.productId} className="space-y-2 p-4">
               <div className="flex gap-3">
                 {imagem ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imagem} alt="" className="size-16 shrink-0 rounded-xl object-cover" />
+                  <Image
+                    src={imagem}
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="size-16 shrink-0 rounded-xl object-cover"
+                  />
                 ) : (
                   <span className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-black/5 text-2xl">
                     🛒

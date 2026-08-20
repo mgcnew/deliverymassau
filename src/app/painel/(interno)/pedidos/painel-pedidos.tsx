@@ -42,6 +42,16 @@ export function PainelPedidos({
     let canal: RealtimeChannel | null = null
     let vivo = true
 
+    // Uma separacao pesa varios itens em sequencia rapida: cada pesagem
+    // dispara UPDATE em order_items + orders, ou seja, varios eventos em
+    // menos de 1s. Sem agrupar, cada um deles disparava um refresh
+    // completo da pagina - agrupa numa janela curta e refaz so uma vez.
+    let temporizador: ReturnType<typeof setTimeout> | null = null
+    const atualizarAgrupado = () => {
+      if (temporizador) clearTimeout(temporizador)
+      temporizador = setTimeout(() => router.refresh(), 400)
+    }
+
     ;(async () => {
       const {
         data: { session },
@@ -51,12 +61,8 @@ export function PainelPedidos({
 
       canal = supabase
         .channel('operacao-pedidos')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () =>
-          router.refresh(),
-        )
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () =>
-          router.refresh(),
-        )
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, atualizarAgrupado)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, atualizarAgrupado)
         .subscribe()
     })()
 
@@ -64,6 +70,7 @@ export function PainelPedidos({
 
     return () => {
       vivo = false
+      if (temporizador) clearTimeout(temporizador)
       clearInterval(intervalo)
       if (canal) supabase.removeChannel(canal)
     }

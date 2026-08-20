@@ -27,7 +27,7 @@ async function exigir(code: string): Promise<ConfigState> {
 function depois(): void {
   revalidatePath('/painel/configuracoes')
   revalidatePath('/painel')
-  revalidatePath('/')
+  revalidatePath('/loja')
 }
 
 export async function salvarMercado(_prev: ConfigState, formData: FormData): Promise<ConfigState> {

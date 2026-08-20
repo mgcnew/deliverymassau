@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { BotaoAdicionar } from '@/components/carrinho/botao-adicionar'
@@ -14,8 +15,13 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
       <Link href={`/p/${produto.slug}`} className={indisponivel ? 'opacity-60' : ''}>
         <div className="relative aspect-square bg-black/[0.04]">
           {imagem ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={imagem} alt="" className="size-full object-cover" />
+            <Image
+              src={imagem}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover"
+            />
           ) : (
             <span className="flex size-full items-center justify-center text-3xl">🛒</span>
           )}

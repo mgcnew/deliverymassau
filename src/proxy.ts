@@ -52,6 +52,11 @@ export async function proxy(request: NextRequest) {
   return response
 }
 
+// So a area interna precisa de sessao/cookie. A loja publica (a maior parte
+// do trafego) nao autentica ninguem - fazer o proxy rodar auth.getUser()
+// (uma ida de rede ao Supabase Auth) em toda pagina do site custava 100-300ms
+// por navegacao mesmo para quem nunca faz login. Restrito a /painel = zero
+// custo de autenticacao para clientes.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/painel/:path*'],
 }

@@ -46,7 +46,7 @@ export async function alternarDisponibilidade(id: string, disponivel: boolean): 
   if (!data?.length) return { error: BLOQUEADO }
 
   revalidatePath('/painel/produtos')
-  revalidatePath('/')
+  revalidatePath('/loja')
   return {}
 }
 
@@ -64,7 +64,7 @@ export async function alternarAtivo(id: string, ativo: boolean): Promise<FormSta
   if (!data?.length) return { error: BLOQUEADO }
 
   revalidatePath('/painel/produtos')
-  revalidatePath('/')
+  revalidatePath('/loja')
   return {}
 }
 
@@ -165,7 +165,7 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
     if (error) return { error: traduzirErroBarcode(error) }
 
     revalidatePath('/painel/produtos')
-    revalidatePath('/')
+    revalidatePath('/loja')
     redirect(`/painel/produtos/${data.id}`)
   }
 
@@ -190,6 +190,6 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
 
   revalidatePath('/painel/produtos')
   revalidatePath(`/painel/produtos/${id}`)
-  revalidatePath('/')
+  revalidatePath('/loja')
   return { ok: 'Produto salvo.' }
 }

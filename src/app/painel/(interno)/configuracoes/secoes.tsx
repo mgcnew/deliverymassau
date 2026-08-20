@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useActionState, useState, useTransition } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -66,8 +67,13 @@ export function SecaoMercado({
           />
         </Field>
         {logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt="" className="size-20 rounded-xl object-cover" />
+          <Image
+            src={logoUrl}
+            alt=""
+            width={80}
+            height={80}
+            className="size-20 rounded-xl object-cover"
+          />
         ) : null}
 
         <Resultado estado={estado} />

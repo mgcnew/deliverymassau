@@ -31,6 +31,14 @@ export function EntregasCliente({
     let canal: RealtimeChannel | null = null
     let vivo = true
 
+    // Varios entregadores podem assumir/liberar corridas quase juntos -
+    // agrupa numa janela curta em vez de um refresh por evento.
+    let temporizador: ReturnType<typeof setTimeout> | null = null
+    const atualizarAgrupado = () => {
+      if (temporizador) clearTimeout(temporizador)
+      temporizador = setTimeout(() => router.refresh(), 400)
+    }
+
     ;(async () => {
       const {
         data: { session },
@@ -40,9 +48,7 @@ export function EntregasCliente({
 
       canal = supabase
         .channel('fila-entregas')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () =>
-          router.refresh(),
-        )
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, atualizarAgrupado)
         .subscribe()
     })()
 
@@ -50,6 +56,7 @@ export function EntregasCliente({
 
     return () => {
       vivo = false
+      if (temporizador) clearTimeout(temporizador)
       clearInterval(intervalo)
       if (canal) supabase.removeChannel(canal)
     }

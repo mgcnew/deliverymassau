@@ -23,15 +23,15 @@ export const getStaff = cache(async (): Promise<Staff | null> => {
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle()
+  // Perfil e permissoes nao dependem um do outro (my_permissions usa
+  // auth.uid() direto via RLS) - rodar em paralelo poupa uma ida de rede
+  // em toda pagina autenticada do painel.
+  const [{ data: profile }, { data: codes }] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+    supabase.rpc('my_permissions'),
+  ])
 
   if (!profile || !profile.is_active) return null
-
-  const { data: codes } = await supabase.rpc('my_permissions')
 
   return {
     user,
