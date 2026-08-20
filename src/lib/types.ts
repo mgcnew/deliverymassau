@@ -68,6 +68,7 @@ export type Product = {
   is_active: boolean
   is_available: boolean
   sort_order: number
+  barcode: string | null
 }
 
 export type DeliveryZone = {

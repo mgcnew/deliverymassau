@@ -34,6 +34,7 @@ export default async function NovoProdutoPage() {
             min_weight_g: 100,
             sort_order: 0,
             imagemUrl: null,
+            barcode: '',
           }}
         />
       </Card>

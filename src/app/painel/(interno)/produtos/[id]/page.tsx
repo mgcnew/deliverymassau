@@ -61,6 +61,7 @@ export default async function ProdutoPage({ params }: PageProps<'/painel/produto
             min_weight_g: Math.round(Number(produto.min_weight ?? 0.1) * 1000),
             sort_order: produto.sort_order,
             imagemUrl: urlImagemProduto(produto.image_path),
+            barcode: produto.barcode ?? '',
           }}
         />
       </Card>

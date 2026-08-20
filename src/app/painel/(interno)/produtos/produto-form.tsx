@@ -5,6 +5,7 @@ import { useActionState, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/card'
 import { Field, Input, Select, Textarea } from '@/components/ui/field'
+import { CampoCodigoBarras } from './campo-codigo-barras'
 import { CampoFoto } from './campo-foto'
 import type { UnitType } from '@/lib/types'
 import { salvarProduto, type FormState } from './actions'
@@ -21,6 +22,7 @@ export type ProdutoFormValores = {
   min_weight_g: number
   sort_order: number
   imagemUrl: string | null
+  barcode: string
 }
 
 export function ProdutoForm({
@@ -145,14 +147,21 @@ export function ProdutoForm({
 
       <CampoFoto imagemAtualUrl={valores.imagemUrl} disabled={somenteLeitura} />
 
-      <Field label="Ordem de exibicao">
-        <Input
-          name="sort_order"
-          type="number"
-          defaultValue={valores.sort_order}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <CampoCodigoBarras
+          produtoId={valores.id}
+          defaultValue={valores.barcode}
           disabled={somenteLeitura}
         />
-      </Field>
+        <Field label="Ordem de exibicao">
+          <Input
+            name="sort_order"
+            type="number"
+            defaultValue={valores.sort_order}
+            disabled={somenteLeitura}
+          />
+        </Field>
+      </div>
 
       {state.error ? <Alert tone="error">{state.error}</Alert> : null}
       {state.ok ? <Alert tone="success">{state.ok}</Alert> : null}

@@ -4,8 +4,8 @@
 > o usuário em 20/08/2026 estão marcadas como **✅ decidido**; o resto são
 > escolhas recomendadas que sigo por padrão, mas podem ser ajustadas.
 >
-> **Fases B e A entregues em 20/08/2026** (câmera do celular e importação
-> CSV). Fase C (código de barras) ainda não implementada.
+> **Fases A, B e C entregues em 20/08/2026** (importação CSV, câmera do
+> celular e código de barras). Plano concluído.
 
 ---
 
@@ -17,7 +17,7 @@ Três frentes independentes, priorizadas por valor imediato:
 |---|---|---|---|
 | **A** ✅ | Importar produtos de uma planilha CSV | Alto | Nada |
 | **B** ✅ | Tirar foto do produto pela câmera do celular | Trivial | Nada |
-| **C** | Código de barras (campo + leitura por câmera) | Médio | Nada, mas complementa A e B |
+| **C** ✅ | Código de barras (campo + leitura por câmera) | Médio | Nada, mas complementa A e B |
 
 Nenhuma delas toca no fluxo do pedido, no carrinho ou no checkout — é só
 cadastro. **A** é a que dá o retorno mais rápido (aproveita o catálogo que

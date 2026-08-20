@@ -95,6 +95,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0017` | Índices de chave estrangeira e policies de escrita separadas da leitura |
 | `0018` | Fecha `dashboard_hoje()` para o visitante anônimo |
 | `0019` | `import_products()` — importação de produtos por CSV (mesma função serve prévia e confirmação) |
+| `0020` | `products.barcode` (único quando preenchido) e `find_product_by_barcode()` |
 
 ## Estado das etapas
 
