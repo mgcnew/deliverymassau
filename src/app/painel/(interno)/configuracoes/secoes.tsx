@@ -1,11 +1,13 @@
 'use client'
 
 import Image from 'next/image'
-import { useActionState, useState, useTransition } from 'react'
+import { useActionState, useMemo, useState, useTransition } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Alert, Card, CardTitle } from '@/components/ui/card'
 import { Field, Input, Textarea } from '@/components/ui/field'
+import { moeda, normalizarComparacao } from '@/lib/format'
+import { distanciaEdicao } from '@/lib/similaridade'
 import {
   adicionarBairro,
   alternarPagamento,
@@ -263,13 +265,37 @@ export type ZonaComBairros = {
 export function SecaoZonas({ zonas }: { zonas: ZonaComBairros[] }) {
   const [estadoZona, acaoZona, pendenteZona] = useActionState<ConfigState, FormData>(salvarZona, {})
 
+  const zonasAtivas = zonas.filter((z) => z.is_active).length
+  const totalBairros = zonas.reduce((soma, z) => soma + z.bairros.length, 0)
+  const zonasVazias = zonas.filter((z) => z.is_active && z.bairros.length === 0).length
+
+  const todosBairros = useMemo(
+    () => zonas.flatMap((z) => z.bairros.map((b) => ({ nome: b.name, zona: z.name }))),
+    [zonas],
+  )
+
   return (
     <Card>
       <CardTitle>Regioes e taxas de entrega</CardTitle>
 
+      <div className="mb-4 flex flex-wrap gap-2 text-sm font-semibold">
+        <span className="rounded-full bg-foreground/5 px-3 py-1">
+          {zonas.length} {zonas.length === 1 ? 'regiao' : 'regioes'}
+        </span>
+        <span className="rounded-full bg-foreground/5 px-3 py-1">{zonasAtivas} ativas</span>
+        <span className="rounded-full bg-foreground/5 px-3 py-1">
+          {totalBairros} {totalBairros === 1 ? 'bairro' : 'bairros'} cadastrados
+        </span>
+        {zonasVazias > 0 ? (
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
+            {zonasVazias} {zonasVazias === 1 ? 'regiao ativa sem bairro' : 'regioes ativas sem bairro'}
+          </span>
+        ) : null}
+      </div>
+
       <div className="space-y-4">
         {zonas.map((zona) => (
-          <ZonaLinha key={zona.id} zona={zona} />
+          <ZonaLinha key={zona.id} zona={zona} todosBairros={todosBairros} />
         ))}
 
         <form action={acaoZona} className="space-y-2 rounded-xl border border-dashed border-line p-3">
@@ -293,7 +319,13 @@ export function SecaoZonas({ zonas }: { zonas: ZonaComBairros[] }) {
   )
 }
 
-function ZonaLinha({ zona }: { zona: ZonaComBairros }) {
+function ZonaLinha({
+  zona,
+  todosBairros,
+}: {
+  zona: ZonaComBairros
+  todosBairros: Array<{ nome: string; zona: string }>
+}) {
   const [estadoZona, acaoZona, pendenteZona] = useActionState<ConfigState, FormData>(salvarZona, {})
   const [estadoBairro, acaoBairro, pendenteBairro] = useActionState<ConfigState, FormData>(
     adicionarBairro,
@@ -301,6 +333,32 @@ function ZonaLinha({ zona }: { zona: ZonaComBairros }) {
   )
   const [transicao, startTransition] = useTransition()
   const [erro, setErro] = useState<string | null>(null)
+  const [filtroBairro, setFiltroBairro] = useState('')
+  const [novoBairro, setNovoBairro] = useState('')
+
+  const bairrosFiltrados = filtroBairro.trim()
+    ? zona.bairros.filter((b) =>
+        normalizarComparacao(b.name).includes(normalizarComparacao(filtroBairro)),
+      )
+    : zona.bairros
+
+  // Aviso leve, nao bloqueia: o banco ja recusa nome identico (mesmo com
+  // acento/caixa diferente). Isso aqui pega erro de digitacao, tipo "Cetro".
+  const parecido = useMemo(() => {
+    const alvo = normalizarComparacao(novoBairro)
+    if (alvo.length < 4) return null
+    let melhor: { nome: string; zona: string; distancia: number } | null = null
+    for (const b of todosBairros) {
+      if (normalizarComparacao(b.nome) === alvo) continue
+      const distancia = distanciaEdicao(alvo, normalizarComparacao(b.nome))
+      if (distancia <= 2 && (!melhor || distancia < melhor.distancia)) {
+        melhor = { ...b, distancia }
+      }
+    }
+    return melhor
+  }, [novoBairro, todosBairros])
+
+  const semBairro = zona.is_active && zona.bairros.length === 0
 
   return (
     <div className={`space-y-3 rounded-xl border p-3 ${zona.is_active ? 'border-line' : 'border-dashed border-line opacity-60'}`}>
@@ -332,8 +390,24 @@ function ZonaLinha({ zona }: { zona: ZonaComBairros }) {
       </form>
       <Resultado estado={estadoZona} />
 
+      {semBairro ? (
+        <Alert tone="info">
+          Essa regiao esta ativa mas sem nenhum bairro. Ninguem vai conseguir escolher a taxa de{' '}
+          {moeda(zona.fee)} no checkout ate voce adicionar um bairro abaixo.
+        </Alert>
+      ) : null}
+
+      {zona.bairros.length > 6 ? (
+        <Input
+          value={filtroBairro}
+          onChange={(e) => setFiltroBairro(e.target.value)}
+          placeholder={`Buscar entre ${zona.bairros.length} bairros...`}
+          className="max-w-xs"
+        />
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
-        {zona.bairros.map((b) => (
+        {bairrosFiltrados.map((b) => (
           <span
             key={b.id}
             className="flex h-10 items-center gap-1 rounded-full border border-line bg-background pl-3 text-sm font-semibold"
@@ -358,15 +432,35 @@ function ZonaLinha({ zona }: { zona: ZonaComBairros }) {
         {zona.bairros.length === 0 ? (
           <span className="text-sm text-muted">Nenhum bairro nesta regiao ainda.</span>
         ) : null}
+        {zona.bairros.length > 0 && bairrosFiltrados.length === 0 ? (
+          <span className="text-sm text-muted">Nenhum bairro bate com essa busca.</span>
+        ) : null}
       </div>
 
-      <form action={acaoBairro} className="flex gap-2">
+      <form
+        action={acaoBairro}
+        className="flex gap-2"
+        onSubmit={() => setNovoBairro('')}
+      >
         <input type="hidden" name="zone_id" value={zona.id} />
-        <Input name="name" placeholder="Adicionar bairro" className="flex-1" required />
+        <Input
+          name="name"
+          placeholder="Adicionar bairro"
+          className="flex-1"
+          required
+          value={novoBairro}
+          onChange={(e) => setNovoBairro(e.target.value)}
+        />
         <Button type="submit" variant="secondary" disabled={pendenteBairro}>
           Adicionar
         </Button>
       </form>
+      {parecido ? (
+        <p className="text-sm text-muted">
+          Parecido com <span className="font-semibold text-foreground">{parecido.nome}</span> (regiao{' '}
+          {parecido.zona}). Confira se nao e o mesmo bairro antes de adicionar.
+        </p>
+      ) : null}
       <Resultado estado={estadoBairro} />
       {erro ? <Alert tone="error">{erro}</Alert> : null}
     </div>

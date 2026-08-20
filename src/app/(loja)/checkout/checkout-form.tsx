@@ -1,15 +1,17 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
+import { Loader2 } from 'lucide-react'
 
 import { useCarrinho } from '@/components/carrinho/use-carrinho'
 import { Button } from '@/components/ui/button'
 import { Alert, Card } from '@/components/ui/card'
 import { Field, Input, Select, Textarea } from '@/components/ui/field'
-import { moeda, quantidade as formatarQuantidade } from '@/lib/format'
+import { moeda, normalizarComparacao, quantidade as formatarQuantidade } from '@/lib/format'
 import { guardarPedido } from '@/lib/carrinho/store'
 import { subtotalItem } from '@/lib/carrinho/tipos'
+import { buscarEnderecoPorCep } from '@/lib/loja/cep'
 import type { PaymentMethod } from '@/lib/types'
 import { criarPedido } from './actions'
 
@@ -42,6 +44,10 @@ export function CheckoutForm({
   const [complemento, setComplemento] = useState('')
   const [referencia, setReferencia] = useState('')
   const [cep, setCep] = useState('')
+  const [resultadoCep, setResultadoCep] = useState<{
+    digitos: string
+    status: 'encontrado' | 'sem_cobertura' | 'nao_encontrado' | 'erro'
+  } | null>(null)
   const [pagamento, setPagamento] = useState<PaymentMethod | ''>('')
   const [precisaTroco, setPrecisaTroco] = useState(false)
   const [trocoPara, setTrocoPara] = useState('')
@@ -54,6 +60,54 @@ export function CheckoutForm({
   const total = Math.round((subtotal + taxa) * 100) / 100
   const trocoNumero = Number(trocoPara.replace(/\./g, '').replace(',', '.'))
   const trocoEstimado = precisaTroco && trocoNumero > total ? trocoNumero - total : 0
+
+  const digitosCep = cep.replace(/\D/g, '')
+  // 'buscando' e derivado (digitos completos mas ainda sem resultado pra eles)
+  // em vez de um setState proprio, pra nao ter estado sincrono duplicado.
+  const statusCep =
+    digitosCep.length !== 8
+      ? 'ocioso'
+      : resultadoCep?.digitos === digitosCep
+        ? resultadoCep.status
+        : 'buscando'
+
+  // CEP e so um atalho: preenche bairro e rua sozinho quando da, mas nunca
+  // trava o formulario -- o cliente sempre pode escolher/digitar na mao.
+  useEffect(() => {
+    if (digitosCep.length !== 8) return
+
+    let cancelado = false
+    const temporizador = setTimeout(async () => {
+      try {
+        const endereco = await buscarEnderecoPorCep(digitosCep)
+        if (cancelado) return
+
+        if (!endereco) {
+          setResultadoCep({ digitos: digitosCep, status: 'nao_encontrado' })
+          return
+        }
+
+        if (!rua.trim() && endereco.rua) setRua(endereco.rua)
+
+        const alvo = normalizarComparacao(endereco.bairro)
+        const encontrado = bairros.find((b) => normalizarComparacao(b.bairro) === alvo)
+        if (encontrado) {
+          setBairro(encontrado.bairro)
+          setResultadoCep({ digitos: digitosCep, status: 'encontrado' })
+        } else {
+          setResultadoCep({ digitos: digitosCep, status: 'sem_cobertura' })
+        }
+      } catch {
+        if (!cancelado) setResultadoCep({ digitos: digitosCep, status: 'erro' })
+      }
+    }, 500)
+
+    return () => {
+      cancelado = true
+      clearTimeout(temporizador)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [digitosCep])
 
   if (!carregado) return <Card>Carregando...</Card>
 
@@ -158,6 +212,45 @@ export function CheckoutForm({
 
         {etapa === 1 ? (
           <>
+            <Field
+              label="CEP (opcional)"
+              hint="Preenchendo o CEP a gente tenta achar o bairro e a rua sozinho."
+            >
+              <div className="relative">
+                <Input
+                  value={cep}
+                  onChange={(e) => setCep(e.target.value)}
+                  inputMode="numeric"
+                  placeholder="00000-000"
+                  maxLength={9}
+                />
+                {statusCep === 'buscando' ? (
+                  <Loader2
+                    size={18}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted"
+                    aria-hidden
+                  />
+                ) : null}
+              </div>
+            </Field>
+            {statusCep === 'encontrado' ? (
+              <Alert tone="success">Endereco encontrado: bairro preenchido automaticamente.</Alert>
+            ) : null}
+            {statusCep === 'sem_cobertura' ? (
+              <Alert tone="info">
+                Achamos o CEP, mas o bairro dele ainda nao esta na nossa lista de entrega. Escolha o
+                bairro mais proximo abaixo.
+              </Alert>
+            ) : null}
+            {statusCep === 'nao_encontrado' ? (
+              <Alert tone="error">CEP nao encontrado. Confira o numero ou preencha na mao.</Alert>
+            ) : null}
+            {statusCep === 'erro' ? (
+              <Alert tone="info">
+                Nao consegui consultar esse CEP agora. Preencha o endereco na mao mesmo.
+              </Alert>
+            ) : null}
+
             <Field label="Bairro" hint="A taxa de entrega depende do bairro.">
               <Select value={bairro} onChange={(e) => setBairro(e.target.value)}>
                 <option value="">Escolha o bairro...</option>
@@ -185,9 +278,6 @@ export function CheckoutForm({
             </Field>
             <Field label="Ponto de referencia">
               <Input value={referencia} onChange={(e) => setReferencia(e.target.value)} />
-            </Field>
-            <Field label="CEP (opcional)">
-              <Input value={cep} onChange={(e) => setCep(e.target.value)} inputMode="numeric" />
             </Field>
           </>
         ) : null}

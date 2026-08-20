@@ -35,6 +35,16 @@ export function paraNumero(texto: FormDataEntryValue | null): number {
   return Number.isFinite(n) ? n : NaN
 }
 
+/** Remove acento/caixa pra comparar texto digitado por gente com nome cadastrado. */
+export function normalizarComparacao(texto: string): string {
+  return texto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')
+}
+
 export function slugify(texto: string): string {
   return texto
     .normalize('NFD')
