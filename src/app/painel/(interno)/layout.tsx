@@ -31,8 +31,8 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
   const items = MENU.filter((item) => staff.permissions.has(item.permission))
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-surface px-4 py-3">
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <header className="z-20 flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4 py-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand">Massa 24h</p>
           <p className="truncate text-sm font-bold">{staff.profile.name}</p>
@@ -48,9 +48,9 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
         </div>
       </header>
 
-      <div className="flex min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 overflow-hidden">
         <Nav items={items} />
-        <main className="min-w-0 flex-1 p-4 pb-24 md:p-6 md:pb-6">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-6">{children}</main>
       </div>
     </div>
   )

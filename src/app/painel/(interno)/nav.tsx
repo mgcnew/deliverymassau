@@ -33,7 +33,7 @@ export function Nav({ items }: { items: NavItem[] }) {
   return (
     <>
       {/* Desktop / tablet */}
-      <nav className="hidden w-56 shrink-0 flex-col gap-1 border-r border-line bg-surface p-3 md:flex">
+      <nav className="hidden w-56 shrink-0 flex-col gap-1 overflow-y-auto border-r border-line bg-surface p-3 md:flex">
         {items.map((item) => {
           const Icon = ICONS[item.icon as keyof typeof ICONS]
           return (
