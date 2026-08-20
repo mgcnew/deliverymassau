@@ -132,30 +132,31 @@ export function PainelPedidos({
         )}
       </div>
 
-      {/* Desktop: quadro com todas as colunas. Cada coluna tem largura minima
-          para o card continuar legivel; se nao couber, o quadro rola de lado
-          em vez de espremer os cartoes. */}
-      <div className="-mx-4 hidden overflow-x-auto px-4 pb-2 lg:block md:-mx-6 md:px-6">
-        <div className="grid min-w-[1250px] grid-cols-5 gap-3">
-        {COLUNAS.map((status) => {
-          const lista = porStatus(status)
-          return (
-            <section key={status} className="space-y-2">
-              <h2 className="flex items-center justify-between text-sm font-black uppercase tracking-wide">
-                {ORDER_STATUS[status].short}
-                <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs">{lista.length}</span>
-              </h2>
-              <div className="space-y-2">
-                {lista.map((p) => (
-                  <CardPedido key={p.id} pedido={p} podeSeparar={podeSeparar} />
-                ))}
-              </div>
-            </section>
-          )
-        })}
+      {/* Desktop: quadro com todas as colunas. Em vez de forcar rolagem
+          horizontal com largura fixa (que cortava a ultima coluna dependendo
+          da largura da tela), a grade se reorganiza - 2 colunas em telas
+          menores, ate 5 lado a lado nas bem largas. Nada fica escondido. */}
+      <div className="hidden lg:block">
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-3 2xl:grid-cols-5">
+          {COLUNAS.map((status) => {
+            const lista = porStatus(status)
+            return (
+              <section key={status} className="space-y-2">
+                <h2 className="flex items-center justify-center gap-2 text-sm font-black uppercase tracking-wide">
+                  {ORDER_STATUS[status].short}
+                  <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs">{lista.length}</span>
+                </h2>
+                <div className="space-y-2">
+                  {lista.map((p) => (
+                    <CardPedido key={p.id} pedido={p} podeSeparar={podeSeparar} />
+                  ))}
+                </div>
+              </section>
+            )
+          })}
 
           <section className="space-y-2">
-            <h2 className="flex items-center justify-between text-sm font-black uppercase tracking-wide">
+            <h2 className="flex items-center justify-center gap-2 text-sm font-black uppercase tracking-wide">
               Finalizados
               <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs">
                 {finalizados.length}

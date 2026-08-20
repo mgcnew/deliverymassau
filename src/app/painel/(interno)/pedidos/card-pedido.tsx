@@ -47,8 +47,16 @@ export function CardPedido({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
-        <span className={`rounded-full border px-2 py-0.5 ${status.tone}`}>{status.short}</span>
+      {/* Status centralizado sozinho: alinha embaixo do titulo centralizado
+          da coluna no quadro do desktop, sem depender de quantas outras
+          etiquetas o pedido tem. */}
+      <div className="flex justify-center">
+        <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${status.tone}`}>
+          {status.short}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-bold">
         <span className="rounded-full bg-black/5 px-2 py-0.5">
           {pedido.itens} {pedido.itens === 1 ? 'item' : 'itens'}
         </span>
