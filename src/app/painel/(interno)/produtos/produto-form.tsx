@@ -5,6 +5,7 @@ import { useActionState, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/card'
 import { Field, Input, Select, Textarea } from '@/components/ui/field'
+import { CampoFoto } from './campo-foto'
 import type { UnitType } from '@/lib/types'
 import { salvarProduto, type FormState } from './actions'
 
@@ -142,30 +143,16 @@ export function ProdutoForm({
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Foto" hint="JPG, PNG ou WEBP de ate 3 MB.">
-          <input
-            type="file"
-            name="imagem"
-            accept="image/*"
-            disabled={somenteLeitura}
-            className="w-full rounded-xl border border-line bg-surface p-2.5 text-sm"
-          />
-        </Field>
-        <Field label="Ordem de exibicao">
-          <Input
-            name="sort_order"
-            type="number"
-            defaultValue={valores.sort_order}
-            disabled={somenteLeitura}
-          />
-        </Field>
-      </div>
+      <CampoFoto imagemAtualUrl={valores.imagemUrl} disabled={somenteLeitura} />
 
-      {valores.imagemUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={valores.imagemUrl} alt="" className="size-28 rounded-xl object-cover" />
-      ) : null}
+      <Field label="Ordem de exibicao">
+        <Input
+          name="sort_order"
+          type="number"
+          defaultValue={valores.sort_order}
+          disabled={somenteLeitura}
+        />
+      </Field>
 
       {state.error ? <Alert tone="error">{state.error}</Alert> : null}
       {state.ok ? <Alert tone="success">{state.ok}</Alert> : null}
