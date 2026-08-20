@@ -1,8 +1,8 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
 import { BarraCarrinho } from '@/components/carrinho/barra-carrinho'
 import { RodapeEquipe } from '@/components/loja/rodape-equipe'
+import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 import { getConfiguracaoPublica } from '@/lib/loja/catalogo'
@@ -13,16 +13,15 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-20 border-b border-line bg-brand text-brand-foreground">
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3">
+      {/* Mesmo padrao neutro do cabecalho do painel (bg-surface, nao mais
+          vermelho fixo) -- a logo troca de versao com o tema, igual la. */}
+      <header className="sticky top-0 z-20 border-b border-line bg-surface">
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-4 px-4 py-4">
           <Link href="/loja" className="min-w-0 flex-1">
-            {/* Fundo do cabecalho e sempre vermelho (claro ou escuro), entao
-                a versao com texto branco da logo e fixa aqui -- nao troca
-                com o tema do site como no painel. */}
-            <Image src="/logo-escuro.png" alt={config?.market_name ?? 'Mercado Massa 24h'} width={166} height={35} priority />
-            <p className="text-xs font-semibold opacity-90">Delivery aberto 24 horas</p>
+            <Logo altura={44} />
+            <p className="text-xs font-semibold text-muted">Delivery aberto 24 horas</p>
           </Link>
-          <ThemeToggle inverso />
+          <ThemeToggle />
         </div>
       </header>
 
