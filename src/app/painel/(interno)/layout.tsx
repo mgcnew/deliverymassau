@@ -36,7 +36,6 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
       <header className="z-20 flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <Logo altura={30} className="shrink-0" />
-          <p className="truncate text-sm font-bold">{staff.profile.name}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <ThemeToggle />
