@@ -27,6 +27,7 @@ export type ProdutoVitrine = {
   unit_type: UnitType
   sold_by_weight: boolean
   price: number
+  original_price: number | null
   is_available: boolean
   category_id: string
   weight_step: number | null
@@ -36,7 +37,12 @@ export type ProdutoVitrine = {
 export type CategoriaVitrine = { id: string; name: string; slug: string }
 
 const CAMPOS_PRODUTO =
-  'id, name, slug, short_description, image_path, unit_type, sold_by_weight, price, is_available, category_id, weight_step, min_weight'
+  'id, name, slug, short_description, image_path, unit_type, sold_by_weight, price, original_price, is_available, category_id, weight_step, min_weight'
+
+/** Em oferta = tem preco antigo cadastrado e ele e maior que o preco atual. */
+export function emPromocao(produto: Pick<ProdutoVitrine, 'price' | 'original_price'>): boolean {
+  return produto.original_price != null && Number(produto.original_price) > Number(produto.price)
+}
 
 /** Uma leitura por request, mesmo com header e pagina perguntando ao mesmo tempo. */
 export const getConfiguracaoPublica = cache(async (): Promise<ConfiguracaoPublica | null> => {

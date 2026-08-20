@@ -6,7 +6,7 @@ import { LinkVoltar } from '@/components/ui/link-voltar'
 import { BotaoAdicionar } from '@/components/carrinho/botao-adicionar'
 import { Card } from '@/components/ui/card'
 import { moeda, precoPorUnidade, UNIT_LABEL } from '@/lib/format'
-import { getCategorias, getProdutoPorSlug } from '@/lib/loja/catalogo'
+import { emPromocao, getCategorias, getProdutoPorSlug } from '@/lib/loja/catalogo'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 
 export async function generateMetadata({ params }: PageProps<'/p/[slug]'>) {
@@ -25,6 +25,7 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
   const imagem = urlImagemProduto(produto.image_path)
   const preco = Number(produto.price)
   const pesoMinimo = Number(produto.min_weight ?? 0.1)
+  const oferta = emPromocao(produto)
 
   return (
     <main className="mx-auto w-full max-w-3xl space-y-4 p-4">
@@ -56,6 +57,16 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
             ) : null}
           </div>
 
+          {oferta ? (
+            <p className="flex items-center gap-2">
+              <span className="rounded-full bg-brand px-2.5 py-1 text-xs font-bold text-brand-foreground">
+                Oferta
+              </span>
+              <span className="text-lg text-muted line-through">
+                {moeda(Number(produto.original_price))}
+              </span>
+            </p>
+          ) : null}
           <p className="text-3xl font-black text-brand">
             {precoPorUnidade(preco, produto.sold_by_weight, produto.unit_type)}
           </p>

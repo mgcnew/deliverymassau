@@ -57,6 +57,9 @@ export default async function ProdutoPage({ params }: PageProps<'/painel/produto
             unit_type: produto.unit_type as UnitType,
             sold_by_weight: produto.sold_by_weight,
             price: Number(produto.price).toFixed(2).replace('.', ','),
+            original_price: produto.original_price
+              ? Number(produto.original_price).toFixed(2).replace('.', ',')
+              : '',
             weight_step_g: Math.round(Number(produto.weight_step ?? 0.1) * 1000),
             min_weight_g: Math.round(Number(produto.min_weight ?? 0.1) * 1000),
             sort_order: produto.sort_order,

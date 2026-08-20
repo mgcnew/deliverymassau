@@ -30,6 +30,7 @@ export default async function NovoProdutoPage() {
             unit_type: 'unidade',
             sold_by_weight: false,
             price: '',
+            original_price: '',
             weight_step_g: 100,
             min_weight_g: 100,
             sort_order: 0,

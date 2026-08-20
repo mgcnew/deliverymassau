@@ -2,13 +2,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { BotaoAdicionar } from '@/components/carrinho/botao-adicionar'
-import { precoPorUnidade } from '@/lib/format'
+import { moeda, precoPorUnidade } from '@/lib/format'
 import { urlImagemProduto } from '@/lib/supabase/storage'
-import type { ProdutoVitrine } from '@/lib/loja/catalogo'
+import { emPromocao, type ProdutoVitrine } from '@/lib/loja/catalogo'
 
 export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
   const imagem = urlImagemProduto(produto.image_path)
   const indisponivel = !produto.is_available
+  const oferta = emPromocao(produto)
 
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-line bg-surface">
@@ -29,6 +30,10 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
             <span className="absolute left-2 top-2 rounded-full bg-foreground px-2.5 py-1 text-xs font-bold text-white">
               Acabou
             </span>
+          ) : oferta ? (
+            <span className="absolute left-2 top-2 rounded-full bg-brand px-2.5 py-1 text-xs font-bold text-brand-foreground">
+              Oferta
+            </span>
           ) : null}
         </div>
 
@@ -37,8 +42,15 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
           {produto.short_description ? (
             <p className="line-clamp-1 text-sm text-muted">{produto.short_description}</p>
           ) : null}
-          <p className="pt-1 font-black text-brand">
-            {precoPorUnidade(Number(produto.price), produto.sold_by_weight, produto.unit_type)}
+          <p className="pt-1">
+            {oferta ? (
+              <span className="mr-1.5 text-sm text-muted line-through">
+                {moeda(Number(produto.original_price))}
+              </span>
+            ) : null}
+            <span className="font-black text-brand">
+              {precoPorUnidade(Number(produto.price), produto.sold_by_weight, produto.unit_type)}
+            </span>
           </p>
         </div>
       </Link>

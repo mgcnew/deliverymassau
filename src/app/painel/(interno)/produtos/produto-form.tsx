@@ -18,6 +18,7 @@ export type ProdutoFormValores = {
   unit_type: UnitType
   sold_by_weight: boolean
   price: string
+  original_price: string
   weight_step_g: number
   min_weight_g: number
   sort_order: number
@@ -119,6 +120,19 @@ export function ProdutoForm({
           />
         </Field>
       </div>
+
+      <Field
+        label="Preco antigo (opcional)"
+        hint="Preenchendo, o produto aparece em Ofertas com o preco antigo riscado. Deixe em branco pra tirar da promocao."
+      >
+        <Input
+          name="original_price"
+          inputMode="decimal"
+          defaultValue={valores.original_price}
+          placeholder="0,00"
+          disabled={somenteLeitura}
+        />
+      </Field>
 
       {porPeso ? (
         <div className="grid gap-4 sm:grid-cols-2">

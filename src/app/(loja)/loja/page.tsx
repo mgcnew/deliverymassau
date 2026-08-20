@@ -4,7 +4,7 @@ import { GradeProdutos } from '@/components/loja/produto-card'
 import { RolarParaHash } from '@/components/loja/rolar-para-hash'
 import { Empty } from '@/components/ui/card'
 import { moeda } from '@/lib/format'
-import { getBairrosAtendidos, getCategorias, getProdutos } from '@/lib/loja/catalogo'
+import { emPromocao, getBairrosAtendidos, getCategorias, getProdutos } from '@/lib/loja/catalogo'
 
 export default async function VitrinePage() {
   const [categorias, produtos, bairros] = await Promise.all([
@@ -12,6 +12,8 @@ export default async function VitrinePage() {
     getProdutos(),
     getBairrosAtendidos(),
   ])
+
+  const ofertas = produtos.filter((p) => p.is_available && emPromocao(p))
 
   const porCategoria = categorias
     .map((c) => ({ categoria: c, itens: produtos.filter((p) => p.category_id === c.id) }))
@@ -22,6 +24,13 @@ export default async function VitrinePage() {
       <RolarParaHash />
       <CampoBusca />
       <CategoriasChips categorias={categorias} />
+
+      {ofertas.length > 0 ? (
+        <section className="space-y-3 rounded-2xl border-2 border-brand bg-brand/5 p-3">
+          <h2 className="flex items-center gap-2 text-xl font-black text-brand">🔥 Ofertas</h2>
+          <GradeProdutos produtos={ofertas} />
+        </section>
+      ) : null}
 
       {porCategoria.length === 0 ? (
         <Empty>Ainda nao ha produtos no catalogo.</Empty>

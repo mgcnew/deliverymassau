@@ -17,9 +17,12 @@ const BLOQUEADO = 'O banco recusou a alteracao: voce nao tem essa permissao.'
 
 const UNIDADES: UnitType[] = ['unidade', 'pacote', 'caixa', 'kg', 'g']
 
-function traduzirErroBarcode(error: { message: string; code?: string }): string {
+function traduzirErroProduto(error: { message: string; code?: string }): string {
   if (error.code === '23505' && error.message.includes('products_barcode_unico')) {
     return 'Ja existe outro produto cadastrado com este codigo de barras.'
+  }
+  if (error.message.includes('products_original_price_ck')) {
+    return 'O preco antigo precisa ser maior que o preco atual.'
   }
   return error.message
 }
@@ -109,11 +112,16 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
   const descricao = String(formData.get('short_description') ?? '').trim()
   const ordem = Number(formData.get('sort_order') ?? 0)
   const codigoBarras = String(formData.get('barcode') ?? '').trim()
+  const precoAntigoTexto = String(formData.get('original_price') ?? '').trim()
+  const precoAntigo = precoAntigoTexto ? paraNumero(precoAntigoTexto) : null
 
   if (!name) return { error: 'Informe o nome do produto.' }
   if (!categoryId) return { error: 'Escolha a categoria.' }
   if (!UNIDADES.includes(unitType)) return { error: 'Unidade invalida.' }
   if (!Number.isFinite(preco) || preco <= 0) return { error: 'Informe um preco valido.' }
+  if (precoAntigo !== null && (!Number.isFinite(precoAntigo) || precoAntigo <= preco)) {
+    return { error: 'O preco antigo precisa ser maior que o preco atual, pra fazer sentido como oferta.' }
+  }
   if (porPeso && unitType !== 'kg' && unitType !== 'g') {
     return { error: 'Produto vendido por peso precisa ter unidade kg ou g.' }
   }
@@ -148,6 +156,7 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
     unit_type: unitType,
     sold_by_weight: porPeso,
     price: preco,
+    original_price: precoAntigo,
     weight_step: porPeso ? passoGramas / 1000 : null,
     min_weight: porPeso ? minimoGramas / 1000 : null,
     sort_order: Number.isFinite(ordem) ? ordem : 0,
@@ -162,7 +171,7 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
       .select('id')
       .single()
 
-    if (error) return { error: traduzirErroBarcode(error) }
+    if (error) return { error: traduzirErroProduto(error) }
 
     revalidatePath('/painel/produtos')
     revalidatePath('/loja')
@@ -180,7 +189,7 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
     .update(dados)
     .eq('id', id)
     .select('id')
-  if (error) return { error: traduzirErroBarcode(error) }
+  if (error) return { error: traduzirErroProduto(error) }
   if (!atualizado?.length) return { error: BLOQUEADO }
 
   // Troca de foto: apaga a antiga para nao acumular lixo no bucket.
