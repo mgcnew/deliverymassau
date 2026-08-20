@@ -1,6 +1,7 @@
 import { CampoBusca } from '@/components/loja/busca'
 import { CategoriasChips } from '@/components/loja/categorias-chips'
 import { GradeProdutos } from '@/components/loja/produto-card'
+import { RolarParaHash } from '@/components/loja/rolar-para-hash'
 import { Empty } from '@/components/ui/card'
 import { moeda } from '@/lib/format'
 import { getBairrosAtendidos, getCategorias, getProdutos } from '@/lib/loja/catalogo'
@@ -18,6 +19,7 @@ export default async function VitrinePage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl space-y-5 p-4">
+      <RolarParaHash />
       <CampoBusca />
       <CategoriasChips categorias={categorias} />
 
@@ -25,7 +27,7 @@ export default async function VitrinePage() {
         <Empty>Ainda nao ha produtos no catalogo.</Empty>
       ) : (
         porCategoria.map(({ categoria, itens }) => (
-          <section key={categoria.id} className="space-y-3">
+          <section key={categoria.id} id={`cat-${categoria.slug}`} className="scroll-mt-24 space-y-3">
             <h2 className="text-xl font-black">{categoria.name}</h2>
             <GradeProdutos produtos={itens} />
           </section>

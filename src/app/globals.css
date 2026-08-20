@@ -73,6 +73,14 @@ body {
   color: var(--foreground);
 }
 
+/* Chips de categoria da loja rolam ate a secao em vez de navegar --
+   suave pra quem nao pediu menos movimento. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 /* Nunca esconder o foco: o painel e muito usado por teclado no balcao. */
 :focus-visible {
   outline: 3px solid var(--brand);
