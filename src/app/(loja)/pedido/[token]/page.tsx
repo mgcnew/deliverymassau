@@ -82,7 +82,14 @@ export default async function PedidoPage({ params, searchParams }: PageProps<'/p
 
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Seu pedido</p>
-        <h1 className="text-3xl font-black">#{pedido.order_number}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-3xl font-black">#{pedido.order_number}</h1>
+          <span
+            className={`rounded-full border px-3 py-1 text-sm font-bold ${ORDER_STATUS[pedido.status].tone}`}
+          >
+            {ORDER_STATUS[pedido.status].label}
+          </span>
+        </div>
         <p className="text-muted">
           Feito em {new Date(pedido.created_at).toLocaleString('pt-BR')}
         </p>
@@ -155,7 +162,9 @@ export default async function PedidoPage({ params, searchParams }: PageProps<'/p
 
               {item.note ? <p className="text-sm text-muted">Obs: {item.note}</p> : null}
               {item.item_status === 'indisponivel' ? (
-                <p className="text-sm font-semibold text-rose-700">Acabou - retirado do pedido</p>
+                <p className="text-sm font-semibold text-rose-700 dark:text-rose-300">
+                  Acabou - retirado do pedido
+                </p>
               ) : null}
             </li>
           ))}
