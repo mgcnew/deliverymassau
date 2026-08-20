@@ -77,6 +77,7 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
         <CompartilharLoja
           nomeMercado={nomeMercado}
           endereco={enderecoMercado}
+          telefoneCliente={cliente.phone}
           nomeCliente={cliente.name}
           rotulo="Convidar cliente"
         />

@@ -27,10 +27,14 @@ export function linkWaze(endereco: EnderecoEntrega): string {
   return `https://waze.com/ul?q=${encodeURIComponent(enderecoTexto(endereco))}&navigate=yes`
 }
 
-export function linkWhatsapp(telefone: string, mensagem?: string): string {
+/** Sem telefone, abre o WhatsApp deixando a pessoa escolher pra quem mandar. */
+export function linkWhatsapp(telefone: string | null | undefined, mensagem?: string): string {
+  const query = mensagem ? `?text=${encodeURIComponent(mensagem)}` : ''
+  if (!telefone) return `https://wa.me/${query}`
+
   const numero = telefone.replace(/\D/g, '')
   const comPais = numero.startsWith('55') ? numero : `55${numero}`
-  return `https://wa.me/${comPais}${mensagem ? `?text=${encodeURIComponent(mensagem)}` : ''}`
+  return `https://wa.me/${comPais}${query}`
 }
 
 export function linkTelefone(telefone: string): string {
