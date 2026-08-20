@@ -6,31 +6,20 @@ import { RodapeEquipe } from '@/components/loja/rodape-equipe'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 import { getConfiguracaoPublica } from '@/lib/loja/catalogo'
-import { urlImagemProduto } from '@/lib/supabase/storage'
 import { moeda } from '@/lib/format'
 
 export default async function LojaLayout({ children }: LayoutProps<'/'>) {
   const config = await getConfiguracaoPublica()
-  const logo = urlImagemProduto(config?.market_logo_path)
 
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-20 border-b border-line bg-brand text-brand-foreground">
         <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3">
-          {logo ? (
-            <Image
-              src={logo}
-              alt=""
-              width={40}
-              height={40}
-              priority
-              className="size-10 rounded-lg bg-white/20 object-cover"
-            />
-          ) : null}
           <Link href="/loja" className="min-w-0 flex-1">
-            <p className="truncate text-lg font-black leading-tight">
-              {config?.market_name ?? 'Mercado Massa 24h'}
-            </p>
+            {/* Fundo do cabecalho e sempre vermelho (claro ou escuro), entao
+                a versao com texto branco da logo e fixa aqui -- nao troca
+                com o tema do site como no painel. */}
+            <Image src="/logo-escuro.png" alt={config?.market_name ?? 'Mercado Massa 24h'} width={166} height={35} priority />
             <p className="text-xs font-semibold opacity-90">Delivery aberto 24 horas</p>
           </Link>
           <ThemeToggle inverso />
