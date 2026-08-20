@@ -40,6 +40,12 @@ export function Alert({
       'bg-[var(--tone-success-bg)] text-[var(--tone-success-fg)] border-[var(--tone-success-border)]',
   }
   return (
-    <p className={`rounded-xl border px-4 py-3 text-sm font-medium ${tones[tone]}`}>{children}</p>
+    <p
+      role="status"
+      aria-live="polite"
+      className={`rounded-xl border px-4 py-3 text-sm font-medium ${tones[tone]}`}
+    >
+      {children}
+    </p>
   )
 }

@@ -167,7 +167,11 @@ export function ItemSeparacao({
         ) : null}
       </div>
 
-      {erro ? <p className="text-sm font-semibold text-rose-700">{erro}</p> : null}
+      {erro ? (
+        <p role="status" aria-live="polite" className="text-sm font-semibold text-rose-700">
+          {erro}
+        </p>
+      ) : null}
     </li>
   )
 }

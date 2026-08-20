@@ -52,7 +52,11 @@ export function BotaoDisponibilidade({
       >
         {otimista ? 'Disponivel' : 'Acabou'}
       </button>
-      {erro ? <span className="text-xs font-semibold text-rose-700">{erro}</span> : null}
+      {erro ? (
+        <span role="status" aria-live="polite" className="text-xs font-semibold text-rose-700">
+          {erro}
+        </span>
+      ) : null}
     </div>
   )
 }

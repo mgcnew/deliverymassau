@@ -96,7 +96,9 @@ export function LinhaCategoria({
       ) : null}
 
       {state.error || erro ? (
-        <p className="w-full text-sm font-semibold text-rose-700">{state.error ?? erro}</p>
+        <p role="status" aria-live="polite" className="w-full text-sm font-semibold text-rose-700">
+          {state.error ?? erro}
+        </p>
       ) : null}
     </li>
   )

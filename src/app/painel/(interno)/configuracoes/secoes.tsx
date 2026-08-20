@@ -3,8 +3,9 @@
 import Image from 'next/image'
 import { useActionState, useMemo, useState, useTransition } from 'react'
 
-import { Button } from '@/components/ui/button'
+import { Button, buttonClass } from '@/components/ui/button'
 import { Alert, Card, CardTitle } from '@/components/ui/card'
+import { ConfirmarAcao } from '@/components/ui/confirmar-acao'
 import { Field, Input, Textarea } from '@/components/ui/field'
 import { moeda, normalizarComparacao } from '@/lib/format'
 import { distanciaEdicao } from '@/lib/similaridade'
@@ -214,19 +215,36 @@ export function SecaoPagamentos({
               className="flex items-center justify-between gap-3 rounded-xl border border-line p-3"
             >
               <span className="font-semibold">{m.label}</span>
-              <Button
-                type="button"
-                variant={m.is_active ? 'secondary' : 'primary'}
-                disabled={transicao}
-                onClick={() =>
-                  startTransition(async () => {
-                    const r = await alternarPagamento(m.code, !m.is_active)
+              {m.is_active ? (
+                <ConfirmarAcao
+                  className={buttonClass('secondary')}
+                  disabled={transicao}
+                  titulo={`Desativar ${m.label}?`}
+                  descricao="O cliente deixa de ver essa forma de pagamento no checkout ate voce ativar de novo."
+                  rotuloConfirmar="Desativar"
+                  onConfirmar={async () => {
+                    const r = await alternarPagamento(m.code, false)
                     setErro(r.erro ?? null)
-                  })
-                }
-              >
-                {m.is_active ? 'Desativar' : 'Ativar'}
-              </Button>
+                    return r
+                  }}
+                >
+                  Desativar
+                </ConfirmarAcao>
+              ) : (
+                <Button
+                  type="button"
+                  variant="primary"
+                  disabled={transicao}
+                  onClick={() =>
+                    startTransition(async () => {
+                      const r = await alternarPagamento(m.code, true)
+                      setErro(r.erro ?? null)
+                    })
+                  }
+                >
+                  Ativar
+                </Button>
+              )}
             </div>
           ))}
           {erro ? <Alert tone="error">{erro}</Alert> : null}
@@ -374,19 +392,36 @@ function ZonaLinha({
         <Button type="submit" variant="secondary" disabled={pendenteZona}>
           Salvar
         </Button>
-        <Button
-          type="button"
-          variant={zona.is_active ? 'ghost' : 'secondary'}
-          disabled={transicao}
-          onClick={() =>
-            startTransition(async () => {
-              const r = await alternarZona(zona.id, !zona.is_active)
+        {zona.is_active ? (
+          <ConfirmarAcao
+            className={buttonClass('ghost')}
+            disabled={transicao}
+            titulo={`Desativar ${zona.name}?`}
+            descricao="O cliente para de conseguir escolher os bairros dessa regiao no checkout ate voce ativar de novo."
+            rotuloConfirmar="Desativar"
+            onConfirmar={async () => {
+              const r = await alternarZona(zona.id, false)
               setErro(r.erro ?? null)
-            })
-          }
-        >
-          {zona.is_active ? 'Desativar' : 'Ativar'}
-        </Button>
+              return r
+            }}
+          >
+            Desativar
+          </ConfirmarAcao>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={transicao}
+            onClick={() =>
+              startTransition(async () => {
+                const r = await alternarZona(zona.id, true)
+                setErro(r.erro ?? null)
+              })
+            }
+          >
+            Ativar
+          </Button>
+        )}
       </form>
       <Resultado estado={estadoZona} />
 
@@ -413,20 +448,21 @@ function ZonaLinha({
             className="flex h-10 items-center gap-1 rounded-full border border-line bg-background pl-3 text-sm font-semibold"
           >
             {b.name}
-            <button
-              type="button"
+            <ConfirmarAcao
               aria-label={`Remover ${b.name}`}
               disabled={transicao}
-              onClick={() =>
-                startTransition(async () => {
-                  const r = await removerBairro(b.id)
-                  setErro(r.erro ?? null)
-                })
-              }
+              titulo={`Remover ${b.name}?`}
+              descricao="O cliente desse bairro deixa de ver essa regiao no checkout. Se ele nao estiver em outra regiao, aparece como fora da area de entrega."
+              rotuloConfirmar="Remover"
+              onConfirmar={async () => {
+                const r = await removerBairro(b.id)
+                setErro(r.erro ?? null)
+                return r
+              }}
               className="flex size-10 items-center justify-center rounded-full text-lg text-muted hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
             >
               ×
-            </button>
+            </ConfirmarAcao>
           </span>
         ))}
         {zona.bairros.length === 0 ? (

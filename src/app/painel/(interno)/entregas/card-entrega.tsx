@@ -176,7 +176,11 @@ export function CardEntrega({
         Ver itens do pedido
       </Link>
 
-      {erro ? <p className="text-center font-semibold text-rose-700">{erro}</p> : null}
+      {erro ? (
+        <p role="status" aria-live="polite" className="text-center font-semibold text-rose-700">
+          {erro}
+        </p>
+      ) : null}
     </article>
   )
 }
