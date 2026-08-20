@@ -24,9 +24,12 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
   const supabase = await createClient()
   const { data: config } = await supabase
     .from('settings')
-    .select('market_name')
+    .select('market_name, market_address, market_city')
     .eq('id', 1)
     .maybeSingle()
+
+  const nomeMercado = config?.market_name ?? 'Mercado Massa 24h'
+  const endereco = [config?.market_address, config?.market_city].filter(Boolean).join(', ') || null
 
   // O menu mostra somente o que a pessoa pode acessar.
   const items = MENU.filter((item) => staff.permissions.has(item.permission))
@@ -39,7 +42,7 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <ThemeToggle />
-          <CompartilharLoja nomeMercado={config?.market_name ?? 'Mercado Massa 24h'} />
+          <CompartilharLoja nomeMercado={nomeMercado} endereco={endereco} />
           <form action={logoutAction}>
             <button className="h-11 rounded-lg px-3 text-sm font-semibold text-muted hover:bg-foreground/5">
               Sair

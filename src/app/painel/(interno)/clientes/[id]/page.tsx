@@ -11,6 +11,7 @@ import { dataHora, moeda, telefone } from '@/lib/format'
 import { ORDER_STATUS } from '@/lib/orders/status'
 import { linkWhatsapp } from '@/lib/orders/navegacao'
 import type { OrderStatus } from '@/lib/types'
+import { CompartilharLoja } from '../../compartilhar-loja'
 import { AcoesCliente } from './acoes-cliente'
 
 export const metadata = { title: 'Cliente | Mercado Massa 24h' }
@@ -20,7 +21,7 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
   const staff = await requirePermission(PERMISSIONS.clientesVer)
   const supabase = await createClient()
 
-  const [{ data: cliente }, { data: enderecos }] = await Promise.all([
+  const [{ data: cliente }, { data: enderecos }, { data: config }] = await Promise.all([
     supabase.from('customers').select('*').eq('id', id).maybeSingle(),
     supabase
       .from('customer_addresses')
@@ -28,9 +29,14 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
       .eq('customer_id', id)
       .order('created_at', { ascending: false })
       .limit(3),
+    supabase.from('settings').select('market_name, market_address, market_city').eq('id', 1).maybeSingle(),
   ])
 
   if (!cliente) notFound()
+
+  const nomeMercado = config?.market_name ?? 'Mercado Massa 24h'
+  const enderecoMercado =
+    [config?.market_address, config?.market_city].filter(Boolean).join(', ') || null
 
   // Historico de pedidos so para quem tambem pode ver pedidos.
   const podeVerPedidos = staff.permissions.has(PERMISSIONS.pedidosVer)
@@ -47,24 +53,33 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
 
   return (
     <div className="w-full space-y-4">
-      <div>
-        <LinkVoltar href="/painel/clientes">Clientes</LinkVoltar>
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-black">{cliente.name}</h1>
-          {cliente.is_blocked ? (
-            <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-bold text-rose-900 dark:bg-rose-900/50 dark:text-rose-200">
-              Bloqueado
-            </span>
-          ) : null}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <LinkVoltar href="/painel/clientes">Clientes</LinkVoltar>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-black">{cliente.name}</h1>
+            {cliente.is_blocked ? (
+              <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-bold text-rose-900 dark:bg-rose-900/50 dark:text-rose-200">
+                Bloqueado
+              </span>
+            ) : null}
+          </div>
+          <a
+            href={linkWhatsapp(cliente.phone)}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-brand underline"
+          >
+            {telefone(cliente.phone)}
+          </a>
         </div>
-        <a
-          href={linkWhatsapp(cliente.phone)}
-          target="_blank"
-          rel="noreferrer"
-          className="font-semibold text-brand underline"
-        >
-          {telefone(cliente.phone)}
-        </a>
+
+        <CompartilharLoja
+          nomeMercado={nomeMercado}
+          endereco={enderecoMercado}
+          nomeCliente={cliente.name}
+          rotulo="Convidar cliente"
+        />
       </div>
 
       {staff.permissions.has(PERMISSIONS.clientesBloquear) ? (
