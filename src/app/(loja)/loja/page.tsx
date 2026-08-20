@@ -26,7 +26,7 @@ export default async function VitrinePage() {
       <CategoriasChips categorias={categorias} />
 
       {ofertas.length > 0 ? (
-        <section className="space-y-3 rounded-2xl border-2 border-brand bg-brand/5 p-3">
+        <section className="space-y-3">
           <h2 className="flex items-center gap-2 text-xl font-black text-brand">🔥 Ofertas</h2>
           <GradeProdutos produtos={ofertas} />
         </section>
