@@ -28,6 +28,7 @@ export const PERMISSIONS = {
   entregasAtribuir: 'entregas.atribuir',
 
   clientesVer: 'clientes.ver',
+  clientesBloquear: 'clientes.bloquear',
 
   equipeVer: 'equipe.ver',
   equipeCadastrar: 'equipe.cadastrar',

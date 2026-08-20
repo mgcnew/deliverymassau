@@ -11,6 +11,7 @@ import { dataHora, moeda, telefone } from '@/lib/format'
 import { ORDER_STATUS } from '@/lib/orders/status'
 import { linkWhatsapp } from '@/lib/orders/navegacao'
 import type { OrderStatus } from '@/lib/types'
+import { AcoesCliente } from './acoes-cliente'
 
 export const metadata = { title: 'Cliente | Mercado Massa 24h' }
 
@@ -48,7 +49,14 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
     <div className="w-full space-y-4">
       <div>
         <LinkVoltar href="/painel/clientes">Clientes</LinkVoltar>
-        <h1 className="text-2xl font-black">{cliente.name}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-black">{cliente.name}</h1>
+          {cliente.is_blocked ? (
+            <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-bold text-rose-900 dark:bg-rose-900/50 dark:text-rose-200">
+              Bloqueado
+            </span>
+          ) : null}
+        </div>
         <a
           href={linkWhatsapp(cliente.phone)}
           target="_blank"
@@ -58,6 +66,15 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
           {telefone(cliente.phone)}
         </a>
       </div>
+
+      {staff.permissions.has(PERMISSIONS.clientesBloquear) ? (
+        <AcoesCliente
+          id={cliente.id}
+          bloqueado={cliente.is_blocked}
+          motivo={cliente.blocked_reason}
+          bloqueadoEm={cliente.blocked_at}
+        />
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3">
         <Card>

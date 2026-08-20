@@ -17,7 +17,7 @@ export default async function ClientesPage({ searchParams }: PageProps<'/painel/
 
   let query = supabase
     .from('customers')
-    .select('id, name, phone, orders_count, total_spent, first_order_at, last_order_at')
+    .select('id, name, phone, orders_count, total_spent, first_order_at, last_order_at, is_blocked')
     .order('last_order_at', { ascending: false, nullsFirst: false })
     .limit(100)
 
@@ -65,7 +65,14 @@ export default async function ClientesPage({ searchParams }: PageProps<'/painel/
                   className="flex items-center justify-between gap-3 py-3"
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-semibold">{c.name}</p>
+                    <p className="flex items-center gap-2 truncate font-semibold">
+                      {c.name}
+                      {c.is_blocked ? (
+                        <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-900 dark:bg-rose-900/50 dark:text-rose-200">
+                          Bloqueado
+                        </span>
+                      ) : null}
+                    </p>
                     <p className="truncate text-sm text-muted">
                       {telefone(c.phone)} - ultimo pedido {dataHora(c.last_order_at)}
                     </p>

@@ -90,6 +90,9 @@ function traduzirErro(mensagem: string, detalhe?: string | null): ResultadoPedid
     case 'TELEFONE_INVALIDO':
       return { erro: 'Telefone invalido. Use DDD + numero, como (75) 99999-9999.' }
 
+    case 'CLIENTE_BLOQUEADO':
+      return { erro: 'Nao foi possivel concluir seu pedido. Entre em contato com o mercado.' }
+
     case 'CARRINHO_VAZIO':
       return { erro: 'Seu carrinho esta vazio.' }
 
