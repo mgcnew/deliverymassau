@@ -1,3 +1,5 @@
+import type { Metadata } from 'next'
+
 import { PERMISSIONS } from '@/lib/permissions'
 import { requireStaff, touchLastSeen } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
@@ -6,6 +8,12 @@ import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { logoutAction } from '../login/actions'
 import { CompartilharLoja } from './compartilhar-loja'
 import { Nav, type NavItem } from './nav'
+
+// App diferente da loja pra quem instala: publico interno, abre direto no
+// painel em vez da vitrine.
+export const metadata: Metadata = {
+  manifest: '/manifest-painel.webmanifest',
+}
 
 const MENU: Array<NavItem & { permission: string }> = [
   { href: '/painel', label: 'Painel', icon: 'dashboard', permission: PERMISSIONS.dashboardVer },

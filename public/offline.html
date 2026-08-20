@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sem conexao | Mercado Massa 24h</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 24px;
+        text-align: center;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #f6f6f7;
+        color: #14141a;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #101014;
+          color: #f2f2f4;
+        }
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 0;
+      }
+      p {
+        margin: 0;
+        color: #5b5b66;
+        max-width: 28rem;
+      }
+      button {
+        margin-top: 8px;
+        height: 44px;
+        padding: 0 20px;
+        border: none;
+        border-radius: 12px;
+        background: #d61f2b;
+        color: #fff;
+        font-weight: 700;
+        font-size: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sem conexao no momento</h1>
+    <p>Nao foi possivel carregar esta pagina. Confira sua internet e tente de novo.</p>
+    <button onclick="location.reload()">Tentar de novo</button>
+  </body>
+</html>
