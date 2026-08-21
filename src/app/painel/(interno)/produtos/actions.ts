@@ -165,17 +165,15 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
   }
 
   if (criando) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('products')
       .insert({ ...dados, slug: `${slugify(name)}-${Date.now().toString(36)}` })
-      .select('id')
-      .single()
 
     if (error) return { error: traduzirErroProduto(error) }
 
     revalidatePath('/painel/produtos')
     revalidatePath('/loja')
-    redirect(`/painel/produtos/${data.id}`)
+    redirect('/painel/produtos')
   }
 
   const { data: anterior } = await supabase
