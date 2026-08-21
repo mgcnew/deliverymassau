@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Printer } from 'lucide-react'
 
 import { LinkVoltar } from '@/components/ui/link-voltar'
 import { notFound } from 'next/navigation'
@@ -40,6 +41,7 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
 
   // Historico de pedidos so para quem tambem pode ver pedidos.
   const podeVerPedidos = staff.permissions.has(PERMISSIONS.pedidosVer)
+  const podeImprimir = staff.permissions.has(PERMISSIONS.pedidosImprimir)
   const { data: pedidos } = podeVerPedidos
     ? await supabase
         .from('orders')
@@ -158,10 +160,10 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
               {pedidos.map((p) => {
                 const status = ORDER_STATUS[p.status as OrderStatus]
                 return (
-                  <li key={p.id}>
+                  <li key={p.id} className="flex items-center gap-1">
                     <Link
                       href={`/painel/pedidos/${p.id}`}
-                      className="flex items-center justify-between gap-3 py-3"
+                      className="flex min-w-0 flex-1 items-center justify-between gap-3 py-3"
                     >
                       <div className="min-w-0">
                         <p className="font-bold">#{p.order_number}</p>
@@ -174,6 +176,16 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
                         <span className="font-bold">{moeda(Number(p.total))}</span>
                       </div>
                     </Link>
+                    {podeImprimir ? (
+                      <Link
+                        href={`/painel/pedidos/${p.id}/imprimir?auto=1`}
+                        aria-label={`Imprimir via do pedido #${p.order_number}`}
+                        title="Imprimir via"
+                        className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-foreground/5"
+                      >
+                        <Printer size={20} aria-hidden />
+                      </Link>
+                    ) : null}
                   </li>
                 )
               })}
