@@ -22,13 +22,14 @@ export default async function EquipePage() {
   const staff = await requirePermission(PERMISSIONS.equipeVer)
   const supabase = await createClient()
 
-  const { data: pessoas } = await supabase
-    .from('profiles')
-    .select('id, name, phone, is_active, last_seen_at, preset_id')
-    .order('is_active', { ascending: false })
-    .order('name')
-
-  const { data: presets } = await supabase.from('permission_presets').select('id, name')
+  const [{ data: pessoas }, { data: presets }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, name, phone, is_active, last_seen_at, preset_id')
+      .order('is_active', { ascending: false })
+      .order('name'),
+    supabase.from('permission_presets').select('id, name'),
+  ])
   const nomePreset = new Map((presets ?? []).map((p) => [p.id, p.name]))
 
   return (
