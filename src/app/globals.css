@@ -81,6 +81,29 @@ body {
   }
 }
 
+/* Transicao de pagina (template.tsx da loja e do painel).
+   Curta de proposito: 180ms so tira o "seco" da troca de tela sem dar a
+   impressao de que a pagina demorou mais. Anima opacity/transform, que o
+   navegador resolve na GPU, entao nao concorre com o carregamento dos
+   dados. Quem pede menos movimento no sistema nao recebe animacao nenhuma
+   -- por isso a regra mora dentro do @media. */
+@keyframes entrada-pagina {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .transicao-pagina {
+    animation: entrada-pagina 180ms ease-out;
+  }
+}
+
 /* Nunca esconder o foco: o painel e muito usado por teclado no balcao. */
 :focus-visible {
   outline: 3px solid var(--brand);
