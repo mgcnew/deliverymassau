@@ -8,6 +8,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { ORDER_STATUS } from '@/lib/orders/status'
 import { Empty } from '@/components/ui/card'
+import { RolagemHorizontal } from '@/components/ui/rolagem-horizontal'
 import type { OrderStatus } from '@/lib/types'
 import { CardPedido } from './card-pedido'
 import type { PedidoOperacional } from './tipos'
@@ -88,7 +89,7 @@ export function PainelPedidos({
     <>
       {/* Celular e tablet: uma coluna por vez, com contador em cada aba */}
       <div className="space-y-3 lg:hidden">
-        <div className="-mx-4 overflow-x-auto px-4">
+        <RolagemHorizontal>
           <div className="flex w-max gap-2">
             {COLUNAS.map((status) => {
               const total = porStatus(status).length
@@ -124,7 +125,7 @@ export function PainelPedidos({
               Finalizados {rotuloDia}
             </button>
           </div>
-        </div>
+        </RolagemHorizontal>
 
         {daAba.length === 0 ? (
           <Empty>

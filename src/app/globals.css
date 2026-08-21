@@ -81,6 +81,18 @@ body {
   }
 }
 
+/* Faixas que rolam de lado (chips de categoria, abas de pedidos): a barra
+   de rolagem do sistema tomava uma faixa inteira da tela no celular. Some
+   com ela -- quem indica que ha mais conteudo e o esfumacado nas bordas
+   (ver <RolagemHorizontal>), nao a barra. */
+.rolagem-discreta {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rolagem-discreta::-webkit-scrollbar {
+  display: none;
+}
+
 /* Transicao de pagina (template.tsx da loja e do painel).
    Curta de proposito: 180ms so tira o "seco" da troca de tela sem dar a
    impressao de que a pagina demorou mais. Anima opacity/transform, que o

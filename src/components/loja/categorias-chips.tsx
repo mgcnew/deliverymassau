@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { MouseEvent } from 'react'
 
+import { RolagemHorizontal } from '@/components/ui/rolagem-horizontal'
 import type { CategoriaVitrine } from '@/lib/loja/catalogo'
 
 /**
@@ -44,8 +45,9 @@ export function CategoriasChips({
   }
 
   return (
-    <nav aria-label="Categorias" className="-mx-4 overflow-x-auto px-4">
-      <ul className="flex w-max gap-2 pb-1">
+    <nav aria-label="Categorias">
+      <RolagemHorizontal>
+        <ul className="flex w-max gap-2 pb-1">
         <li>
           <Link
             href="/loja"
@@ -70,7 +72,8 @@ export function CategoriasChips({
             </Link>
           </li>
         ))}
-      </ul>
+        </ul>
+      </RolagemHorizontal>
     </nav>
   )
 }
