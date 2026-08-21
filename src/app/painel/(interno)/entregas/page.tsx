@@ -23,7 +23,7 @@ export default async function EntregasPage() {
       .eq('delivery_person_id', staff.profile.id)
       .in('status', ['aguardando_entregador', 'saiu_para_entrega'])
       .order('created_at'),
-    supabase.from('settings').select('market_city').eq('id', 1).maybeSingle(),
+    supabase.from('settings').select('market_city, market_name').eq('id', 1).maybeSingle(),
   ])
 
   return (
@@ -34,6 +34,7 @@ export default async function EntregasPage() {
         disponiveis={(disponiveis ?? []) as EntregaCard[]}
         minhas={(minhas ?? []) as EntregaCard[]}
         cidade={config?.market_city ?? null}
+        nomeMercado={config?.market_name ?? 'Mercado Massa 24h'}
         permissoes={{
           assumir: staff.permissions.has(PERMISSIONS.entregasAssumir),
           iniciar: staff.permissions.has(PERMISSIONS.entregasIniciar),

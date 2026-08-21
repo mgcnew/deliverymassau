@@ -13,11 +13,13 @@ export function EntregasCliente({
   disponiveis,
   minhas,
   cidade,
+  nomeMercado,
   permissoes,
 }: {
   disponiveis: EntregaCard[]
   minhas: EntregaCard[]
   cidade: string | null
+  nomeMercado: string
   permissoes: { assumir: boolean; iniciar: boolean; finalizar: boolean }
 }) {
   const router = useRouter()
@@ -100,6 +102,7 @@ export function EntregasCliente({
               key={entrega.id}
               entrega={entrega}
               cidade={cidade}
+              nomeMercado={nomeMercado}
               minha={aba === 'minhas'}
               permissoes={permissoes}
               aoAssumir={() => setAba('minhas')}

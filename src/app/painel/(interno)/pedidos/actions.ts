@@ -34,8 +34,8 @@ export async function iniciarEntrega(orderId: string) {
   return chamar('start_delivery', { p_order_id: orderId })
 }
 
-export async function finalizarEntrega(orderId: string) {
-  return chamar('finish_delivery', { p_order_id: orderId })
+export async function finalizarEntrega(orderId: string, codigo: string) {
+  return chamar('finish_delivery', { p_order_id: orderId, p_code: codigo })
 }
 
 export async function assumirEntrega(orderId: string) {
@@ -66,6 +66,8 @@ function traduzir(mensagem: string, detalhe?: string | null): string {
       return 'A entrega ja comecou e nao pode ser liberada.'
     case 'ENTREGA_NAO_DISPONIVEL':
       return 'Esta entrega nao esta disponivel para voce.'
+    case 'CODIGO_INVALIDO':
+      return 'Codigo incorreto. Confirme com o cliente e tente de novo.'
     default:
       return mensagem.includes('Transicao de status invalida')
         ? 'O pedido mudou de status enquanto voce olhava. A tela ja foi atualizada.'

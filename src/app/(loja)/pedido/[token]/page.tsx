@@ -6,6 +6,7 @@ import { moeda, quantidade as formatarQuantidade } from '@/lib/format'
 import { ORDER_STATUS, ORDER_STATUS_FLOW } from '@/lib/orders/status'
 import { createClient } from '@/lib/supabase/server'
 import type { OrderStatus, PaymentMethod, UnitType } from '@/lib/types'
+import { CodigoEntrega } from './codigo-entrega'
 import { GuardarPedido } from './guardar-pedido'
 
 export const metadata = { title: 'Meu pedido | Mercado Massa 24h' }
@@ -45,6 +46,7 @@ type PedidoPublico = {
   change_amount: number | null
   customer_note: string | null
   cancel_reason: string | null
+  delivery_code: string | null
   items: ItemPedido[]
 }
 
@@ -94,6 +96,10 @@ export default async function PedidoPage({ params, searchParams }: PageProps<'/p
           Feito em {new Date(pedido.created_at).toLocaleString('pt-BR')}
         </p>
       </div>
+
+      {!cancelado && pedido.status !== 'entregue' && pedido.delivery_code ? (
+        <CodigoEntrega codigo={pedido.delivery_code} numeroPedido={pedido.order_number} />
+      ) : null}
 
       <Card className="space-y-3">
         {cancelado ? (

@@ -18,7 +18,8 @@ export type EntregaCard = {
   change_for: number | null
   change_amount: number | null
   delivery_person_id: string | null
+  public_token: string
 }
 
 export const CAMPOS_ENTREGA =
-  'id, order_number, status, customer_name, customer_phone, address_street, address_number, address_district, address_complement, address_reference, customer_note, total, payment_method, needs_change, change_for, change_amount, delivery_person_id'
+  'id, order_number, status, customer_name, customer_phone, address_street, address_number, address_district, address_complement, address_reference, customer_note, total, payment_method, needs_change, change_for, change_amount, delivery_person_id, public_token'

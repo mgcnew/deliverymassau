@@ -6,6 +6,7 @@ import { useState, useTransition } from 'react'
 import { MapPin, MessageCircle, Navigation, Phone } from 'lucide-react'
 
 import { moeda } from '@/lib/format'
+import { montarMensagemNota } from '@/lib/loja/mensagem-compartilhamento'
 import {
   enderecoTexto,
   linkGoogleMaps,
@@ -20,12 +21,14 @@ import type { EntregaCard } from './tipos'
 export function CardEntrega({
   entrega,
   cidade,
+  nomeMercado,
   minha,
   permissoes,
   aoAssumir,
 }: {
   entrega: EntregaCard
   cidade: string | null
+  nomeMercado: string
   minha: boolean
   permissoes: { assumir: boolean; iniciar: boolean; finalizar: boolean }
   aoAssumir?: () => void
@@ -33,6 +36,18 @@ export function CardEntrega({
   const router = useRouter()
   const [transicao, startTransition] = useTransition()
   const [erro, setErro] = useState<string | null>(null)
+  const [codigo, setCodigo] = useState('')
+
+  function enviarNota() {
+    const url = `${window.location.origin}/pedido/${entrega.public_token}`
+    const texto = montarMensagemNota({
+      nomeMercado,
+      nomeCliente: entrega.customer_name,
+      numeroPedido: entrega.order_number,
+      url,
+    })
+    window.open(linkWhatsapp(entrega.customer_phone, texto), '_blank', 'noopener,noreferrer')
+  }
 
   const endereco = {
     street: entrega.address_street,
@@ -158,15 +173,42 @@ export function CardEntrega({
         </div>
       ) : null}
 
-      {minha && entrega.status === 'saiu_para_entrega' && permissoes.finalizar ? (
+      {minha && entrega.status === 'saiu_para_entrega' ? (
         <button
           type="button"
-          disabled={transicao}
-          onClick={() => rodar(() => finalizarEntrega(entrega.id))}
-          className="h-16 w-full rounded-xl bg-emerald-600 text-lg font-black text-white"
+          onClick={enviarNota}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line font-bold"
         >
-          {transicao ? 'Finalizando...' : 'MARCAR COMO ENTREGUE'}
+          <MessageCircle size={18} /> Enviar nota pelo WhatsApp
         </button>
+      ) : null}
+
+      {minha && entrega.status === 'saiu_para_entrega' && permissoes.finalizar ? (
+        <div className="space-y-2">
+          <div>
+            <label htmlFor={`codigo-${entrega.id}`} className="text-sm font-semibold text-muted">
+              Peça o código de 4 dígitos ao cliente na porta
+            </label>
+            <input
+              id={`codigo-${entrega.id}`}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={4}
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="0000"
+              className="mt-1 h-14 w-full rounded-xl border border-line bg-surface text-center text-2xl font-black tracking-[0.4em]"
+            />
+          </div>
+          <button
+            type="button"
+            disabled={transicao || codigo.length !== 4}
+            onClick={() => rodar(() => finalizarEntrega(entrega.id, codigo))}
+            className="h-16 w-full rounded-xl bg-emerald-600 text-lg font-black text-white disabled:opacity-50"
+          >
+            {transicao ? 'Finalizando...' : 'MARCAR COMO ENTREGUE'}
+          </button>
+        </div>
       ) : null}
 
       <Link
