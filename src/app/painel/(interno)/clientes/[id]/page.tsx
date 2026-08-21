@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Printer } from 'lucide-react'
 
 import { LinkVoltar } from '@/components/ui/link-voltar'
 import { notFound } from 'next/navigation'
@@ -14,6 +13,7 @@ import { linkWhatsapp } from '@/lib/orders/navegacao'
 import type { OrderStatus } from '@/lib/types'
 import { CompartilharLoja } from '../../compartilhar-loja'
 import { AcoesCliente } from './acoes-cliente'
+import { BotaoNotaWhatsapp } from './botao-nota-whatsapp'
 
 export const metadata = { title: 'Cliente | Mercado Massa 24h' }
 
@@ -45,7 +45,7 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
   const { data: pedidos } = podeVerPedidos
     ? await supabase
         .from('orders')
-        .select('id, order_number, status, total, created_at')
+        .select('id, order_number, status, total, created_at, public_token')
         .eq('customer_id', id)
         .order('created_at', { ascending: false })
         .limit(20)
@@ -177,14 +177,13 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
                       </div>
                     </Link>
                     {podeImprimir ? (
-                      <Link
-                        href={`/painel/pedidos/${p.id}/imprimir?auto=1`}
-                        aria-label={`Imprimir via do pedido #${p.order_number}`}
-                        title="Imprimir via"
-                        className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-foreground/5"
-                      >
-                        <Printer size={20} aria-hidden />
-                      </Link>
+                      <BotaoNotaWhatsapp
+                        telefone={cliente.phone}
+                        nomeCliente={cliente.name}
+                        nomeMercado={nomeMercado}
+                        numeroPedido={p.order_number}
+                        token={p.public_token}
+                      />
                     ) : null}
                   </li>
                 )

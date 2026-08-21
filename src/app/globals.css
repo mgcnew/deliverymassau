@@ -109,6 +109,15 @@ body {
   padding: 8mm;
 }
 
+/* Impressora bluetooth portatil (rolo de 58mm) -- area impressa mais
+   estreita que a termica de balcao (80mm), letra um pouco menor pra
+   nao quebrar linha o tempo todo. */
+.via-58mm {
+  width: 58mm;
+  font-size: 10px;
+  padding: 2mm;
+}
+
 .via hr {
   border: none;
   border-top: 1px dashed #000;
@@ -140,5 +149,9 @@ body {
     width: auto;
     padding: 0;
     font-size: 12px;
+  }
+
+  .via-58mm {
+    font-size: 10px;
   }
 }

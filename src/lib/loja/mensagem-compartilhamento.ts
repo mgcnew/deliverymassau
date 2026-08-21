@@ -26,3 +26,27 @@ export function montarMensagemCompartilhamento({
 
   return linhas.join('\n')
 }
+
+/** Mensagem de agradecimento com o link da nota do pedido, mandada pelo
+ *  WhatsApp em vez de so abrir a caixa de impressao. */
+export function montarMensagemNota({
+  nomeMercado,
+  nomeCliente,
+  numeroPedido,
+  url,
+}: {
+  nomeMercado: string
+  nomeCliente: string
+  numeroPedido: number
+  url: string
+}): string {
+  return [
+    `Oi, ${nomeCliente}! 🙏`,
+    `Muito obrigado por comprar no *${nomeMercado}*!`,
+    `Segue a nota do seu pedido #${numeroPedido}:`,
+    '',
+    url,
+    '',
+    'Foi um prazer atender você. Até a próxima! 😊',
+  ].join('\n')
+}

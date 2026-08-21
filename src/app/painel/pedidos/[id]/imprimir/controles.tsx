@@ -3,8 +3,16 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
+type Formato = '58mm' | '80mm' | 'a4'
+
+const OPCOES: Array<{ valor: Formato; label: string }> = [
+  { valor: '58mm', label: 'Bluetooth 58mm' },
+  { valor: '80mm', label: 'Termica 80mm' },
+  { valor: 'a4', label: 'Papel A4' },
+]
+
 export function ControlesImpressao({ orderId, auto }: { orderId: string; auto: boolean }) {
-  const [a4, setA4] = useState(false)
+  const [formato, setFormato] = useState<Formato>('80mm')
 
   // Abre a caixa de impressao sozinho apenas quando veio do botao "Imprimir"
   // do pedido (?auto=1). Quem abre a via pelo link direto nao fica preso num
@@ -16,8 +24,10 @@ export function ControlesImpressao({ orderId, auto }: { orderId: string; auto: b
   }, [auto])
 
   useEffect(() => {
-    document.querySelector('.via')?.classList.toggle('via-a4', a4)
-  }, [a4])
+    const via = document.querySelector('.via')
+    via?.classList.toggle('via-a4', formato === 'a4')
+    via?.classList.toggle('via-58mm', formato === '58mm')
+  }, [formato])
 
   return (
     <div className="nao-imprimir mx-auto flex w-full max-w-2xl flex-wrap items-center gap-2 p-4">
@@ -37,20 +47,18 @@ export function ControlesImpressao({ orderId, auto }: { orderId: string; auto: b
       </button>
 
       <div className="flex overflow-hidden rounded-xl border border-line">
-        <button
-          type="button"
-          onClick={() => setA4(false)}
-          className={`h-11 px-4 font-semibold ${!a4 ? 'bg-foreground text-white' : 'bg-surface'}`}
-        >
-          Termica 80mm
-        </button>
-        <button
-          type="button"
-          onClick={() => setA4(true)}
-          className={`h-11 px-4 font-semibold ${a4 ? 'bg-foreground text-white' : 'bg-surface'}`}
-        >
-          Papel A4
-        </button>
+        {OPCOES.map((opcao) => (
+          <button
+            key={opcao.valor}
+            type="button"
+            onClick={() => setFormato(opcao.valor)}
+            className={`h-11 px-4 text-sm font-semibold ${
+              formato === opcao.valor ? 'bg-foreground text-white' : 'bg-surface'
+            }`}
+          >
+            {opcao.label}
+          </button>
+        ))}
       </div>
     </div>
   )
