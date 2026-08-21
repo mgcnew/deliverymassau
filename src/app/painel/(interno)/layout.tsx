@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
+import { after } from 'next/server'
 
 import { PERMISSIONS } from '@/lib/permissions'
 import { requireStaff, touchLastSeen } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
+import { getMercado } from '@/lib/painel/mercado'
 import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { logoutAction } from '../login/actions'
@@ -26,15 +27,14 @@ const MENU: Array<NavItem & { permission: string }> = [
 ]
 
 export default async function PainelLayout({ children }: LayoutProps<'/painel'>) {
-  const staff = await requireStaff()
-  await touchLastSeen(staff)
+  // Os dados do mercado nao dependem de quem esta logado, entao vao junto em
+  // vez de esperar a autenticacao terminar - era mais uma ida de rede em
+  // fila no caminho critico de toda pagina do painel.
+  const [staff, config] = await Promise.all([requireStaff(), getMercado()])
 
-  const supabase = await createClient()
-  const { data: config } = await supabase
-    .from('settings')
-    .select('market_name, market_address, market_city')
-    .eq('id', 1)
-    .maybeSingle()
+  // "Ultimo acesso" e informacao de bastidor: nao pode segurar a resposta.
+  // after() roda depois que a pagina ja foi enviada.
+  after(() => touchLastSeen(staff))
 
   const nomeMercado = config?.market_name ?? 'Mercado Massa 24h'
   const endereco = [config?.market_address, config?.market_city].filter(Boolean).join(', ') || null

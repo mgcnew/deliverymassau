@@ -8,6 +8,24 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
   : undefined;
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Aumenta o tempo de reuso do Client Cache (default de `dynamic` e 0 =
+    // nao cacheia).
+    //
+    // ATENCAO ao que isto NAO faz: medi antes e depois, e voltar para uma
+    // pagina ja visitada CONTINUA indo ao servidor. Para rota dinamica com
+    // loading.tsx, o que fica no cache do cliente e so a casca ("layout ate
+    // o primeiro loading boundary", conforme docs/prefetching) -- os dados
+    // sempre chegam do servidor via streaming. Ou seja: o jeito de a
+    // navegacao parecer instantanea nao e cache, e o loading.tsx aparecendo
+    // na hora enquanto o dado vem. O que da pra encurtar e o tempo de
+    // resposta (regiao da Vercel + menos idas ao Supabase), nao a existencia
+    // da requisicao.
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+  },
   images: {
     // Fotos de produto/logo vem do Storage do Supabase. Com isso o
     // next/image passa a redimensionar, converter formato (webp/avif) e

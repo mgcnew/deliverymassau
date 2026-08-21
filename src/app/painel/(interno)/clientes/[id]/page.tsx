@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 
 import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
+import { getMercado } from '@/lib/painel/mercado'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardTitle, Empty } from '@/components/ui/card'
 import { dataHora, moeda, telefone } from '@/lib/format'
@@ -22,7 +23,7 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
   const staff = await requirePermission(PERMISSIONS.clientesVer)
   const supabase = await createClient()
 
-  const [{ data: cliente }, { data: enderecos }, { data: config }] = await Promise.all([
+  const [{ data: cliente }, { data: enderecos }, config] = await Promise.all([
     supabase.from('customers').select('*').eq('id', id).maybeSingle(),
     supabase
       .from('customer_addresses')
@@ -30,7 +31,8 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
       .eq('customer_id', id)
       .order('created_at', { ascending: false })
       .limit(3),
-    supabase.from('settings').select('market_name, market_address, market_city').eq('id', 1).maybeSingle(),
+    // Ja veio do layout neste mesmo request: o cache() devolve sem ir ao banco.
+    getMercado(),
   ])
 
   if (!cliente) notFound()

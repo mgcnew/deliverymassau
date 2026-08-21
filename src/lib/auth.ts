@@ -2,14 +2,13 @@ import 'server-only'
 
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
-import type { User } from '@supabase/supabase-js'
 
 import { createClient } from '@/lib/supabase/server'
 import type { PermissionCode } from '@/lib/permissions'
 import type { Profile } from '@/lib/types'
 
 export type Staff = {
-  user: User
+  userId: string
   profile: Profile
   permissions: Set<string>
 }
@@ -18,23 +17,27 @@ export type Staff = {
 export const getStaff = cache(async (): Promise<Staff | null> => {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
+  // getClaims() e nao getUser(): as chaves do projeto sao ES256, entao o JWT
+  // e validado localmente (assinatura conferida de verdade, nao e o
+  // getSession() que so le o cookie). getUser() batia no Supabase Auth em
+  // toda pagina do painel -- somado ao proxy, eram DUAS idas de rede de
+  // ~60-100ms cada por navegacao, so para descobrir quem e o usuario.
+  const { data: claims } = await supabase.auth.getClaims()
+  const userId = claims?.claims?.sub
+  if (!userId) return null
 
   // Perfil e permissoes nao dependem um do outro (my_permissions usa
   // auth.uid() direto via RLS) - rodar em paralelo poupa uma ida de rede
   // em toda pagina autenticada do painel.
   const [{ data: profile }, { data: codes }] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+    supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     supabase.rpc('my_permissions'),
   ])
 
   if (!profile || !profile.is_active) return null
 
   return {
-    user,
+    userId,
     profile: profile as Profile,
     permissions: new Set<string>((codes as string[] | null) ?? []),
   }

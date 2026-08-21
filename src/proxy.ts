@@ -27,9 +27,16 @@ export async function proxy(request: NextRequest) {
   )
 
   // Renova a sessao. Checagem otimista: quem manda mesmo sao o layout e a RLS.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  //
+  // getClaims() em vez de getUser(): as chaves deste projeto sao ES256
+  // (assimetricas), entao a assinatura do JWT e conferida localmente, sem
+  // ida de rede ao Supabase Auth. getUser() sempre bate no servidor -- eram
+  // ~60-100ms cravados em TODA navegacao do painel, e o proxy roda tambem
+  // nas requisicoes RSC. A verificacao continua criptografica (nao e o
+  // getSession(), que so le o cookie sem validar), e getClaims renova a
+  // sessao sozinho quando o token esta perto de expirar.
+  const { data: claims } = await supabase.auth.getClaims()
+  const user = claims?.claims ?? null
 
   const { pathname } = request.nextUrl
   const areaInterna = pathname.startsWith('/painel')

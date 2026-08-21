@@ -1,5 +1,6 @@
 import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
+import { getMercado } from '@/lib/painel/mercado'
 import { createClient } from '@/lib/supabase/server'
 import { EntregasCliente } from './entregas-cliente'
 import { CAMPOS_ENTREGA, type EntregaCard } from './tipos'
@@ -10,7 +11,7 @@ export default async function EntregasPage() {
   const staff = await requirePermission(PERMISSIONS.entregasVer)
   const supabase = await createClient()
 
-  const [{ data: disponiveis }, { data: minhas }, { data: config }] = await Promise.all([
+  const [{ data: disponiveis }, { data: minhas }, config] = await Promise.all([
     supabase
       .from('orders')
       .select(CAMPOS_ENTREGA)
@@ -23,7 +24,8 @@ export default async function EntregasPage() {
       .eq('delivery_person_id', staff.profile.id)
       .in('status', ['aguardando_entregador', 'saiu_para_entrega'])
       .order('created_at'),
-    supabase.from('settings').select('market_city, market_name').eq('id', 1).maybeSingle(),
+    // Ja veio do layout neste mesmo request: o cache() devolve sem ir ao banco.
+    getMercado(),
   ])
 
   return (

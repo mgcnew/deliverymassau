@@ -34,7 +34,17 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} h-full antialiased`} suppressHydrationWarning>
+    // data-scroll-behavior: o Next 16 parou de neutralizar sozinho o
+    // `scroll-behavior: smooth` do globals.css durante troca de rota, entao
+    // a rolagem pro topo virava uma animacao -- navegacao parecia lenta. O
+    // atributo devolve o comportamento antigo (rolagem instantanea na
+    // navegacao, suave so nas ancoras da loja).
+    <html
+      lang="pt-BR"
+      data-scroll-behavior="smooth"
+      className={`${geistSans.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
