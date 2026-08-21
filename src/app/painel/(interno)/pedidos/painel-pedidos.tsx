@@ -23,10 +23,12 @@ export function PainelPedidos({
   pedidos,
   finalizados,
   podeSeparar,
+  podeImprimir,
 }: {
   pedidos: PedidoOperacional[]
   finalizados: PedidoOperacional[]
   podeSeparar: boolean
+  podeImprimir: boolean
 }) {
   const router = useRouter()
   const [aba, setAba] = useState<OrderStatus | 'finalizados'>('recebido')
@@ -126,7 +128,7 @@ export function PainelPedidos({
         ) : (
           <div className="space-y-3">
             {daAba.map((p) => (
-              <CardPedido key={p.id} pedido={p} podeSeparar={podeSeparar} />
+              <CardPedido key={p.id} pedido={p} podeSeparar={podeSeparar} podeImprimir={podeImprimir} />
             ))}
           </div>
         )}
@@ -148,7 +150,7 @@ export function PainelPedidos({
                 </h2>
                 <div className="space-y-2">
                   {lista.map((p) => (
-                    <CardPedido key={p.id} pedido={p} podeSeparar={podeSeparar} />
+                    <CardPedido key={p.id} pedido={p} podeSeparar={podeSeparar} podeImprimir={podeImprimir} />
                   ))}
                 </div>
               </section>
@@ -164,7 +166,7 @@ export function PainelPedidos({
             </h2>
             <div className="space-y-2">
               {finalizados.map((p) => (
-                <CardPedido key={p.id} pedido={p} podeSeparar={false} />
+                <CardPedido key={p.id} pedido={p} podeSeparar={false} podeImprimir={podeImprimir} />
               ))}
             </div>
           </section>

@@ -42,6 +42,7 @@ export default async function PedidosPage() {
         pedidos={mapear(abertos as LinhaPedido[] | null)}
         finalizados={mapear(fechados as LinhaPedido[] | null)}
         podeSeparar={staff.permissions.has(PERMISSIONS.pedidosSeparar)}
+        podeImprimir={staff.permissions.has(PERMISSIONS.pedidosImprimir)}
       />
     </div>
   )

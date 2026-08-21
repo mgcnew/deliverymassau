@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
+import { Printer } from 'lucide-react'
 
 import { moeda } from '@/lib/format'
 import { ORDER_STATUS } from '@/lib/orders/status'
@@ -12,9 +13,11 @@ import { PAGAMENTO_CURTO, tempoRelativo, type PedidoOperacional } from './tipos'
 export function CardPedido({
   pedido,
   podeSeparar,
+  podeImprimir,
 }: {
   pedido: PedidoOperacional
   podeSeparar: boolean
+  podeImprimir: boolean
 }) {
   const router = useRouter()
   const [transicao, startTransition] = useTransition()
@@ -70,25 +73,40 @@ export function CardPedido({
         ) : null}
       </div>
 
-      {podeSeparar && pedido.status === 'recebido' ? (
-        <button
-          type="button"
-          disabled={transicao}
-          onClick={() =>
-            startTransition(async () => {
-              const r = await iniciarSeparacao(pedido.id)
-              if (r.erro) {
-                setErro(r.erro)
-                router.refresh()
-                return
+      {pedido.status === 'recebido' && (podeSeparar || podeImprimir) ? (
+        <div className="flex gap-2">
+          {podeSeparar ? (
+            <button
+              type="button"
+              disabled={transicao}
+              onClick={() =>
+                startTransition(async () => {
+                  const r = await iniciarSeparacao(pedido.id)
+                  if (r.erro) {
+                    setErro(r.erro)
+                    router.refresh()
+                    return
+                  }
+                  router.push(`/painel/pedidos/${pedido.id}/separacao`)
+                })
               }
-              router.push(`/painel/pedidos/${pedido.id}/separacao`)
-            })
-          }
-          className="h-11 w-full rounded-xl bg-brand font-bold text-brand-foreground"
-        >
-          {transicao ? 'Abrindo...' : 'Separar'}
-        </button>
+              className="h-11 flex-1 rounded-xl bg-brand font-bold text-brand-foreground"
+            >
+              {transicao ? 'Abrindo...' : 'Separar'}
+            </button>
+          ) : null}
+
+          {podeImprimir ? (
+            <Link
+              href={`/painel/pedidos/${pedido.id}/imprimir?auto=1`}
+              aria-label={`Imprimir via do pedido #${pedido.order_number}`}
+              title="Imprimir via termica"
+              className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface"
+            >
+              <Printer size={20} aria-hidden />
+            </Link>
+          ) : null}
+        </div>
       ) : null}
 
       {pedido.status === 'separando' ? (
