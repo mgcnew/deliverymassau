@@ -31,7 +31,11 @@ function Numero({
   const conteudo = (
     <Card className={`h-full ${destaque ? 'border-brand' : ''}`}>
       <p className="text-sm font-semibold text-muted">{titulo}</p>
-      <p className={`text-3xl font-black ${destaque ? 'text-brand' : ''}`}>{valor}</p>
+      <p
+        className={`break-words text-xl font-black tabular-nums sm:text-2xl lg:text-3xl ${destaque ? 'text-brand' : ''}`}
+      >
+        {valor.replace(/ /g, ' ')}
+      </p>
     </Card>
   )
 
