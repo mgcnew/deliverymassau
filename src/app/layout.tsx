@@ -27,7 +27,13 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#d61f2b',
+  // Cor da barra de status do celular. Era o vermelho da marca, sobra da
+  // epoca em que o topo do app era vermelho -- hoje o cabecalho e bg-surface,
+  // entao a barra combina com ele em cada tema em vez de destoar.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#1a1a20' },
+  ],
   width: 'device-width',
   initialScale: 1,
 }
