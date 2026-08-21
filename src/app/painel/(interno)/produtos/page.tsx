@@ -10,6 +10,7 @@ import { precoPorUnidade } from '@/lib/format'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 import type { UnitType } from '@/lib/types'
 import { BotaoDisponibilidade } from './disponibilidade'
+import { SeletorCategoria } from './seletor-categoria'
 
 export const metadata = { title: 'Produtos | Mercado Massa 24h' }
 
@@ -113,25 +114,12 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
             {f.label}
           </Link>
         ))}
-        <Link
-          href={link({ c: '', p: '1' })}
-          className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-bold ${
-            categoria ? 'bg-surface border border-line' : 'bg-foreground/10'
-          }`}
-        >
-          Todas as categorias
-        </Link>
-        {(categorias ?? []).map((c) => (
-          <Link
-            key={c.id}
-            href={link({ c: c.id, p: '1' })}
-            className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-bold ${
-              categoria === c.id ? 'bg-brand text-brand-foreground' : 'bg-surface border border-line'
-            }`}
-          >
-            {c.name}
-          </Link>
-        ))}
+        <SeletorCategoria
+          categorias={categorias ?? []}
+          selecionada={categoria}
+          filtro={filtro}
+          busca={busca}
+        />
       </div>
 
       <Card>
