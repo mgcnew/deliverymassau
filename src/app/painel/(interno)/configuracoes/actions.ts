@@ -103,6 +103,31 @@ export async function salvarDelivery(_prev: ConfigState, formData: FormData): Pr
   return { ok: 'Configuracoes de entrega salvas.' }
 }
 
+/**
+ * Interruptor do painel: abre/fecha o delivery num toque.
+ *
+ * Mexe SO no delivery_enabled -- diferente do formulario de configuracoes,
+ * que grava tambem a mensagem de fechado. Se este tocasse na mensagem,
+ * abrir e fechar pelo atalho apagaria o texto que a pessoa escreveu la.
+ */
+export async function alternarDelivery(ativo: boolean): Promise<ConfigState> {
+  const guard = await exigir(PERMISSIONS.configDeliveryStatus)
+  if (guard.erro) return guard
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('settings')
+    .update({ delivery_enabled: ativo })
+    .eq('id', 1)
+    .select('id')
+
+  if (error) return { erro: error.message }
+  if (!data?.length) return { erro: BLOQUEADO }
+
+  depois()
+  return { ok: ativo ? 'Delivery aberto.' : 'Delivery fechado.' }
+}
+
 export async function salvarPix(_prev: ConfigState, formData: FormData): Promise<ConfigState> {
   const guard = await exigir(PERMISSIONS.configPix)
   if (guard.erro) return guard

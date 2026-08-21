@@ -22,11 +22,14 @@ const COLUNAS: OrderStatus[] = [
 export function PainelPedidos({
   pedidos,
   finalizados,
+  rotuloDia,
   podeSeparar,
   podeImprimir,
 }: {
   pedidos: PedidoOperacional[]
   finalizados: PedidoOperacional[]
+  /** "hoje", "ontem" ou "21/08" - so os finalizados seguem o filtro de data. */
+  rotuloDia: string
   podeSeparar: boolean
   podeImprimir: boolean
 }) {
@@ -118,13 +121,17 @@ export function PainelPedidos({
                   : 'border border-line bg-surface'
               }`}
             >
-              Finalizados
+              Finalizados {rotuloDia}
             </button>
           </div>
         </div>
 
         {daAba.length === 0 ? (
-          <Empty>Nenhum pedido aqui agora.</Empty>
+          <Empty>
+            {aba === 'finalizados'
+              ? `Nenhum pedido finalizado ${rotuloDia}.`
+              : 'Nenhum pedido aqui agora.'}
+          </Empty>
         ) : (
           <div className="space-y-3">
             {daAba.map((p) => (
@@ -159,7 +166,7 @@ export function PainelPedidos({
 
           <section className="space-y-2">
             <h2 className="flex items-center justify-center gap-2 text-sm font-black uppercase tracking-wide">
-              Finalizados
+              Finalizados {rotuloDia}
               <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-xs">
                 {finalizados.length}
               </span>

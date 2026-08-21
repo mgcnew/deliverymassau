@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { PERMISSIONS } from '@/lib/permissions'
 import { PainelIndicadores, type Indicadores } from './indicadores'
+import { InterruptorDelivery } from './interruptor-delivery'
 
 export const metadata = { title: 'Painel | Mercado Massa 24h' }
 
@@ -36,23 +37,10 @@ export default async function PainelHome() {
         <p className="text-muted">{settings?.market_name ?? 'Mercado Massa 24h'}</p>
       </div>
 
-      <Card className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-muted">Delivery</p>
-          <p className="text-lg font-bold">
-            {settings?.delivery_enabled ? 'Aberto para pedidos' : 'Fechado temporariamente'}
-          </p>
-        </div>
-        <span
-          className={`rounded-full px-3 py-1 text-sm font-bold ${
-            settings?.delivery_enabled
-              ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200'
-              : 'bg-rose-100 text-rose-900 dark:bg-rose-900/50 dark:text-rose-200'
-          }`}
-        >
-          {settings?.delivery_enabled ? 'ON' : 'OFF'}
-        </span>
-      </Card>
+      <InterruptorDelivery
+        ativo={settings?.delivery_enabled ?? false}
+        podeAlterar={staff.permissions.has(PERMISSIONS.configDeliveryStatus)}
+      />
 
       {indicadores ? <PainelIndicadores dados={indicadores} /> : null}
 
