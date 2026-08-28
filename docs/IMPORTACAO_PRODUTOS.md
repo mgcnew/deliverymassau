@@ -162,3 +162,39 @@ duas anteriores, mas é o único opcional dos três).
 
 Se preferir, começo pela Fase A direto — a ordem não muda nada tecnicamente,
 é só uma sugestão de prioridade.
+
+
+---
+
+## Reclassificação em massa (28/08/2026)
+
+A carga do sistema antigo não traz seção: os 5.024 produtos entraram quase
+todos em "Mercearia" (4.218, ou 84%). A classificação foi refeita a partir do
+**nome do produto**, com sete categorias novas — Matinais, Biscoitos e snacks,
+Doces e chocolates, Molhos e conservas, Congelados, Bazar e utilidades e Pet —
+e duas renomeadas (Frios → **Frios e laticínios**, Higiene → **Higiene e
+beleza**; o slug não mudou, então os endereços da loja continuam valendo).
+
+Resultado: Mercearia caiu de 4.218 para **1.923** produtos.
+
+**A classificação erra e vai continuar errando** onde o nome menciona um
+ingrediente: "SALG.BACON" não é açougue, "PIPOCA SABOR QUEIJO" não é frios.
+Uma passada de correção tratou os casos conhecidos (biscoito/salgadinho →
+snacks; caldo/sopa/miojo → molhos), mas o certo é a equipe ir ajustando pela
+tela de Produtos conforme aparecer.
+
+### Como voltar atrás
+
+A categoria de cada produto foi salva antes da mudança:
+
+```sql
+-- desfaz a reclassificação inteira
+update public.products p
+   set category_id = b.category_id
+  from public.products_categoria_backup b
+ where b.id = p.id and p.category_id is distinct from b.category_id;
+```
+
+A tabela `public.products_categoria_backup` tem RLS ligada e nenhuma política:
+não é acessível pela API, só pelo servidor. Pode ser descartada quando a
+classificação estiver estável.
