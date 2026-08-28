@@ -22,6 +22,7 @@ const MENU: Array<NavItem & { permission: string }> = [
   { href: '/painel/entregas', label: 'Entregas', icon: 'entregas', permission: PERMISSIONS.entregasVer },
   { href: '/painel/produtos', label: 'Produtos', icon: 'produtos', permission: PERMISSIONS.produtosVer },
   { href: '/painel/clientes', label: 'Clientes', icon: 'clientes', permission: PERMISSIONS.clientesVer },
+  { href: '/painel/relatorios', label: 'Relatorios', icon: 'relatorios', permission: PERMISSIONS.relatoriosVer },
   { href: '/painel/equipe', label: 'Equipe', icon: 'equipe', permission: PERMISSIONS.equipeVer },
   { href: '/painel/configuracoes', label: 'Configuracoes', icon: 'config', permission: PERMISSIONS.configAcessar },
 ]

@@ -3,6 +3,7 @@
 
 export const PERMISSIONS = {
   dashboardVer: 'dashboard.ver',
+  relatoriosVer: 'relatorios.ver',
 
   pedidosVer: 'pedidos.ver',
   pedidosEditar: 'pedidos.editar',

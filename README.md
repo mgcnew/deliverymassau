@@ -96,6 +96,12 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0018` | Fecha `dashboard_hoje()` para o visitante anônimo |
 | `0019` | `import_products()` — importação de produtos por CSV (mesma função serve prévia e confirmação) |
 | `0020` | `products.barcode` (único quando preenchido) e `find_product_by_barcode()` |
+| `0021` | Bloqueio de cliente (`customers.is_blocked`) — barra pedido novo, preserva o histórico |
+| `0022` | Promoções (`products.original_price`) e vitrine de ofertas |
+| `0023` | Código de confirmação de entrega, contra baixa indevida |
+| `0024` | `dashboard_hoje()` sem varredura completa de `orders` |
+| `0025` | Índices nas chaves estrangeiras apontadas pelos advisors |
+| `0026` | Permissão `relatorios.ver` e `relatorio_vendas(inicio, fim)` — relatório de vendas por período |
 
 ## Estado das etapas
 

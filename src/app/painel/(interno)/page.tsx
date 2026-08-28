@@ -13,6 +13,7 @@ const ATALHOS = [
   { href: '/painel/pedidos', titulo: 'Pedidos', texto: 'Receber, separar e despachar', permission: PERMISSIONS.pedidosVer },
   { href: '/painel/entregas', titulo: 'Entregas', texto: 'Fila e minhas entregas', permission: PERMISSIONS.entregasVer },
   { href: '/painel/produtos', titulo: 'Produtos', texto: 'Disponibilidade e cadastro', permission: PERMISSIONS.produtosVer },
+  { href: '/painel/relatorios', titulo: 'Relatorios', texto: 'Faturamento e desempenho por periodo', permission: PERMISSIONS.relatoriosVer },
   { href: '/painel/equipe', titulo: 'Equipe', texto: 'Funcionarios e permissoes', permission: PERMISSIONS.equipeVer },
   { href: '/painel/configuracoes', titulo: 'Configuracoes', texto: 'Entrega, pagamento e mercado', permission: PERMISSIONS.configAcessar },
 ]

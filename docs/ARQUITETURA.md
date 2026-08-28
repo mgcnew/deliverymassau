@@ -557,6 +557,22 @@ Todas as 11 etapas do plano foram implementadas. O que existe hoje:
 | 10 | Dashboard no fuso do mercado e configurações | `/painel`, `/painel/configuracoes` |
 | 11 | Revisão de segurança, advisors e refino | migrations `0017`–`0018` |
 
+### Depois do plano inicial
+
+| Entrega | Onde |
+|---|---|
+| Bloqueio de cliente, promoções, código de confirmação de entrega, PWA e impressão 58mm | migrations `0021`–`0023` |
+| **Relatórios de vendas por período** | `/painel/relatorios`, migration `0026` |
+
+O relatório responde "como foi o período", enquanto o dashboard responde "como
+está o dia agora". Uma RPC só (`relatorio_vendas`) devolve as sete seções da tela
+— resumo, comparação com o período anterior de mesmo tamanho, faturamento por dia,
+produtos, bairros, formas de pagamento e movimento por hora — porque sete RPCs
+seriam sete idas de rede para montar uma página. Duas regras valem para todos os
+números: o dia é o do fuso do mercado (§ igual ao `dashboard_hoje()`) e dinheiro
+só conta pedido **entregue**, já que pedido em andamento ainda muda de valor na
+pesagem ou é cancelado. O período é limitado a 366 dias, no banco e na tela.
+
 ### Riscos do §16 e como ficaram
 
 | # | Situação |

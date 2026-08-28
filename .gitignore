@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 !.env.example
+
+# backup do banco: contem dados pessoais de clientes (nome, telefone, endereco)
+/backup

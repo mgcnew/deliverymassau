@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Bike,
+  ChartColumn,
   LayoutDashboard,
   Package,
   Receipt,
@@ -20,6 +21,7 @@ const ICONS = {
   produtos: Package,
   entregas: Bike,
   clientes: UsersRound,
+  relatorios: ChartColumn,
   equipe: Users,
   config: Settings,
 } as const
