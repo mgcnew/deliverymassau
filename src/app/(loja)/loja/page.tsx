@@ -1,9 +1,9 @@
+import { BairrosAtendidos } from '@/components/loja/bairros-atendidos'
 import { CampoBusca } from '@/components/loja/busca'
 import { CategoriasChips } from '@/components/loja/categorias-chips'
 import { GradeProdutos } from '@/components/loja/produto-card'
 import { RolarParaHash } from '@/components/loja/rolar-para-hash'
 import { Empty } from '@/components/ui/card'
-import { moeda } from '@/lib/format'
 import { emPromocao, getBairrosAtendidos, getCategorias, getProdutos } from '@/lib/loja/catalogo'
 
 export default async function VitrinePage() {
@@ -43,22 +43,7 @@ export default async function VitrinePage() {
         ))
       )}
 
-      {bairros.length > 0 ? (
-        <section className="space-y-2 pt-2">
-          <h2 className="text-lg font-black">Onde entregamos</h2>
-          <ul className="flex flex-wrap gap-2">
-            {bairros.map((b) => (
-              <li
-                key={b.bairro}
-                className="rounded-full border border-line bg-surface px-3 py-1.5 text-sm"
-              >
-                <span className="font-semibold">{b.bairro}</span>
-                <span className="text-muted"> - {moeda(b.taxa)}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <BairrosAtendidos bairros={bairros} />
     </main>
   )
 }
