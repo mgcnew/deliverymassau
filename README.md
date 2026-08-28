@@ -136,6 +136,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0028` | `get_orders_summary_by_tokens()` — resumo dos pedidos guardados no aparelho do cliente |
 | `0029` | Auditoria de `profiles` ignora o update que só mexe em `last_seen_at` |
 | `0030` | Importação de produtos aceita a coluna opcional `codigo_barras` |
+| `0031` | Índice do nome normalizado — importação de planilha grande deixa de estourar o tempo limite |
 
 ## Estado das etapas
 

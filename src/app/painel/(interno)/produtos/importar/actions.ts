@@ -77,7 +77,7 @@ export async function analisarPlanilha(
     p_dry_run: true,
   })
 
-  if (error) return { erro: traduzirErro(error.message) }
+  if (error) return { erro: traduzirErro(error.message, error) }
 
   return { resultado: data as ResultadoImportacao, linhasEnviadas: leitura.linhas }
 }
@@ -92,7 +92,7 @@ export async function confirmarImportacao(linhas: LinhaPlanilha[]): Promise<Impo
     p_dry_run: false,
   })
 
-  if (error) return { erro: traduzirErro(error.message) }
+  if (error) return { erro: traduzirErro(error.message, error) }
 
   revalidatePath('/painel/produtos')
   revalidatePath('/painel/categorias')
@@ -100,9 +100,13 @@ export async function confirmarImportacao(linhas: LinhaPlanilha[]): Promise<Impo
   return { resultado: data as ResultadoImportacao, concluido: true }
 }
 
-function traduzirErro(mensagem: string): string {
+function traduzirErro(mensagem: string, detalhe?: unknown): string {
   if (mensagem.trim() === 'SEM_PERMISSAO') {
     return 'Voce nao tem permissao para cadastrar produtos.'
   }
+  // A tela mostra um recado curto, mas o motivo real precisa ficar em algum
+  // lugar: sem isto, "tente novamente" era tudo o que existia para depurar
+  // uma importacao de milhares de linhas.
+  console.error('[importacao] falha na RPC import_products:', mensagem, detalhe ?? '')
   return 'Nao foi possivel processar a planilha. Tente novamente.'
 }
