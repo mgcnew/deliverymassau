@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { BarraCarrinho } from '@/components/carrinho/barra-carrinho'
+import { LinkMeusPedidos } from '@/components/loja/link-meus-pedidos'
 import { RodapeEquipe } from '@/components/loja/rodape-equipe'
 import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -21,6 +22,7 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
             <Logo altura={44} />
             <p className="text-xs font-semibold text-muted">Delivery aberto 24 horas</p>
           </Link>
+          <LinkMeusPedidos />
           <ThemeToggle />
         </div>
       </header>
