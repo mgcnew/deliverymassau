@@ -134,6 +134,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0026` | Permissão `relatorios.ver` e `relatorio_vendas(inicio, fim)` — relatório de vendas por período |
 | `0027` | `push_subscriptions` — aparelhos inscritos para o aviso de pedido novo |
 | `0028` | `get_orders_summary_by_tokens()` — resumo dos pedidos guardados no aparelho do cliente |
+| `0029` | Auditoria de `profiles` ignora o update que só mexe em `last_seen_at` |
 
 ## Estado das etapas
 
