@@ -138,6 +138,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0030` | Importação de produtos aceita a coluna opcional `codigo_barras` |
 | `0031` | Índice do nome normalizado — importação de planilha grande deixa de estourar o tempo limite |
 | `0032` | Reimportar preço encerra promoção vencida em vez de derrubar a importação |
+| `0033` | `get_showcase()` — home mostra só o começo de cada categoria, com o total |
 
 ## Estado das etapas
 

@@ -61,6 +61,60 @@ export const getCategorias = cache(async (): Promise<CategoriaVitrine[]> => {
   return data ?? []
 })
 
+/**
+ * Vitrine da home: so o comeco de cada categoria, com o total ao lado.
+ *
+ * Antes a home trazia o catalogo inteiro e agrupava aqui. Isso funcionava
+ * com dezenas de produtos e desabou com milhares - a pagina passou de 2 MB
+ * e o PostgREST cortava em 1.000 itens, escondendo o resto sem avisar.
+ */
+export const getVitrine = cache(
+  async (porCategoria = 12): Promise<Map<string, { itens: ProdutoVitrine[]; total: number }>> => {
+    const supabase = await createClient()
+    const { data } = await supabase.rpc('get_showcase', { p_por_categoria: porCategoria })
+
+    const linhas = (data ?? []) as Array<ProdutoVitrine & { total_da_categoria: number }>
+    const porId = new Map<string, { itens: ProdutoVitrine[]; total: number }>()
+
+    for (const { total_da_categoria, ...produto } of linhas) {
+      const grupo = porId.get(produto.category_id) ?? { itens: [], total: Number(total_da_categoria) }
+      grupo.itens.push(produto)
+      porId.set(produto.category_id, grupo)
+    }
+
+    return porId
+  },
+)
+
+/** Uma pagina de produtos, com o total para a tela saber quantas paginas existem. */
+export const getProdutosPaginados = cache(
+  async (opcoes: {
+    categoriaId?: string
+    busca?: string
+    pagina: number
+    porPagina: number
+  }): Promise<{ itens: ProdutoVitrine[]; total: number }> => {
+    const supabase = await createClient()
+    const de = (opcoes.pagina - 1) * opcoes.porPagina
+
+    let query = supabase
+      .from('products')
+      // count exato numa consulta so: sem ele a tela nao sabe se existe
+      // pagina seguinte, e "carregar mais" viraria adivinhacao.
+      .select(CAMPOS_PRODUTO, { count: 'exact' })
+      .order('is_available', { ascending: false })
+      .order('sort_order')
+      .order('name')
+      .range(de, de + opcoes.porPagina - 1)
+
+    if (opcoes.categoriaId) query = query.eq('category_id', opcoes.categoriaId)
+    if (opcoes.busca) query = query.ilike('name', `%${opcoes.busca}%`)
+
+    const { data, count } = await query
+    return { itens: (data ?? []) as ProdutoVitrine[], total: count ?? 0 }
+  },
+)
+
 /** A RLS ja limita o anon a produtos ativos; indisponivel aparece marcado como "Acabou". */
 export const getProdutos = cache(
   async (opcoes?: { categoriaId?: string; busca?: string; limite?: number }): Promise<ProdutoVitrine[]> => {
