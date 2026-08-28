@@ -1,7 +1,7 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
 import { BotaoAdicionar } from '@/components/carrinho/botao-adicionar'
+import { FotoProduto } from '@/components/loja/foto-produto'
 import { moeda, precoPorUnidade } from '@/lib/format'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 import { emPromocao, type ProdutoVitrine } from '@/lib/loja/catalogo'
@@ -20,14 +20,11 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
           que importa num mercado com centenas de itens. A pagina do produto
           (/p/[slug]) segue com a imagem quadrada, grande, para decidir a compra.
         */}
-        <div className="relative aspect-[4/3] bg-foreground/[0.04]">
+        <div className="relative aspect-[4/3] overflow-hidden bg-foreground/[0.04]">
           {imagem ? (
-            <Image
+            <FotoProduto
               src={imagem}
-              alt=""
-              fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
-              className="object-cover"
             />
           ) : (
             <span className="flex size-full items-center justify-center text-3xl">🛒</span>

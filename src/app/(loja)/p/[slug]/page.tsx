@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
 import { LinkVoltar } from '@/components/ui/link-voltar'
@@ -14,6 +13,7 @@ import {
   getProdutos,
   getProdutosEmPromocao,
 } from '@/lib/loja/catalogo'
+import { FotoProduto } from '@/components/loja/foto-produto'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 
 export async function generateMetadata({ params }: PageProps<'/p/[slug]'>) {
@@ -57,14 +57,7 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-2xl border border-line bg-foreground/[0.04]">
           {imagem ? (
-            <Image
-              src={imagem}
-              alt=""
-              fill
-              sizes="(max-width: 640px) 100vw, 50vw"
-              priority
-              className="object-cover"
-            />
+            <FotoProduto src={imagem} sizes="(max-width: 640px) 100vw, 50vw" priority />
           ) : (
             <span className="flex size-full items-center justify-center text-5xl">🛒</span>
           )}
