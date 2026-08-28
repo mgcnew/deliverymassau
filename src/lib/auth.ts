@@ -60,12 +60,22 @@ export function can(staff: Staff | null, code: PermissionCode): boolean {
   return staff?.permissions.has(code) ?? false
 }
 
-/** "Ultimo acesso" da tela de Equipe, sem escrever no banco a cada clique. */
-export async function touchLastSeen(staff: Staff): Promise<void> {
+/**
+ * "Ultimo acesso" da tela de Equipe, sem escrever no banco a cada clique.
+ *
+ * Recebe o cliente pronto em vez de criar o proprio: quem chama e o layout,
+ * dentro de after(), e Server Component nao pode ler cookies() depois que a
+ * resposta saiu (o cliente do Supabase le a sessao dos cookies). Criar ali
+ * dentro fazia o after() estourar e o ultimo acesso nunca era gravado - em
+ * silencio, porque o Next engole o erro do callback.
+ */
+export async function touchLastSeen(
+  staff: Staff,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<void> {
   const last = staff.profile.last_seen_at ? new Date(staff.profile.last_seen_at).getTime() : 0
   if (Date.now() - last < 5 * 60 * 1000) return
 
-  const supabase = await createClient()
   await supabase
     .from('profiles')
     .update({ last_seen_at: new Date().toISOString() })

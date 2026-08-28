@@ -3,6 +3,7 @@ import { after } from 'next/server'
 
 import { PERMISSIONS } from '@/lib/permissions'
 import { requireStaff, touchLastSeen } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 import { getMercado } from '@/lib/painel/mercado'
 import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -35,7 +36,12 @@ export default async function PainelLayout({ children }: LayoutProps<'/painel'>)
 
   // "Ultimo acesso" e informacao de bastidor: nao pode segurar a resposta.
   // after() roda depois que a pagina ja foi enviada.
-  after(() => touchLastSeen(staff))
+  //
+  // O cliente do Supabase nasce AQUI, e nao dentro do callback: ele le a
+  // sessao dos cookies, e num Server Component o after() roda depois do
+  // ciclo de render, quando cookies() ja nao pode ser lido.
+  const supabase = await createClient()
+  after(() => touchLastSeen(staff, supabase))
 
   const nomeMercado = config?.market_name ?? 'Mercado Massa 24h'
   const endereco = [config?.market_address, config?.market_city].filter(Boolean).join(', ') || null
