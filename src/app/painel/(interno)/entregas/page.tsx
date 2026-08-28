@@ -42,6 +42,9 @@ export default async function EntregasPage() {
           iniciar: staff.permissions.has(PERMISSIONS.entregasIniciar),
           finalizar: staff.permissions.has(PERMISSIONS.entregasFinalizar),
         }}
+        // A chave publica VAPID e publica mesmo (vai no bundle do navegador);
+        // quem assina o envio e a privada, que fica so no servidor.
+        chavePush={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''}
       />
     </div>
   )

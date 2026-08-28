@@ -48,6 +48,9 @@ Ela **nunca** pode ganhar o prefixo `NEXT_PUBLIC_`.
    | `NEXT_PUBLIC_SUPABASE_URL` | `https://btycibxmcsjgcibcosvk.supabase.co` | Supabase → Project Settings → API |
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_Qj16imN7jDYTNfKjUc-gLQ_krRSP_Ms` | Supabase → Project Settings → API Keys |
    | `SUPABASE_SERVICE_ROLE_KEY` | *(secreta — não commitar)* | Supabase → Project Settings → API Keys → `service_role` |
+   | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | chave pública do push | está no `.env.local` |
+   | `VAPID_PRIVATE_KEY` | *(secreta — não commitar)* | está no `.env.local` |
+   | `VAPID_SUBJECT` | `mailto:massau24hrs@gmail.com` | contato exigido pelo protocolo |
 
    As duas primeiras não são segredo (são a URL pública e a chave anônima, protegidas
    pela RLS). A `service_role` **ignora RLS** — nunca prefixar com `NEXT_PUBLIC_`, nunca
@@ -68,6 +71,33 @@ Ela **nunca** pode ganhar o prefixo `NEXT_PUBLIC_`.
 Nenhum `vercel.json` é necessário — a única configuração especial do projeto é o Proxy
 (`src/proxy.ts`, equivalente ao antigo middleware), que a Vercel já reconhece nativamente
 em qualquer projeto Next.js com App Router.
+
+## Aviso de pedido novo (entregador)
+
+O painel avisa o entregador de duas formas, e as duas precisam das chaves VAPID
+configuradas (veja a tabela de variáveis acima):
+
+- **App aberto** — a fila se atualiza sozinha pelo Realtime e toca um alerta com
+  vibração quando entra corrida nova.
+- **App fechado** — notificação do sistema, entregue pelo serviço de push do
+  navegador. É preciso que o entregador toque uma vez em **"Me avisar de pedido
+  novo"** em `/painel/entregas` e aceite a permissão. Cada aparelho decide por si.
+
+Sem as chaves VAPID no ambiente, o botão não aparece e o resto do painel segue
+funcionando normalmente — o envio simplesmente não acontece.
+
+**No iPhone**, notificação web só funciona com o painel instalado na tela de
+início (Compartilhar → Adicionar à Tela de Início). No Android funciona pelo
+navegador, e melhor ainda com o app instalado.
+
+Gerar um par novo de chaves, se algum dia for preciso trocar:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Trocar as chaves invalida as inscrições existentes: todo mundo precisa tocar em
+"Me avisar de pedido novo" outra vez.
 
 ## Migrations
 
@@ -102,6 +132,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0024` | `dashboard_hoje()` sem varredura completa de `orders` |
 | `0025` | Índices nas chaves estrangeiras apontadas pelos advisors |
 | `0026` | Permissão `relatorios.ver` e `relatorio_vendas(inicio, fim)` — relatório de vendas por período |
+| `0027` | `push_subscriptions` — aparelhos inscritos para o aviso de pedido novo |
 
 ## Estado das etapas
 
