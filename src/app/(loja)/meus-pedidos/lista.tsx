@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { FileText } from 'lucide-react'
 
 import { Card, Empty } from '@/components/ui/card'
 import { assinarPedidos, lerPedidos, lerPedidosNoServidor } from '@/lib/carrinho/store'
@@ -93,10 +94,10 @@ export function ListaMeusPedidos() {
               {anteriores.map((p) => {
                 const resumo = resumos?.get(p.token)
                 return (
-                  <li key={p.token}>
+                  <li key={p.token} className="flex items-center gap-1 pr-3">
                     <Link
                       href={`/pedido/${p.token}`}
-                      className="flex items-center justify-between gap-3 p-4"
+                      className="flex min-w-0 flex-1 items-center justify-between gap-3 p-4"
                     >
                       <span className="min-w-0">
                         <span className="block font-bold">Pedido #{p.numero}</span>
@@ -108,10 +109,23 @@ export function ListaMeusPedidos() {
                               : 'Toque para ver'}
                         </span>
                       </span>
+                    </Link>
+
+                    {/* A nota so aparece com o pedido fechado: antes disso o
+                        peso ainda muda e item pode faltar. */}
+                    {resumo?.status === 'entregue' ? (
+                      <Link
+                        href={`/nota/${p.token}`}
+                        className="flex h-11 shrink-0 items-center gap-2 rounded-xl border border-line px-3 text-sm font-bold"
+                      >
+                        <FileText size={16} aria-hidden />
+                        Nota
+                      </Link>
+                    ) : (
                       <span aria-hidden className="shrink-0 text-muted">
                         &rsaquo;
                       </span>
-                    </Link>
+                    )}
                   </li>
                 )
               })}

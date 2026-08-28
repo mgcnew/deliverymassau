@@ -224,6 +224,17 @@ export default async function PedidoPage({ params, searchParams }: PageProps<'/p
         ) : null}
       </Card>
 
+      {/* Nota so depois de fechado: com o pedido em andamento o peso ainda
+          muda e item pode faltar, entao o papel sairia desatualizado. */}
+      {pedido.status === 'entregue' ? (
+        <Link
+          href={`/nota/${token}`}
+          className="flex h-12 items-center justify-center gap-2 rounded-xl bg-brand font-bold text-brand-foreground"
+        >
+          Ver nota do pedido
+        </Link>
+      ) : null}
+
       <div className="flex gap-2">
         <Link
           href="/loja"

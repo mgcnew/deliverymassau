@@ -153,6 +153,16 @@ body {
   padding: 2mm;
 }
 
+/* A nota do CLIENTE nasce na tela do celular, nao na impressora: largura
+   fixa de papel (como .via-a4) cortava os valores da direita. Na hora de
+   imprimir, o @media print devolve a largura da folha. */
+.via-cliente {
+  width: 100%;
+  max-width: 460px;
+  font-size: 13px;
+  padding: 4mm;
+}
+
 .via hr {
   border: none;
   border-top: 1px dashed #000;
@@ -188,5 +198,10 @@ body {
 
   .via-58mm {
     font-size: 10px;
+  }
+
+  .via-cliente {
+    width: auto;
+    max-width: none;
   }
 }
