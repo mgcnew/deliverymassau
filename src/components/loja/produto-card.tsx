@@ -14,13 +14,19 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-line bg-surface">
       <Link href={`/p/${produto.slug}`} className={indisponivel ? 'opacity-60' : ''}>
-        <div className="relative aspect-square bg-foreground/[0.04]">
+        {/*
+          4/3 e nao quadrada: a foto continua reconhecivel de relance, mas o
+          card encolhe ~15% de altura e cabe mais produto na tela - que e o
+          que importa num mercado com centenas de itens. A pagina do produto
+          (/p/[slug]) segue com a imagem quadrada, grande, para decidir a compra.
+        */}
+        <div className="relative aspect-[4/3] bg-foreground/[0.04]">
           {imagem ? (
             <Image
               src={imagem}
               alt=""
               fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
               className="object-cover"
             />
           ) : (
@@ -37,7 +43,7 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-0.5 p-3 pb-2">
+        <div className="flex flex-col gap-0.5 p-2.5 pb-1.5">
           <p className="line-clamp-2 font-semibold leading-tight">{produto.name}</p>
           {produto.short_description ? (
             <p className="line-clamp-1 text-sm text-muted">{produto.short_description}</p>
@@ -55,7 +61,7 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
         </div>
       </Link>
 
-      <div className="mt-auto p-3 pt-0">
+      <div className="mt-auto p-2.5 pt-0">
         <BotaoAdicionar produto={produto} />
       </div>
     </article>
@@ -64,7 +70,7 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
 
 export function GradeProdutos({ produtos }: { produtos: ProdutoVitrine[] }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {produtos.map((p) => (
         <ProdutoCard key={p.id} produto={p} />
       ))}
