@@ -1,11 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import { useState } from 'react'
 
 import { Empty } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/client'
+import { useAtualizacaoAoVivo } from '../use-atualizacao-ao-vivo'
 import { CardEntrega } from './card-entrega'
 import type { EntregaCard } from './tipos'
 
@@ -22,47 +20,14 @@ export function EntregasCliente({
   nomeMercado: string
   permissoes: { assumir: boolean; iniciar: boolean; finalizar: boolean }
 }) {
-  const router = useRouter()
   const [aba, setAba] = useState<'disponiveis' | 'minhas'>(
     minhas.length > 0 ? 'minhas' : 'disponiveis',
   )
 
   // A fila muda o tempo todo: se outro entregador assume, some da sua tela.
-  useEffect(() => {
-    const supabase = createClient()
-    let canal: RealtimeChannel | null = null
-    let vivo = true
-
-    // Varios entregadores podem assumir/liberar corridas quase juntos -
-    // agrupa numa janela curta em vez de um refresh por evento.
-    let temporizador: ReturnType<typeof setTimeout> | null = null
-    const atualizarAgrupado = () => {
-      if (temporizador) clearTimeout(temporizador)
-      temporizador = setTimeout(() => router.refresh(), 400)
-    }
-
-    ;(async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!vivo) return
-      if (session?.access_token) await supabase.realtime.setAuth(session.access_token)
-
-      canal = supabase
-        .channel('fila-entregas')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, atualizarAgrupado)
-        .subscribe()
-    })()
-
-    const intervalo = setInterval(() => router.refresh(), 30_000)
-
-    return () => {
-      vivo = false
-      if (temporizador) clearTimeout(temporizador)
-      clearInterval(intervalo)
-      if (canal) supabase.removeChannel(canal)
-    }
-  }, [router])
+  // E o celular do entregador vive no bolso - por isso o hook tambem atualiza
+  // no instante em que a tela volta a ser olhada.
+  useAtualizacaoAoVivo({ canal: 'fila-entregas', tabelas: ['orders'] })
 
   const lista = aba === 'minhas' ? minhas : disponiveis
 

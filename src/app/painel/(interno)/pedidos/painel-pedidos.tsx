@@ -1,14 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import type { RealtimeChannel } from '@supabase/supabase-js'
-
-import { createClient } from '@/lib/supabase/client'
 import { ORDER_STATUS } from '@/lib/orders/status'
 import { Empty } from '@/components/ui/card'
 import { RolagemHorizontal } from '@/components/ui/rolagem-horizontal'
+import { useAtualizacaoAoVivo } from '../use-atualizacao-ao-vivo'
 import type { OrderStatus } from '@/lib/types'
 import { CardPedido } from './card-pedido'
 import type { PedidoOperacional } from './tipos'
@@ -34,53 +31,11 @@ export function PainelPedidos({
   podeSeparar: boolean
   podeImprimir: boolean
 }) {
-  const router = useRouter()
   const [aba, setAba] = useState<OrderStatus | 'finalizados'>('recebido')
 
-  // Tempo real. Duas sutilezas que custaram caro:
-  // 1) o socket precisa do token ANTES de assinar, senao o Realtime avalia a RLS
-  //    como visitante anonimo e nenhum evento de pedido chega;
-  // 2) rede de balcao cai. O intervalo e a rede de seguranca para o caso de o
-  //    socket morrer sem avisar - num 24h e pior perder pedido do que gastar
-  //    uma consulta a cada 30 segundos.
-  useEffect(() => {
-    const supabase = createClient()
-    let canal: RealtimeChannel | null = null
-    let vivo = true
-
-    // Uma separacao pesa varios itens em sequencia rapida: cada pesagem
-    // dispara UPDATE em order_items + orders, ou seja, varios eventos em
-    // menos de 1s. Sem agrupar, cada um deles disparava um refresh
-    // completo da pagina - agrupa numa janela curta e refaz so uma vez.
-    let temporizador: ReturnType<typeof setTimeout> | null = null
-    const atualizarAgrupado = () => {
-      if (temporizador) clearTimeout(temporizador)
-      temporizador = setTimeout(() => router.refresh(), 400)
-    }
-
-    ;(async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!vivo) return
-      if (session?.access_token) await supabase.realtime.setAuth(session.access_token)
-
-      canal = supabase
-        .channel('operacao-pedidos')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, atualizarAgrupado)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, atualizarAgrupado)
-        .subscribe()
-    })()
-
-    const intervalo = setInterval(() => router.refresh(), 30_000)
-
-    return () => {
-      vivo = false
-      if (temporizador) clearTimeout(temporizador)
-      clearInterval(intervalo)
-      if (canal) supabase.removeChannel(canal)
-    }
-  }, [router])
+  // Tempo real da operacao: o hook cuida do socket, do token, da rede que
+  // cai e do refresh no instante em que a tela volta ao foco.
+  useAtualizacaoAoVivo({ canal: 'operacao-pedidos', tabelas: ['orders', 'order_items'] })
 
   const porStatus = (status: OrderStatus) => pedidos.filter((p) => p.status === status)
   const daAba = aba === 'finalizados' ? finalizados : porStatus(aba)
