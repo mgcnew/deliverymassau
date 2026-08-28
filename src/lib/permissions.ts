@@ -18,6 +18,7 @@ export const PERMISSIONS = {
   produtosCriar: 'produtos.criar',
   produtosEditar: 'produtos.editar',
   produtosDesativar: 'produtos.desativar',
+  produtosExcluir: 'produtos.excluir',
   produtosAlterarDisponibilidade: 'produtos.alterar_disponibilidade',
   categoriasGerenciar: 'categorias.gerenciar',
 

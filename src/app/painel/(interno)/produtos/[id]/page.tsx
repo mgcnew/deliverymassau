@@ -17,9 +17,15 @@ export default async function ProdutoPage({ params }: PageProps<'/painel/produto
   const staff = await requirePermission(PERMISSIONS.produtosVer)
   const supabase = await createClient()
 
-  const [{ data: produto }, { data: categorias }] = await Promise.all([
+  const [{ data: produto }, { data: categorias }, { count: vendas }] = await Promise.all([
     supabase.from('products').select('*').eq('id', id).maybeSingle(),
     supabase.from('categories').select('id, name').eq('is_active', true).order('sort_order'),
+    // head: so o contador, sem trazer os itens - produto campeao de vendas
+    // pode ter centenas de linhas e nenhuma delas e usada aqui.
+    supabase
+      .from('order_items')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_id', id),
   ])
 
   if (!produto) notFound()
@@ -41,6 +47,8 @@ export default async function ProdutoPage({ params }: PageProps<'/painel/produto
           podeAlterarDisponibilidade={staff.permissions.has(
             PERMISSIONS.produtosAlterarDisponibilidade,
           )}
+          podeExcluir={staff.permissions.has(PERMISSIONS.produtosExcluir)}
+          jaVendeu={(vendas ?? 0) > 0}
         />
       </Card>
 

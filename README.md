@@ -139,6 +139,7 @@ pedido mínimo, totais, transições de status e permissões são validados no P
 | `0031` | Índice do nome normalizado — importação de planilha grande deixa de estourar o tempo limite |
 | `0032` | Reimportar preço encerra promoção vencida em vez de derrubar a importação |
 | `0033` | `get_showcase()` — home mostra só o começo de cada categoria, com o total |
+| `0034` | `delete_product()` — exclui o produto nunca vendido; se já saiu em pedido, desativa |
 
 ## Estado das etapas
 

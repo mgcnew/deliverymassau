@@ -71,6 +71,46 @@ export async function alternarAtivo(id: string, ativo: boolean): Promise<FormSta
   return {}
 }
 
+export type ResultadoExclusao = FormState & { acao?: 'excluido' | 'desativado'; vendas?: number }
+
+/**
+ * Exclui o produto - ou desativa, quando ele ja saiu em algum pedido.
+ *
+ * Quem decide e o banco (delete_product): order_items aponta para products
+ * com ON DELETE RESTRICT, entao apagar um produto vendido reescreveria o
+ * historico do pedido e a nota do cliente. A funcao devolve o que fez para
+ * a tela poder dizer a verdade em vez de "pronto".
+ */
+export async function excluirProduto(id: string): Promise<ResultadoExclusao> {
+  const guard = await exigir(PERMISSIONS.produtosExcluir)
+  if (guard.error) return guard
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('delete_product', { p_id: id })
+
+  if (error) {
+    return {
+      error:
+        error.message.trim() === 'SEM_PERMISSAO'
+          ? 'Voce nao tem permissao para excluir produtos.'
+          : 'Nao foi possivel excluir este produto.',
+    }
+  }
+
+  const resultado = data as { acao: 'excluido' | 'desativado'; nome: string; vendas?: number; imagem?: string | null }
+
+  // A imagem so sai depois que o produto saiu: se o banco recusasse, o
+  // arquivo teria sumido de um produto que continua no catalogo.
+  if (resultado.acao === 'excluido' && resultado.imagem) {
+    await supabase.storage.from(BUCKET_PRODUTOS).remove([resultado.imagem])
+  }
+
+  revalidatePath('/painel/produtos')
+  revalidatePath('/loja')
+
+  return { acao: resultado.acao, vendas: resultado.vendas }
+}
+
 export type VerificacaoBarcode = { produtoExistente?: { id: string; name: string } }
 
 /** Avisa antes de salvar se o codigo ja pertence a outro produto. */
