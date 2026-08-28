@@ -32,11 +32,20 @@ você já tem no seu sistema atual), por isso proponho começar por ela.
 Primeira linha é o cabeçalho, nesta ordem (aceito variação de acento/caixa):
 
 ```
-produto,categoria,unidade,preco
-Alcatra,Acougue,kg,49.90
-Coca-Cola 2L,Bebidas,unidade,10.00
-Queijo Mussarela,Frios,kg,42.00
+produto,categoria,unidade,preco,codigo_barras
+Alcatra,Acougue,kg,49.90,
+Coca-Cola 2L,Bebidas,unidade,10.00,7894900011517
+Queijo Mussarela,Frios,kg,42.00,
 ```
+
+- **codigo_barras** é **opcional** (migration `0030`) e aceita os nomes
+  `codigo_barras`, `código de barras`, `codigo`, `ean` ou `barcode`. Só entra
+  com 8 a 14 dígitos — código interno curto do sistema de origem é ignorado.
+  Se o código já pertence a outro produto, **o produto entra mesmo assim, sem
+  o código**, e a tela informa quantos foram ignorados: uma colisão nunca
+  derruba a importação inteira. Produto que já tem código cadastrado no
+  painel mantém o dele — quem escaneou tinha a embalagem na mão, a planilha
+  não.
 
 - **unidade** aceita: `unidade`, `pacote`, `caixa`, `kg`, `g` (mesmas opções do
   cadastro manual). `kg`/`g` marcam o produto automaticamente como **vendido

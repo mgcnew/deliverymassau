@@ -43,3 +43,6 @@ next-env.d.ts
 
 # backup do banco: contem dados pessoais de clientes (nome, telefone, endereco)
 /backup
+
+# planilhas de importacao geradas a partir do sistema antigo
+/importacao

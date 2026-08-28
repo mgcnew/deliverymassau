@@ -54,6 +54,17 @@ export function ImportarForm() {
           <li>
             <strong>{previa.categorias_criadas}</strong> categorias novas
           </li>
+          {previa.codigos_aplicados > 0 ? (
+            <li>
+              <strong>{previa.codigos_aplicados}</strong> codigos de barras gravados
+            </li>
+          ) : null}
+          {previa.codigos_ignorados > 0 ? (
+            <li>
+              <strong>{previa.codigos_ignorados}</strong> codigos ja usados por outro produto
+              (o produto entrou, o codigo nao)
+            </li>
+          ) : null}
           {previa.erros.length > 0 ? (
             <li>
               <strong>{previa.erros.length}</strong> linhas ignoradas por erro
@@ -110,6 +121,7 @@ export function ImportarForm() {
             <p className="font-bold">
               {previa.criados} novos · {previa.atualizados} atualizados ·{' '}
               {previa.categorias_criadas} categorias novas
+              {previa.codigos_aplicados > 0 ? ` · ${previa.codigos_aplicados} com codigo de barras` : ''}
               {previa.erros.length > 0 ? ` · ${previa.erros.length} com erro` : ''}
             </p>
             <p className="text-sm text-muted">

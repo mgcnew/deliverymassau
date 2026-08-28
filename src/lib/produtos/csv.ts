@@ -1,8 +1,9 @@
 /**
  * Parser de CSV proprio, sem dependencia nova. Trata aspas com virgula/aspas
  * embutida (padrao RFC 4180), BOM do Excel e quebra de linha CRLF/LF.
- * A planilha de origem e simples (4 colunas), entao um parser manual e
- * suficiente e evita subir uma biblioteca inteira de planilha so pra isso.
+ * A planilha de origem e simples (4 colunas, mais o codigo de barras
+ * opcional), entao um parser manual e suficiente e evita subir uma
+ * biblioteca inteira de planilha so pra isso.
  */
 export function parseCsv(texto: string): string[][] {
   const semBom = texto.charCodeAt(0) === 0xfeff ? texto.slice(1) : texto
@@ -59,6 +60,8 @@ export type LinhaPlanilha = {
   category: string
   unit: string
   price: number | null
+  /** Opcional: nem todo sistema de origem exporta o EAN. */
+  barcode: string
 }
 
 const ALIASES: Record<'name' | 'category' | 'unit' | 'price', string[]> = {
@@ -67,6 +70,13 @@ const ALIASES: Record<'name' | 'category' | 'unit' | 'price', string[]> = {
   unit: ['unidade', 'unit'],
   price: ['preco', 'preço', 'price', 'valor'],
 }
+
+/**
+ * Coluna opcional: se vier, o codigo entra junto com o produto e o balcao
+ * passa a achar o item pela camera sem escanear um por um. Se nao vier, a
+ * importacao segue como sempre foi.
+ */
+const ALIASES_CODIGO = ['codigo_barras', 'codigo de barras', 'codigo', 'ean', 'barcode', 'cod barras']
 
 function normalizarCabecalho(texto: string): string {
   return texto
@@ -132,12 +142,15 @@ export function lerPlanilhaProdutos(texto: string): ResultadoLeituraCsv {
     indice[campo] = pos
   }
 
+  const posCodigo = cabecalho.findIndex((h) => ALIASES_CODIGO.includes(h))
+
   const linhas: LinhaPlanilha[] = tabela.slice(1).map((colunas, i) => ({
     linha: i + 2, // +1 pelo cabecalho, +1 porque planilha comeca em 1
     name: (colunas[indice.name!] ?? '').trim(),
     category: (colunas[indice.category!] ?? '').trim(),
     unit: (colunas[indice.unit!] ?? '').trim(),
     price: paraNumeroPreco(colunas[indice.price!] ?? ''),
+    barcode: posCodigo === -1 ? '' : (colunas[posCodigo] ?? '').trim(),
   }))
 
   return { ok: true, linhas }

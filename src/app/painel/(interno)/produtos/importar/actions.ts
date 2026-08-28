@@ -15,6 +15,8 @@ export type LinhaResultado = {
   categoria_nova: boolean
   preco_novo: number
   preco_atual?: number
+  /** null quando a planilha nao trouxe codigo ou ele ja era de outro produto. */
+  codigo?: string | null
 }
 
 export type LinhaErro = { linha: string; motivo: string }
@@ -23,6 +25,9 @@ export type ResultadoImportacao = {
   criados: number
   atualizados: number
   categorias_criadas: number
+  codigos_aplicados: number
+  /** Codigo que ja pertencia a outro produto: o produto entra, o codigo nao. */
+  codigos_ignorados: number
   erros: LinhaErro[]
   linhas: LinhaResultado[]
 }
