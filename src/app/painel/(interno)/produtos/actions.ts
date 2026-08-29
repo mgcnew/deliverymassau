@@ -7,6 +7,7 @@ import { PERMISSIONS } from '@/lib/permissions'
 import { getStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { BUCKET_PRODUTOS } from '@/lib/supabase/storage'
+import { baixarImagemDeUrl } from '@/lib/produtos/baixar-imagem'
 import { paraNumero, slugify } from '@/lib/format'
 import type { UnitType } from '@/lib/types'
 
@@ -172,8 +173,22 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
   const supabase = await createClient()
 
   // Imagem (opcional) -> Storage. A policy do bucket confere a permissao de novo.
+  //
+  // Duas portas de entrada: o arquivo escolhido no formulario e uma URL
+  // colada. A URL existe para o trabalho de completar catalogo achando foto
+  // na web -- sem ela, cada produto exige salvar no disco e reenviar.
+  // O arquivo tem precedencia: se a pessoa fez as duas coisas, vale o que
+  // ela escolheu por ultimo na tela, e a tela limpa a URL ao escolher.
   let imagePath: string | undefined
-  const arquivo = formData.get('imagem')
+  let arquivo = formData.get('imagem')
+  const enderecoImagem = String(formData.get('imagem_url') ?? '').trim()
+
+  if (!(arquivo instanceof File && arquivo.size > 0) && enderecoImagem) {
+    const baixado = await baixarImagemDeUrl(enderecoImagem)
+    if ('erro' in baixado) return { error: baixado.erro }
+    arquivo = baixado.arquivo
+  }
+
   if (arquivo instanceof File && arquivo.size > 0) {
     if (!arquivo.type.startsWith('image/')) return { error: 'Envie um arquivo de imagem.' }
     if (arquivo.size > 3 * 1024 * 1024) return { error: 'A imagem precisa ter no maximo 3 MB.' }
