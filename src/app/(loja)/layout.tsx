@@ -44,6 +44,26 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
             Pedido minimo de {moeda(config?.min_order_value ?? 0)} em produtos, sem contar a taxa de
             entrega.
           </p>
+          {/*
+            Exigencia de licenca, nao enfeite: as fotos de produto que vieram
+            das bases abertas Open Food Facts / Beauty / Products estao sob
+            CC BY-SA, que permite uso comercial desde que a fonte seja
+            creditada. O credito fica aqui, uma vez, em vez de poluir cada
+            card da vitrine.
+          */}
+          <p className="text-xs">
+            Algumas fotos de produtos:{' '}
+            <a
+              href="https://world.openfoodfacts.org"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              Open Food Facts
+            </a>{' '}
+            (CC BY-SA).
+          </p>
+
           <RodapeEquipe />
         </div>
       </footer>
