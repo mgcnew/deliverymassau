@@ -44,5 +44,11 @@ next-env.d.ts
 # backup do banco: contem dados pessoais de clientes (nome, telefone, endereco)
 /backup
 
-# planilhas de importacao geradas a partir do sistema antigo
-/importacao
+# planilhas de importacao geradas a partir do sistema antigo, logs das rodadas
+# e o indice do zip de fotos (25 MB). Excecao para os scripts: reconstruir a
+# leitura de ZIP64 por faixa de bytes de cabeca ninguem reconstroi.
+# Precisa ser /importacao/* e nao /importacao: o git nao readmite arquivo de
+# dentro de uma pasta que ja foi excluida inteira.
+/importacao/*
+!/importacao/fotos.js
+!/importacao/fotos-pdv.js
