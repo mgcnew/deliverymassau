@@ -5,35 +5,69 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import { RolagemHorizontal } from '@/components/ui/rolagem-horizontal'
 
 /**
- * Configuracoes em abas: eram quatro blocos empilhados (mercado, delivery,
- * bairros e taxas, pagamentos) e quem vinha mudar a chave PIX rolava por
- * todo o resto ate chegar la.
+ * Abas de uma tela comprida. Usado nas Configuracoes e na edicao de produto:
+ * quem vinha mudar uma coisa so rolava por todo o resto ate chegar la.
  *
  * - A troca e so no navegador, sem ir ao servidor: instantanea.
  * - As abas escondidas continuam montadas (hidden), entao o que foi digitado
- *   numa aba e nao salvo nao se perde ao olhar outra.
- * - A aba vai para a URL (?aba=pagamentos) com replaceState: recarregar,
- *   salvar (a action revalida a pagina) ou mandar o link mantem a aba, sem
- *   encher o historico do "voltar" com cada clique.
+ *   numa aba e nao salvo nao se perde ao olhar outra - e, dentro de um
+ *   <form>, os campos de todas as abas vao juntos no envio.
+ * - A aba vai para a URL (?aba=preco) com replaceState: recarregar, salvar
+ *   (a action revalida a pagina) ou mandar o link mantem a aba, sem encher o
+ *   historico do "voltar" com cada clique.
+ * - Controlada (ativa + aoTrocar) quando quem usa precisa trocar de aba por
+ *   conta propria, como o formulario de produto ao achar campo invalido
+ *   numa aba escondida.
  */
 export type Aba = { id: string; rotulo: string; conteudo: ReactNode }
 
-export function AbasConfiguracoes({ abas, inicial }: { abas: Aba[]; inicial: string }) {
-  const [ativa, setAtiva] = useState(abas.some((a) => a.id === inicial) ? inicial : abas[0]?.id)
+export function Abas({
+  abas,
+  inicial = '',
+  rotulo,
+  ativa: ativaControlada,
+  aoTrocar,
+}: {
+  abas: Aba[]
+  /** Aba aberta de inicio (ex.: vinda de ?aba=). Invalida ou vazia = a primeira. */
+  inicial?: string
+  /** Nome do conjunto para leitor de tela, ex.: "Secoes das configuracoes". */
+  rotulo: string
+  ativa?: string
+  aoTrocar?: (id: string) => void
+}) {
+  const [ativaInterna, setAtivaInterna] = useState(
+    abas.some((a) => a.id === inicial) ? inicial : abas[0]?.id,
+  )
+  const ativa = ativaControlada ?? ativaInterna
   const botoes = useRef<Map<string, HTMLButtonElement>>(new Map())
 
-  // No celular as quatro abas nao cabem e a faixa desliza: a selecionada
-  // rola para dentro da tela - senao quem abre direto em ?aba=pagamentos via
-  // a aba ativa cortada na borda.
+  // No celular as abas nem sempre cabem e a faixa desliza: a selecionada
+  // rola para dentro da tela - senao quem abre direto numa aba do fim via a
+  // aba ativa cortada na borda.
   useEffect(() => {
     botoes.current.get(ativa ?? '')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   }, [ativa])
 
-  function abrir(id: string) {
-    setAtiva(id)
+  // A URL segue a aba ativa - inclusive quando quem controla troca sozinho
+  // (ex.: formulario pulando para o campo invalido). So depois do primeiro
+  // render: abrir a pagina sem ?aba= nao precisa reescrever o endereco.
+  const primeiroRender = useRef(true)
+  useEffect(() => {
+    if (primeiroRender.current) {
+      primeiroRender.current = false
+      return
+    }
     const url = new URL(window.location.href)
-    url.searchParams.set('aba', id)
-    window.history.replaceState(null, '', url)
+    if (ativa && url.searchParams.get('aba') !== ativa) {
+      url.searchParams.set('aba', ativa)
+      window.history.replaceState(null, '', url)
+    }
+  }, [ativa])
+
+  function abrir(id: string) {
+    setAtivaInterna(id)
+    aoTrocar?.(id)
   }
 
   // Setas trocam de aba, como o padrao de abas do leitor de tela espera.
@@ -50,7 +84,7 @@ export function AbasConfiguracoes({ abas, inicial }: { abas: Aba[]; inicial: str
   return (
     <div className="space-y-4">
       <RolagemHorizontal>
-        <div role="tablist" aria-label="Secoes das configuracoes" className="flex w-max gap-2">
+        <div role="tablist" aria-label={rotulo} className="flex w-max gap-2">
           {abas.map((aba) => {
             const selecionada = aba.id === ativa
             return (

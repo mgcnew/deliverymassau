@@ -2,7 +2,7 @@ import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { urlImagemProduto } from '@/lib/supabase/storage'
-import { AbasConfiguracoes, type Aba } from './abas'
+import { Abas, type Aba } from '@/components/ui/abas'
 import {
   SecaoDelivery,
   SecaoMercado,
@@ -107,7 +107,11 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps<'/pa
       <h1 className="text-2xl font-black">Configuracoes</h1>
 
       {abas.length > 0 ? (
-        <AbasConfiguracoes abas={abas} inicial={typeof aba === 'string' ? aba : ''} />
+        <Abas
+          abas={abas}
+          inicial={typeof aba === 'string' ? aba : ''}
+          rotulo="Secoes das configuracoes"
+        />
       ) : (
         <p className="text-muted">Voce nao tem permissao para alterar nenhuma configuracao.</p>
       )}

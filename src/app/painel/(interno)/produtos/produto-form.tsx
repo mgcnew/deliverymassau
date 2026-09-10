@@ -1,7 +1,8 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState, type FormEvent } from 'react'
 
+import { Abas, type Aba } from '@/components/ui/abas'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/card'
 import { Field, Input, Select, Textarea } from '@/components/ui/field'
@@ -26,18 +27,62 @@ export type ProdutoFormValores = {
   barcode: string
 }
 
+/** Abas do formulario na edicao. Preco vem primeiro: e o que mais se muda
+ *  (quem bipa o produto na gondola vem trocar preco). */
+const ABAS_DO_FORM = ['preco', 'dados', 'foto'] as const
+
 export function ProdutoForm({
   valores,
   categorias,
   somenteLeitura,
+  emAbas,
 }: {
   valores: ProdutoFormValores
   categorias: Array<{ id: string; name: string }>
   somenteLeitura: boolean
+  /**
+   * Edicao: campos em abas (Preco, Dados, Foto e codigo) mais as `extras`
+   * que nao sao do formulario (ex.: Estado, que salva na hora). Sem isso -
+   * cadastro novo - tudo fica numa pagina so, preenchida em sequencia.
+   */
+  emAbas?: { inicial: string; extras?: Aba[] }
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(salvarProduto, {})
   const [porPeso, setPorPeso] = useState(valores.sold_by_weight)
   const [unidade, setUnidade] = useState<UnitType>(valores.unit_type)
+
+  const extras = emAbas?.extras ?? []
+  const idsValidos = [...ABAS_DO_FORM, ...extras.map((e) => e.id)] as string[]
+  const [aba, setAba] = useState(
+    emAbas && idsValidos.includes(emAbas.inicial) ? emAbas.inicial : ABAS_DO_FORM[0],
+  )
+  // O botao Salvar e do formulario: numa aba extra (Estado, que salva na
+  // hora) ele so confundiria.
+  const naAbaDoForm = !emAbas || (ABAS_DO_FORM as readonly string[]).includes(aba)
+
+  // Campo obrigatorio vazio numa aba escondida: o navegador bloqueia o envio
+  // mas nao consegue mostrar o aviso num campo invisivel - o botao parecia
+  // nao fazer nada. Leva a pessoa ate a aba do PRIMEIRO campo invalido.
+  const pulouNesteEnvio = useRef(false)
+  function aoInvalidar(e: FormEvent<HTMLFormElement>) {
+    if (!emAbas || pulouNesteEnvio.current) return
+    pulouNesteEnvio.current = true
+    // Os avisos de invalido de um mesmo envio chegam todos juntos, na mesma
+    // tarefa: so o primeiro decide a aba.
+    setTimeout(() => {
+      pulouNesteEnvio.current = false
+    })
+
+    const campo = e.target as HTMLInputElement
+    const painel = campo.closest<HTMLElement>('[role="tabpanel"]')
+    if (!painel?.hidden) return
+    setAba(painel.id.replace('painel-', ''))
+    // Depois que a aba aparece, o aviso do navegador ja consegue apontar.
+    setTimeout(() => {
+      campo.focus()
+      campo.reportValidity()
+    })
+  }
 
   // Peso e unidade andam juntos: marcar "vende por peso" ja assume kg.
   function marcarPorPeso(marcado: boolean) {
@@ -46,10 +91,8 @@ export function ProdutoForm({
     if (!marcado && (unidade === 'kg' || unidade === 'g')) setUnidade('unidade')
   }
 
-  return (
-    <form action={action} className="space-y-4">
-      {valores.id ? <input type="hidden" name="id" value={valores.id} /> : null}
-
+  const secaoDados = (
+    <>
       <Field label="Nome">
         <Input name="name" defaultValue={valores.name} required disabled={somenteLeitura} />
       </Field>
@@ -76,6 +119,19 @@ export function ProdutoForm({
         />
       </Field>
 
+      <Field label="Ordem de exibicao">
+        <Input
+          name="sort_order"
+          type="number"
+          defaultValue={valores.sort_order}
+          disabled={somenteLeitura}
+        />
+      </Field>
+    </>
+  )
+
+  const secaoPreco = (
+    <>
       <label className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3">
         <input
           type="checkbox"
@@ -158,29 +214,48 @@ export function ProdutoForm({
           </Field>
         </div>
       ) : null}
+    </>
+  )
 
+  const secaoFoto = (
+    <>
       <CampoFoto imagemAtualUrl={valores.imagemUrl} disabled={somenteLeitura} />
+      <CampoCodigoBarras
+        produtoId={valores.id}
+        defaultValue={valores.barcode}
+        disabled={somenteLeitura}
+      />
+    </>
+  )
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <CampoCodigoBarras
-          produtoId={valores.id}
-          defaultValue={valores.barcode}
-          disabled={somenteLeitura}
+  return (
+    <form action={action} onInvalidCapture={aoInvalidar} className="space-y-4">
+      {valores.id ? <input type="hidden" name="id" value={valores.id} /> : null}
+
+      {emAbas ? (
+        <Abas
+          rotulo="Partes do cadastro do produto"
+          ativa={aba}
+          aoTrocar={setAba}
+          abas={[
+            { id: 'preco', rotulo: 'Preco', conteudo: secaoPreco },
+            { id: 'dados', rotulo: 'Dados', conteudo: secaoDados },
+            { id: 'foto', rotulo: 'Foto e codigo', conteudo: secaoFoto },
+            ...extras,
+          ]}
         />
-        <Field label="Ordem de exibicao">
-          <Input
-            name="sort_order"
-            type="number"
-            defaultValue={valores.sort_order}
-            disabled={somenteLeitura}
-          />
-        </Field>
-      </div>
+      ) : (
+        <>
+          {secaoDados}
+          {secaoPreco}
+          {secaoFoto}
+        </>
+      )}
 
-      {state.error ? <Alert tone="error">{state.error}</Alert> : null}
-      {state.ok ? <Alert tone="success">{state.ok}</Alert> : null}
+      {naAbaDoForm && state.error ? <Alert tone="error">{state.error}</Alert> : null}
+      {naAbaDoForm && state.ok ? <Alert tone="success">{state.ok}</Alert> : null}
 
-      {!somenteLeitura ? (
+      {!naAbaDoForm ? null : !somenteLeitura ? (
         <Button type="submit" size="lg" className="w-full" disabled={pending}>
           {pending ? 'Salvando...' : valores.id ? 'Salvar produto' : 'Cadastrar produto'}
         </Button>

@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardTitle } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 import type { UnitType } from '@/lib/types'
 import { ProdutoForm } from '../produto-form'
@@ -12,8 +12,11 @@ import { EstadoProduto } from './estado-produto'
 
 export const metadata = { title: 'Produto | Mercado Massa 24h' }
 
-export default async function ProdutoPage({ params }: PageProps<'/painel/produtos/[id]'>) {
-  const { id } = await params
+export default async function ProdutoPage({
+  params,
+  searchParams,
+}: PageProps<'/painel/produtos/[id]'>) {
+  const [{ id }, { aba }] = await Promise.all([params, searchParams])
   const staff = await requirePermission(PERMISSIONS.produtosVer)
   const supabase = await createClient()
 
@@ -38,25 +41,33 @@ export default async function ProdutoPage({ params }: PageProps<'/painel/produto
       </div>
 
       <Card>
-        <CardTitle>Estado</CardTitle>
-        <EstadoProduto
-          id={produto.id}
-          ativo={produto.is_active}
-          disponivel={produto.is_available}
-          podeDesativar={staff.permissions.has(PERMISSIONS.produtosDesativar)}
-          podeAlterarDisponibilidade={staff.permissions.has(
-            PERMISSIONS.produtosAlterarDisponibilidade,
-          )}
-          podeExcluir={staff.permissions.has(PERMISSIONS.produtosExcluir)}
-          jaVendeu={(vendas ?? 0) > 0}
-        />
-      </Card>
-
-      <Card>
-        <CardTitle>Cadastro</CardTitle>
         <ProdutoForm
           categorias={categorias ?? []}
           somenteLeitura={!staff.permissions.has(PERMISSIONS.produtosEditar)}
+          // Em abas: preco, dados e foto sao do formulario; Estado (ativo,
+          // disponivel, excluir) salva na hora e entra como aba extra.
+          emAbas={{
+            inicial: typeof aba === 'string' ? aba : '',
+            extras: [
+              {
+                id: 'estado',
+                rotulo: 'Estado',
+                conteudo: (
+                  <EstadoProduto
+                    id={produto.id}
+                    ativo={produto.is_active}
+                    disponivel={produto.is_available}
+                    podeDesativar={staff.permissions.has(PERMISSIONS.produtosDesativar)}
+                    podeAlterarDisponibilidade={staff.permissions.has(
+                      PERMISSIONS.produtosAlterarDisponibilidade,
+                    )}
+                    podeExcluir={staff.permissions.has(PERMISSIONS.produtosExcluir)}
+                    jaVendeu={(vendas ?? 0) > 0}
+                  />
+                ),
+              },
+            ],
+          }}
           valores={{
             id: produto.id,
             name: produto.name,
