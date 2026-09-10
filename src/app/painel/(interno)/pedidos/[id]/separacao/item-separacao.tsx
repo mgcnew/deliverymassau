@@ -24,12 +24,21 @@ export function ItemSeparacao({
   const router = useRouter()
   const [transicao, startTransition] = useTransition()
   const [erro, setErro] = useState<string | null>(null)
-  const [gramas, setGramas] = useState(
+  const pesoDoServidor =
     item.weighed_quantity !== null
       ? String(Math.round(Number(item.weighed_quantity) * 1000))
-      : String(Math.round(Number(item.requested_quantity) * 1000)),
-  )
+      : String(Math.round(Number(item.requested_quantity) * 1000))
+  const [gramas, setGramas] = useState(pesoDoServidor)
+  const [pesoVisto, setPesoVisto] = useState(pesoDoServidor)
   const [confirmarDivergencia, setConfirmarDivergencia] = useState(false)
+
+  // A tela atualiza sozinha (tempo real): se outra pessoa pesou este item, o
+  // campo acompanha - mas so se quem esta aqui nao estiver no meio de digitar
+  // outro numero. O que foi digitado e nao confirmado nunca e apagado.
+  if (pesoDoServidor !== pesoVisto) {
+    setPesoVisto(pesoDoServidor)
+    if (gramas === pesoVisto) setGramas(pesoDoServidor)
+  }
 
   const pedidoGramas = Math.round(Number(item.requested_quantity) * 1000)
   const digitado = Number(gramas)

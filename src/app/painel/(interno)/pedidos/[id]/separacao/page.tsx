@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { AcompanharPedidoAoVivo } from '@/lib/tempo-real/acompanhar-pedido-ao-vivo'
 import { Alert, Card } from '@/components/ui/card'
 import type { OrderItem } from '@/lib/types'
 import { BarraConcluir } from './concluir'
@@ -33,6 +34,11 @@ export default async function SeparacaoPage({
 
   return (
     <div className="w-full space-y-4">
+      {/* Duas pessoas separando o mesmo pedido veem o progresso uma da outra.
+          Se o pedido for cancelado ou concluido por outra pessoa, a atualizacao
+          cai no redirect acima e tira quem esta aqui da separacao. */}
+      <AcompanharPedidoAoVivo token={pedido.public_token} />
+
       <div>
         <LinkVoltar href={`/painel/pedidos/${id}`}>Pedido #{pedido.order_number}</LinkVoltar>
         <h1 className="text-2xl font-black">Separacao do #{pedido.order_number}</h1>
