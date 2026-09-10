@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardTitle } from '@/components/ui/card'
 import { moeda, quantidade as formatarQuantidade } from '@/lib/format'
 import { ORDER_STATUS } from '@/lib/orders/status'
+import { AcompanharPedidoAoVivo } from '@/lib/tempo-real/acompanhar-pedido-ao-vivo'
 import type { OrderStatus, PaymentMethod, UnitType } from '@/lib/types'
 import { PAGAMENTO_CURTO } from '../tipos'
 import { AcoesPedido } from './acoes-pedido'
@@ -37,6 +38,13 @@ export default async function PedidoDetalhePage({ params }: PageProps<'/painel/p
 
   return (
     <div className="w-full space-y-4">
+      {/* Outra pessoa da equipe separando, o entregador saindo ou o cliente
+          confirmando a entrega: a tela acompanha sem recarregar. Entregue ou
+          cancelado nao muda mais. */}
+      {pedido.status !== 'entregue' && pedido.status !== 'cancelado' ? (
+        <AcompanharPedidoAoVivo token={pedido.public_token} />
+      ) : null}
+
       <div>
         <LinkVoltar href="/painel/pedidos">Pedidos</LinkVoltar>
         <div className="flex flex-wrap items-center gap-3">

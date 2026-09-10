@@ -5,8 +5,8 @@ import { Alert, Card } from '@/components/ui/card'
 import { moeda, quantidade as formatarQuantidade } from '@/lib/format'
 import { ORDER_STATUS, ORDER_STATUS_FLOW } from '@/lib/orders/status'
 import { createClient } from '@/lib/supabase/server'
+import { AcompanharPedidoAoVivo } from '@/lib/tempo-real/acompanhar-pedido-ao-vivo'
 import type { OrderStatus, PaymentMethod, UnitType } from '@/lib/types'
-import { AcompanharAoVivo } from './acompanhar-ao-vivo'
 import { CodigoEntrega } from './codigo-entrega'
 import { GuardarPedido } from './guardar-pedido'
 
@@ -77,7 +77,7 @@ export default async function PedidoPage({ params, searchParams }: PageProps<'/p
     <main className="mx-auto w-full max-w-2xl space-y-4 p-4">
       <GuardarPedido token={token} numero={pedido.order_number} />
       {/* Entregue ou cancelado nao muda mais: nao ha o que escutar. */}
-      {!cancelado && pedido.status !== 'entregue' ? <AcompanharAoVivo token={token} /> : null}
+      {!cancelado && pedido.status !== 'entregue' ? <AcompanharPedidoAoVivo token={token} /> : null}
 
       {query.novo ? (
         <Alert tone="success">
