@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useEffectEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -10,8 +10,11 @@ import { createClient } from '@/lib/supabase/client'
  * (O prefixo `use` e exigencia do React para hooks - o resto do projeto
  * segue em portugues.)
  *
- * Mantem a tela em dia sozinha: Realtime do Postgres + tres redes de
- * seguranca. Usado pela fila de entregas e pela tela de pedidos.
+ * Mantem a tela em dia sozinha: Realtime + tres redes de seguranca. Usado
+ * pela fila de entregas e pela tela de pedidos do painel (postgres_changes
+ * nas `tabelas`) e pelas telas do cliente (broadcast nos `topicos`, ver
+ * migration 0035 - cliente e anonimo e a RLS nao entrega postgres_changes
+ * de pedido para ele).
  *
  * Sutilezas que custaram caro:
  *
@@ -30,24 +33,37 @@ import { createClient } from '@/lib/supabase/client'
  *
  * O intervalo so roda com a aba visivel: em segundo plano ele nao ajuda
  * (o navegador atrasa o timer de qualquer jeito) e so gasta bateria.
+ *
+ * `aoAtualizar` troca o router.refresh() padrao, para tela que busca os
+ * dados no navegador em vez de no servidor (Meus pedidos).
  */
 export function useAtualizacaoAoVivo({
   canal: nomeDoCanal,
-  tabelas,
+  tabelas = [],
+  topicos = [],
   intervaloMs = 30_000,
+  aoAtualizar,
 }: {
   canal: string
-  tabelas: string[]
+  tabelas?: string[]
+  topicos?: string[]
   intervaloMs?: number
+  aoAtualizar?: () => void
 }) {
   const router = useRouter()
   // Quem chama passa a lista inline ({ tabelas: ['orders'] }), e um array
   // novo a cada render reassinaria o canal a cada render. A string e estavel.
   const chaveTabelas = tabelas.join(',')
+  const chaveTopicos = topicos.join(',')
+
+  const atualizar = useEffectEvent(() => {
+    if (aoAtualizar) aoAtualizar()
+    else router.refresh()
+  })
 
   useEffect(() => {
     const supabase = createClient()
-    let canal: RealtimeChannel | null = null
+    const canais: RealtimeChannel[] = []
     let vivo = true
 
     // Uma separacao pesa varios itens em sequencia: cada pesagem dispara
@@ -56,7 +72,7 @@ export function useAtualizacaoAoVivo({
     let temporizador: ReturnType<typeof setTimeout> | null = null
     const atualizarAgrupado = () => {
       if (temporizador) clearTimeout(temporizador)
-      temporizador = setTimeout(() => router.refresh(), 400)
+      temporizador = setTimeout(atualizar, 400)
     }
 
     ;(async () => {
@@ -65,16 +81,30 @@ export function useAtualizacaoAoVivo({
       } = await supabase.auth.getSession()
       if (!vivo) return
       if (session?.access_token) await supabase.realtime.setAuth(session.access_token)
+      if (!vivo) return
 
-      let assinatura = supabase.channel(nomeDoCanal)
-      for (const table of chaveTabelas.split(',')) {
-        assinatura = assinatura.on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table },
-          atualizarAgrupado,
-        )
+      if (chaveTabelas) {
+        let assinatura = supabase.channel(nomeDoCanal)
+        for (const table of chaveTabelas.split(',')) {
+          assinatura = assinatura.on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table },
+            atualizarAgrupado,
+          )
+        }
+        canais.push(assinatura.subscribe())
       }
-      canal = assinatura.subscribe()
+
+      if (chaveTopicos) {
+        for (const topico of chaveTopicos.split(',')) {
+          canais.push(
+            supabase
+              .channel(topico)
+              .on('broadcast', { event: 'pedido_atualizado' }, atualizarAgrupado)
+              .subscribe(),
+          )
+        }
+      }
     })()
 
     // Voltou a olhar a tela: atualiza agora, sem esperar intervalo nenhum.
@@ -86,7 +116,7 @@ export function useAtualizacaoAoVivo({
     window.addEventListener('online', atualizarAgrupado)
 
     const intervalo = setInterval(() => {
-      if (document.visibilityState === 'visible') router.refresh()
+      if (document.visibilityState === 'visible') atualizar()
     }, intervaloMs)
 
     return () => {
@@ -96,7 +126,7 @@ export function useAtualizacaoAoVivo({
       document.removeEventListener('visibilitychange', aoVoltar)
       window.removeEventListener('focus', aoVoltar)
       window.removeEventListener('online', atualizarAgrupado)
-      if (canal) supabase.removeChannel(canal)
+      for (const canal of canais) supabase.removeChannel(canal)
     }
-  }, [router, nomeDoCanal, intervaloMs, chaveTabelas])
+  }, [nomeDoCanal, intervaloMs, chaveTabelas, chaveTopicos])
 }

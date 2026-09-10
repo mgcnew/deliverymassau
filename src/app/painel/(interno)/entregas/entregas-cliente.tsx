@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Empty } from '@/components/ui/card'
 import { tocarAlerta } from '@/lib/push/alerta-sonoro'
-import { useAtualizacaoAoVivo } from '../use-atualizacao-ao-vivo'
+import { useAtualizacaoAoVivo } from '@/lib/tempo-real/use-atualizacao-ao-vivo'
 import { AlertasEntregador } from './alertas-entregador'
 import { CardEntrega } from './card-entrega'
 import type { EntregaCard } from './tipos'

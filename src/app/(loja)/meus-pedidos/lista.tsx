@@ -9,6 +9,7 @@ import { assinarPedidos, lerPedidos, lerPedidosNoServidor } from '@/lib/carrinho
 import { moeda } from '@/lib/format'
 import { ORDER_STATUS } from '@/lib/orders/status'
 import { createClient } from '@/lib/supabase/client'
+import { useAtualizacaoAoVivo } from '@/lib/tempo-real/use-atualizacao-ao-vivo'
 import type { OrderStatus } from '@/lib/types'
 import { useSyncExternalStore } from 'react'
 
@@ -45,6 +46,26 @@ const EM_ANDAMENTO: OrderStatus[] = [
 export function ListaMeusPedidos() {
   const guardados = useSyncExternalStore(assinarPedidos, lerPedidos, lerPedidosNoServidor)
   const [resumos, setResumos] = useState<Map<string, Resumo> | null>(null)
+  // Cada aviso do banco (ou volta para a tela) sobe a versao e refaz a busca.
+  const [versao, setVersao] = useState(0)
+
+  // Escuta so os pedidos que ainda podem mudar. Antes do primeiro resumo
+  // chegar nao da para saber quais sao, entao escuta todos os guardados.
+  const vivos = (guardados ?? [])
+    .filter((p) => {
+      const r = resumos?.get(p.token)
+      return !r || EM_ANDAMENTO.includes(r.status)
+    })
+    .map((p) => `pedido:${p.token}`)
+
+  useAtualizacaoAoVivo({
+    canal: 'meus-pedidos',
+    topicos: vivos,
+    // Tudo entregue ou cancelado: nada mais muda, o intervalo nao busca a toa.
+    aoAtualizar: () => {
+      if (vivos.length > 0) setVersao((v) => v + 1)
+    },
+  })
 
   useEffect(() => {
     if (!guardados?.length) return
@@ -64,7 +85,7 @@ export function ListaMeusPedidos() {
     return () => {
       vivo = false
     }
-  }, [guardados])
+  }, [guardados, versao])
 
   if (guardados === null) return <Empty>Carregando...</Empty>
   if (guardados.length === 0) return <Empty>Voce ainda nao fez pedidos neste aparelho.</Empty>
