@@ -93,6 +93,13 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
           <ButtonLink href="/painel/categorias" variant="secondary">
             Categorias
           </ButtonLink>
+          {staff.permissions.has(PERMISSIONS.produtosEditar) ||
+          staff.permissions.has(PERMISSIONS.produtosDesativar) ||
+          staff.permissions.has(PERMISSIONS.produtosExcluir) ? (
+            <ButtonLink href="/painel/produtos/lote" variant="secondary">
+              Editar em lote
+            </ButtonLink>
+          ) : null}
           {staff.permissions.has(PERMISSIONS.produtosCriar) ? (
             <>
               <ButtonLink href="/painel/produtos/importar" variant="secondary">
