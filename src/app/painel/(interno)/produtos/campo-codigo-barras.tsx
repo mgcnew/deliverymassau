@@ -1,20 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { Barcode, X } from 'lucide-react'
+import { useState } from 'react'
+import { Barcode } from 'lucide-react'
 
 import { Input } from '@/components/ui/field'
+import { LeitorCodigoBarras, useLeitorDisponivel } from '@/components/ui/leitor-codigo-barras'
 import { verificarCodigoBarras } from './actions'
-
-// Detector nativo do navegador. So existe em Chrome/Edge (desktop e Android);
-// Safari/Firefox ainda nao tem. Onde nao existir, o botao de escanear some
-// e sobra so a digitacao manual.
-type DetectorDeCodigos = {
-  detect: (fonte: CanvasImageSource) => Promise<Array<{ rawValue: string }>>
-}
-type JanelaComDetector = Window & {
-  BarcodeDetector?: new (opcoes?: { formats: string[] }) => DetectorDeCodigos
-}
 
 export function CampoCodigoBarras({
   produtoId,
@@ -26,79 +17,14 @@ export function CampoCodigoBarras({
   disabled?: boolean
 }) {
   const [valor, setValor] = useState(defaultValue)
-  // Feature detection direto no useState: rodar isso num useEffect causaria
-  // uma renderizacao extra toda vez (setState sincrono dentro de effect).
-  const [suportado] = useState(() => typeof window !== 'undefined' && 'BarcodeDetector' in window)
+  const suportado = useLeitorDisponivel()
   const [escaneando, setEscaneando] = useState(false)
-  const [erroCamera, setErroCamera] = useState<string | null>(null)
   const [duplicado, setDuplicado] = useState<{ id: string; name: string } | null>(null)
-
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const pararLoopRef = useRef(false)
-
-  useEffect(() => {
-    return () => pararCamera()
-  }, [])
-
-  function pararCamera() {
-    pararLoopRef.current = true
-    streamRef.current?.getTracks().forEach((t) => t.stop())
-    streamRef.current = null
-  }
-
-  async function abrirScanner() {
-    setErroCamera(null)
-    setEscaneando(true)
-    pararLoopRef.current = false
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-      }
-
-      const Detector = (window as JanelaComDetector).BarcodeDetector
-      if (!Detector) throw new Error('sem suporte')
-      const detector = new Detector({
-        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'qr_code'],
-      })
-
-      const loop = async () => {
-        if (pararLoopRef.current || !videoRef.current) return
-        try {
-          const codigos = await detector.detect(videoRef.current)
-          if (codigos[0]) {
-            aoDetectar(codigos[0].rawValue)
-            return
-          }
-        } catch {
-          // frame ilegivel, so tenta de novo no proximo
-        }
-        requestAnimationFrame(loop)
-      }
-      requestAnimationFrame(loop)
-    } catch {
-      // Mantem a tela aberta so com a mensagem: se fechasse sozinho, o
-      // aviso desapareceria junto (ele fica dentro do overlay de camera).
-      setErroCamera('Nao foi possivel abrir a camera. Feche e digite o codigo manualmente.')
-      pararCamera()
-    }
-  }
 
   function aoDetectar(codigo: string) {
     setValor(codigo)
-    fecharScanner()
-    conferirDuplicado(codigo)
-  }
-
-  function fecharScanner() {
-    pararCamera()
     setEscaneando(false)
+    conferirDuplicado(codigo)
   }
 
   async function conferirDuplicado(codigo: string) {
@@ -129,7 +55,7 @@ export function CampoCodigoBarras({
           <button
             type="button"
             disabled={disabled}
-            onClick={abrirScanner}
+            onClick={() => setEscaneando(true)}
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-line bg-surface disabled:opacity-50"
             aria-label="Escanear codigo de barras"
           >
@@ -151,23 +77,7 @@ export function CampoCodigoBarras({
       ) : null}
 
       {escaneando ? (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black">
-          <div className="flex items-center justify-between p-4">
-            <p className="font-semibold text-white">Aponte para o codigo de barras</p>
-            <button
-              type="button"
-              onClick={fecharScanner}
-              className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white"
-              aria-label="Fechar"
-            >
-              <X size={20} aria-hidden />
-            </button>
-          </div>
-          <video ref={videoRef} className="flex-1 object-cover" playsInline muted />
-          {erroCamera ? (
-            <p className="p-4 text-center font-semibold text-rose-300">{erroCamera}</p>
-          ) : null}
-        </div>
+        <LeitorCodigoBarras onDetectar={aoDetectar} onFechar={() => setEscaneando(false)} />
       ) : null}
     </div>
   )

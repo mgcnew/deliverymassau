@@ -8,6 +8,7 @@ import { getStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { BUCKET_PRODUTOS } from '@/lib/supabase/storage'
 import { baixarImagemDeUrl } from '@/lib/produtos/baixar-imagem'
+import { variantesDoCodigo } from '@/lib/produtos/codigo-barras'
 import { paraNumero, slugify } from '@/lib/format'
 import type { UnitType } from '@/lib/types'
 
@@ -134,6 +135,45 @@ export async function verificarCodigoBarras(
 
   const encontrado = Array.isArray(data) ? data[0] : null
   return encontrado ? { produtoExistente: { id: encontrado.id, name: encontrado.name } } : {}
+}
+
+export type ProdutoLido = { id: string; name: string; price: number }
+
+export type ProdutoPorCodigo =
+  | { produto: ProdutoLido }
+  | { varios: ProdutoLido[] }
+  | { naoEncontrado: true }
+  | { erro: string }
+
+/**
+ * Leitura pela camera na busca da lista: acha o produto do codigo para abrir
+ * direto a edicao. Tolera o zero a esquerda (ver variantesDoCodigo).
+ *
+ * Mais de um produto com o "mesmo" codigo existe de verdade: o cadastro
+ * antigo tem o mesmo item duas vezes, uma com e outra sem o zero, as vezes
+ * com precos diferentes. Nao escolhe por conta propria - quem leu troca o
+ * preco de um e o outro seguiria vendendo pelo antigo. Devolve todos.
+ */
+export async function produtoPorCodigo(codigo: string): Promise<ProdutoPorCodigo> {
+  const guard = await exigir(PERMISSIONS.produtosVer)
+  if (guard.error) return { erro: guard.error }
+
+  const variantes = variantesDoCodigo(codigo)
+  if (!variantes.length) return { naoEncontrado: true }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, name, price')
+    .in('barcode', variantes)
+    .order('name')
+    .limit(10)
+
+  if (error) return { erro: 'Nao foi possivel buscar o produto. Tente de novo.' }
+  if (!data?.length) return { naoEncontrado: true }
+
+  const lidos = data.map((p) => ({ id: p.id, name: p.name, price: Number(p.price) }))
+  return lidos.length === 1 ? { produto: lidos[0] } : { varios: lidos }
 }
 
 export async function salvarProduto(_prev: FormState, formData: FormData): Promise<FormState> {

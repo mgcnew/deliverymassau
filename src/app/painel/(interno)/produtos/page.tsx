@@ -7,8 +7,10 @@ import { createClient } from '@/lib/supabase/server'
 import { ButtonLink } from '@/components/ui/button'
 import { Card, Empty } from '@/components/ui/card'
 import { precoPorUnidade } from '@/lib/format'
+import { variantesDoCodigo } from '@/lib/produtos/codigo-barras'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 import type { UnitType } from '@/lib/types'
+import { BuscaProdutos } from './busca-produtos'
 import { BotaoDisponibilidade } from './disponibilidade'
 import { SeletorCategoria } from './seletor-categoria'
 
@@ -48,7 +50,16 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
 
   if (filtro === 'disponiveis') query = query.eq('is_available', true).eq('is_active', true)
   if (filtro === 'indisponiveis') query = query.eq('is_available', false)
-  if (busca) query = query.ilike('name', `%${busca}%`)
+  if (busca) {
+    // Numero com cara de codigo de barras tambem acha pelo codigo (digitado ou
+    // vindo de leitor bluetooth). So entra no .or() quando a busca e so
+    // digitos (variantesDoCodigo devolve vazio para o resto), entao o texto
+    // nao tem como quebrar a sintaxe do filtro.
+    const codigos = variantesDoCodigo(busca)
+    query = codigos.length
+      ? query.or(`name.ilike.%${busca}%,barcode.in.(${codigos.join(',')})`)
+      : query.ilike('name', `%${busca}%`)
+  }
   if (categoria) query = query.eq('category_id', categoria)
 
   const [{ data: produtos, count: total }, { data: categorias }] = await Promise.all([
@@ -88,19 +99,12 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
         </div>
       </div>
 
-      <form className="flex gap-2 lg:max-w-xl" action="/painel/produtos">
-        <input type="hidden" name="f" value={filtro} />
-        {categoria ? <input type="hidden" name="c" value={categoria} /> : null}
-        <input
-          name="q"
-          defaultValue={busca}
-          placeholder="Buscar produto"
-          className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-base"
-        />
-        <button className="h-12 shrink-0 rounded-xl border border-line bg-surface px-4 font-semibold">
-          Buscar
-        </button>
-      </form>
+      <BuscaProdutos
+        busca={busca}
+        filtro={filtro}
+        categoria={categoria}
+        podeCriar={staff.permissions.has(PERMISSIONS.produtosCriar)}
+      />
 
       <div className="flex flex-wrap gap-2">
         {FILTROS.map((f) => (

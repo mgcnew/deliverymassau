@@ -6,8 +6,12 @@ import { ProdutoForm } from '../produto-form'
 
 export const metadata = { title: 'Novo produto | Mercado Massa 24h' }
 
-export default async function NovoProdutoPage() {
+export default async function NovoProdutoPage({ searchParams }: PageProps<'/painel/produtos/novo'>) {
   await requirePermission(PERMISSIONS.produtosCriar)
+  // Vindo da leitura pela camera na busca: o codigo que nao estava cadastrado
+  // ja entra preenchido. So digitos - o resto da URL nao vira dado do produto.
+  const { codigo } = await searchParams
+  const codigoLido = typeof codigo === 'string' ? codigo.replace(/\D/g, '').slice(0, 14) : ''
   const supabase = await createClient()
 
   const { data: categorias } = await supabase
@@ -35,7 +39,7 @@ export default async function NovoProdutoPage() {
             min_weight_g: 100,
             sort_order: 0,
             imagemUrl: null,
-            barcode: '',
+            barcode: codigoLido,
           }}
         />
       </Card>
