@@ -2,6 +2,7 @@ import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { urlImagemProduto } from '@/lib/supabase/storage'
+import { AbasConfiguracoes, type Aba } from './abas'
 import {
   SecaoDelivery,
   SecaoMercado,
@@ -12,8 +13,9 @@ import {
 
 export const metadata = { title: 'Configuracoes | Mercado Massa 24h' }
 
-export default async function ConfiguracoesPage() {
+export default async function ConfiguracoesPage({ searchParams }: PageProps<'/painel/configuracoes'>) {
   const staff = await requirePermission(PERMISSIONS.configAcessar)
+  const { aba } = await searchParams
   const supabase = await createClient()
 
   const [{ data: config }, { data: metodos }, { data: zonas }, { data: bairros }] =
@@ -34,11 +36,15 @@ export default async function ConfiguracoesPage() {
 
   const pode = (code: string) => staff.permissions.has(code)
 
-  return (
-    <div className="w-full space-y-4">
-      <h1 className="text-2xl font-black">Configuracoes</h1>
+  // Cada aba so existe para quem pode mexer em algo dentro dela: aba vazia
+  // seria um botao que leva a lugar nenhum.
+  const abas: Aba[] = []
 
-      {pode(PERMISSIONS.configMercado) && config ? (
+  if (pode(PERMISSIONS.configMercado) && config) {
+    abas.push({
+      id: 'mercado',
+      rotulo: 'Mercado',
+      conteudo: (
         <SecaoMercado
           valores={{
             market_name: config.market_name,
@@ -49,9 +55,17 @@ export default async function ConfiguracoesPage() {
           }}
           logoUrl={urlImagemProduto(config.market_logo_path)}
         />
-      ) : null}
+      ),
+    })
+  }
 
-      {config ? (
+  const podeAbrirFechar = pode(PERMISSIONS.configDeliveryStatus)
+  const podeMinimo = pode(PERMISSIONS.configPedidoMinimo)
+  if (config && (podeAbrirFechar || podeMinimo)) {
+    abas.push({
+      id: 'delivery',
+      rotulo: 'Delivery',
+      conteudo: (
         <SecaoDelivery
           valores={{
             delivery_enabled: config.delivery_enabled,
@@ -59,20 +73,44 @@ export default async function ConfiguracoesPage() {
             min_order_value: Number(config.min_order_value),
             weight_tolerance_pct: Number(config.weight_tolerance_pct),
           }}
-          podeAbrirFechar={pode(PERMISSIONS.configDeliveryStatus)}
-          podeMinimo={pode(PERMISSIONS.configPedidoMinimo)}
+          podeAbrirFechar={podeAbrirFechar}
+          podeMinimo={podeMinimo}
         />
-      ) : null}
+      ),
+    })
+  }
 
-      {pode(PERMISSIONS.configTaxaEntrega) ? <SecaoZonas zonas={zonasComBairros} /> : null}
+  if (pode(PERMISSIONS.configTaxaEntrega)) {
+    abas.push({
+      id: 'bairros',
+      rotulo: 'Bairros e taxas',
+      conteudo: <SecaoZonas zonas={zonasComBairros} />,
+    })
+  }
 
-      {pode(PERMISSIONS.configPagamentos) && config ? (
+  if (pode(PERMISSIONS.configPagamentos) && config) {
+    abas.push({
+      id: 'pagamentos',
+      rotulo: 'Pagamentos',
+      conteudo: (
         <SecaoPagamentos
           metodos={metodos ?? []}
           pix={{ pix_key: config.pix_key, pix_receiver_name: config.pix_receiver_name }}
           podePix={pode(PERMISSIONS.configPix)}
         />
-      ) : null}
+      ),
+    })
+  }
+
+  return (
+    <div className="w-full space-y-4">
+      <h1 className="text-2xl font-black">Configuracoes</h1>
+
+      {abas.length > 0 ? (
+        <AbasConfiguracoes abas={abas} inicial={typeof aba === 'string' ? aba : ''} />
+      ) : (
+        <p className="text-muted">Voce nao tem permissao para alterar nenhuma configuracao.</p>
+      )}
     </div>
   )
 }
