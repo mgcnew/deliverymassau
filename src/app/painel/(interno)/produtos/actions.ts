@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import { BUCKET_PRODUTOS } from '@/lib/supabase/storage'
 import { baixarImagemDeUrl } from '@/lib/produtos/baixar-imagem'
 import { variantesDoCodigo } from '@/lib/produtos/codigo-barras'
+import { ancoraProduto, listaSegura } from '@/lib/produtos/volta'
 import { paraNumero, slugify } from '@/lib/format'
 import type { UnitType } from '@/lib/types'
 
@@ -259,16 +260,22 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
     ...(imagePath ? { image_path: imagePath } : {}),
   }
 
+  // Salvou: volta para a lista de onde a pessoa veio (mesma categoria,
+  // pagina, busca), rolando ate o produto - que pisca com o selo "Salvo".
+  const lista = listaSegura(formData.get('volta'))
+
   if (criando) {
-    const { error } = await supabase
+    const { data: criado, error } = await supabase
       .from('products')
       .insert({ ...dados, slug: `${slugify(name)}-${Date.now().toString(36)}` })
+      .select('id')
+      .single()
 
     if (error) return { error: traduzirErroProduto(error) }
 
     revalidatePath('/painel/produtos')
     revalidatePath('/loja')
-    redirect('/painel/produtos')
+    redirect(`${lista}#${ancoraProduto(criado.id)}`)
   }
 
   const { data: anterior } = await supabase
@@ -293,5 +300,5 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
   revalidatePath('/painel/produtos')
   revalidatePath(`/painel/produtos/${id}`)
   revalidatePath('/loja')
-  return { ok: 'Produto salvo.' }
+  redirect(`${lista}#${ancoraProduto(id)}`)
 }

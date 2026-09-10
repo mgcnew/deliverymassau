@@ -35,11 +35,14 @@ export function ProdutoForm({
   valores,
   categorias,
   somenteLeitura,
+  volta,
   emAbas,
 }: {
   valores: ProdutoFormValores
   categorias: Array<{ id: string; name: string }>
   somenteLeitura: boolean
+  /** Lista de onde a pessoa veio: salvar volta para ela (ver lib/produtos/volta). */
+  volta: string
   /**
    * Edicao: campos em abas (Preco, Dados, Foto e codigo) mais as `extras`
    * que nao sao do formulario (ex.: Estado, que salva na hora). Sem isso -
@@ -231,6 +234,7 @@ export function ProdutoForm({
   return (
     <form action={action} onInvalidCapture={aoInvalidar} className="space-y-4">
       {valores.id ? <input type="hidden" name="id" value={valores.id} /> : null}
+      <input type="hidden" name="volta" value={volta} />
 
       {emAbas ? (
         <Abas

@@ -8,9 +8,11 @@ import { ButtonLink } from '@/components/ui/button'
 import { Card, Empty } from '@/components/ui/card'
 import { precoPorUnidade } from '@/lib/format'
 import { variantesDoCodigo } from '@/lib/produtos/codigo-barras'
+import { ancoraProduto, linkEdicao } from '@/lib/produtos/volta'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 import type { UnitType } from '@/lib/types'
 import { BuscaProdutos } from './busca-produtos'
+import { ProdutoSalvo } from './produto-salvo'
 import { BotaoDisponibilidade } from './disponibilidade'
 import { SeletorCategoria } from './seletor-categoria'
 
@@ -79,6 +81,9 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
     })
     return `/painel/produtos?${sp.toString()}`
   }
+  // Esta lista, exatamente como esta (filtro, busca, categoria, pagina): vai
+  // junto para a edicao e e para ela que o salvar volta.
+  const aqui = link({ p: String(pagina) })
 
   return (
     <div className="w-full space-y-4">
@@ -93,11 +98,15 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
               <ButtonLink href="/painel/produtos/importar" variant="secondary">
                 Importar
               </ButtonLink>
-              <ButtonLink href="/painel/produtos/novo">Novo</ButtonLink>
+              <ButtonLink href={`/painel/produtos/novo?volta=${encodeURIComponent(aqui)}`}>
+                Novo
+              </ButtonLink>
             </>
           ) : null}
         </div>
       </div>
+
+      <ProdutoSalvo />
 
       <BuscaProdutos
         busca={busca}
@@ -134,7 +143,13 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
             {produtos.map((p) => {
               const img = urlImagemProduto(p.image_path)
               return (
-                <li key={p.id} className="flex items-center gap-3 py-3">
+                <li
+                  key={p.id}
+                  id={ancoraProduto(p.id)}
+                  // Voltando da edicao, ProdutoSalvo rola ate esta linha e
+                  // a acende - e o "salvo" que antes aparecia la dentro.
+                  className="group flex items-center gap-3 py-3"
+                >
                   {img ? (
                     <Image
                       src={img}
@@ -147,7 +162,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
                     <span className="size-14 shrink-0 rounded-xl bg-foreground/5" />
                   )}
 
-                  <Link href={`/painel/produtos/${p.id}`} className="min-w-0 flex-1">
+                  <Link href={linkEdicao(p.id, aqui)} className="min-w-0 flex-1">
                     <p className="truncate font-semibold">
                       {p.name}
                       {!p.is_active ? (
@@ -157,6 +172,11 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
                       ) : null}
                     </p>
                     <p className="truncate text-sm text-muted">
+                      {/* No comeco da linha: depois do nome, o "..." do nome
+                          comprido cortava o selo no celular. */}
+                      <span className="mr-1.5 hidden rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-900 group-[.produto-salvo]:inline dark:bg-emerald-900/50 dark:text-emerald-200">
+                        Salvo
+                      </span>
                       {precoPorUnidade(Number(p.price), p.sold_by_weight, p.unit_type as UnitType)}
                       {' - '}
                       {nomeCategoria.get(p.category_id) ?? 'sem categoria'}

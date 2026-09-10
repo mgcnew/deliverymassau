@@ -8,6 +8,7 @@ import { ScanBarcode } from 'lucide-react'
 import { Button, buttonClass } from '@/components/ui/button'
 import { LeitorCodigoBarras, useLeitorDisponivel } from '@/components/ui/leitor-codigo-barras'
 import { moeda } from '@/lib/format'
+import { linkEdicao } from '@/lib/produtos/volta'
 import { produtoPorCodigo, type ProdutoLido } from './actions'
 
 /**
@@ -46,6 +47,8 @@ export function BuscaProdutos({
   const [leitura, setLeitura] = useState<Leitura | null>(null)
 
   const tentativa = leitura?.tentativa ?? 0
+  // A lista como esta agora: quem bipou e salvou volta para ela.
+  const aqui = () => `${window.location.pathname}${window.location.search}`
   const lerDeNovo = () => setLeitura({ fase: 'lendo', tentativa: tentativa + 1 })
 
   async function aoDetectar(codigo: string) {
@@ -54,7 +57,7 @@ export function BuscaProdutos({
 
     if ('produto' in resultado) {
       setLeitura({ fase: 'abrindo', nome: resultado.produto.name, tentativa })
-      router.push(`/painel/produtos/${resultado.produto.id}`)
+      router.push(linkEdicao(resultado.produto.id, aqui()))
     } else if ('varios' in resultado) {
       setLeitura({ fase: 'varios', codigo, produtos: resultado.varios, tentativa })
     } else if ('naoEncontrado' in resultado) {
@@ -121,7 +124,7 @@ export function BuscaProdutos({
                 {leitura.produtos.map((p) => (
                   <li key={p.id}>
                     <Link
-                      href={`/painel/produtos/${p.id}`}
+                      href={linkEdicao(p.id, aqui())}
                       className="flex items-center justify-between gap-3 px-3 py-3 hover:bg-foreground/5"
                     >
                       <span className="min-w-0 font-semibold">{p.name}</span>
@@ -145,7 +148,7 @@ export function BuscaProdutos({
               <div className="flex flex-col gap-2">
                 {podeCriar ? (
                   <Link
-                    href={`/painel/produtos/novo?codigo=${encodeURIComponent(leitura.codigo)}`}
+                    href={`/painel/produtos/novo?codigo=${encodeURIComponent(leitura.codigo)}&volta=${encodeURIComponent(aqui())}`}
                     className={buttonClass('primary', 'lg', 'w-full')}
                   >
                     Cadastrar com este codigo

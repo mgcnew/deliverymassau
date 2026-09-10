@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 import type { UnitType } from '@/lib/types'
+import { listaSegura } from '@/lib/produtos/volta'
 import { ProdutoForm } from '../produto-form'
 import { EstadoProduto } from './estado-produto'
 
@@ -16,7 +17,10 @@ export default async function ProdutoPage({
   params,
   searchParams,
 }: PageProps<'/painel/produtos/[id]'>) {
-  const [{ id }, { aba }] = await Promise.all([params, searchParams])
+  const [{ id }, { aba, volta }] = await Promise.all([params, searchParams])
+  // A lista de onde a pessoa veio (categoria, pagina...): o voltar e o
+  // salvar retornam a ela.
+  const lista = listaSegura(volta)
   const staff = await requirePermission(PERMISSIONS.produtosVer)
   const supabase = await createClient()
 
@@ -36,7 +40,7 @@ export default async function ProdutoPage({
   return (
     <div className="w-full space-y-4">
       <div>
-        <LinkVoltar href="/painel/produtos">Produtos</LinkVoltar>
+        <LinkVoltar href={lista}>Produtos</LinkVoltar>
         <h1 className="text-2xl font-black">{produto.name}</h1>
       </div>
 
@@ -44,6 +48,7 @@ export default async function ProdutoPage({
         <ProdutoForm
           categorias={categorias ?? []}
           somenteLeitura={!staff.permissions.has(PERMISSIONS.produtosEditar)}
+          volta={lista}
           // Em abas: preco, dados e foto sao do formulario; Estado (ativo,
           // disponivel, excluir) salva na hora e entra como aba extra.
           emAbas={{

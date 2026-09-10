@@ -116,6 +116,24 @@ body {
   }
 }
 
+/* Produto que acabou de ser salvo, na volta para a lista (produto-salvo.tsx
+   poe a classe): a linha acende e apaga, para o olho achar onde a pessoa
+   estava. Sem animacao, fica so o selo "Salvo" da propria linha. */
+@keyframes destaque-produto {
+  from {
+    background-color: color-mix(in srgb, var(--brand) 16%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .produto-salvo {
+    animation: destaque-produto 2.4s ease-out;
+  }
+}
+
 /* Nunca esconder o foco: o painel e muito usado por teclado no balcao. */
 :focus-visible {
   outline: 3px solid var(--brand);

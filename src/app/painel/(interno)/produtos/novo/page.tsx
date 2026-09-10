@@ -2,6 +2,7 @@ import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
+import { listaSegura } from '@/lib/produtos/volta'
 import { ProdutoForm } from '../produto-form'
 
 export const metadata = { title: 'Novo produto | Mercado Massa 24h' }
@@ -10,7 +11,7 @@ export default async function NovoProdutoPage({ searchParams }: PageProps<'/pain
   await requirePermission(PERMISSIONS.produtosCriar)
   // Vindo da leitura pela camera na busca: o codigo que nao estava cadastrado
   // ja entra preenchido. So digitos - o resto da URL nao vira dado do produto.
-  const { codigo } = await searchParams
+  const { codigo, volta } = await searchParams
   const codigoLido = typeof codigo === 'string' ? codigo.replace(/\D/g, '').slice(0, 14) : ''
   const supabase = await createClient()
 
@@ -27,6 +28,7 @@ export default async function NovoProdutoPage({ searchParams }: PageProps<'/pain
         <ProdutoForm
           categorias={categorias ?? []}
           somenteLeitura={false}
+          volta={listaSegura(volta)}
           valores={{
             name: '',
             category_id: categorias?.[0]?.id ?? '',
