@@ -1,8 +1,10 @@
 import Link from 'next/link'
 
 import { BarraCarrinho } from '@/components/carrinho/barra-carrinho'
+import { BotaoSair } from '@/components/loja/botao-sair'
 import { LinkMeusPedidos } from '@/components/loja/link-meus-pedidos'
 import { RodapeEquipe } from '@/components/loja/rodape-equipe'
+import { ConviteInstalar } from '@/components/pwa/convite-instalar'
 import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 
@@ -17,15 +19,20 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
       {/* Mesmo padrao neutro do cabecalho do painel (bg-surface, nao mais
           vermelho fixo) -- a logo troca de versao com o tema, igual la. */}
       <header className="sticky top-0 z-20 border-b border-line bg-surface">
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-4 px-4 py-4">
+        {/* gap menor no celular: com o Sair, a logo encolhe um pouco em vez
+            de empurrar os botoes para fora da tela. */}
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-4 py-4 sm:gap-4">
           <Link href="/loja" className="min-w-0 flex-1">
             <Logo altura={44} />
             <p className="text-xs font-semibold text-muted">Delivery aberto 24 horas</p>
           </Link>
           <LinkMeusPedidos />
           <ThemeToggle />
+          <BotaoSair />
         </div>
       </header>
+
+      <ConviteInstalar />
 
       {!config?.delivery_enabled ? (
         <p className="bg-amber-100 px-4 py-3 text-center text-sm font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">

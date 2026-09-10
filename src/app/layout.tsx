@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
 import './globals.css'
 import { THEME_INIT_SCRIPT } from '@/lib/theme-script'
+import { CAPTURA_INSTALACAO_SCRIPT } from '@/lib/pwa/captura-instalacao'
 import { RegistrarServiceWorker } from '@/components/pwa/registrar-sw'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: CAPTURA_INSTALACAO_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         {children}
