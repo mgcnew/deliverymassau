@@ -1,10 +1,11 @@
 import { requireStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { PERMISSIONS } from '@/lib/permissions'
+import type { EstadoDelivery } from '@/lib/horario'
 import type { OrderStatus } from '@/lib/types'
 import { InicioAoVivo } from './inicio-ao-vivo'
 import { PainelIndicadores, type Indicadores } from './indicadores'
-import { InterruptorDelivery } from './interruptor-delivery'
+import { EstadoDeliveryCard } from './estado-delivery'
 import { PrecisaDeAtencao, type PedidoEmAndamento } from './precisa-de-atencao'
 
 export const metadata = { title: 'Painel | Mercado Massa 24h' }
@@ -62,8 +63,9 @@ export default async function PainelHome() {
   const veIndicadores = staff.permissions.has(PERMISSIONS.dashboardVer)
   const vePedidos = staff.permissions.has(PERMISSIONS.pedidosVer)
 
-  const [{ data: settings }, indicadores, emAndamento] = await Promise.all([
-    supabase.from('settings').select('market_name, delivery_enabled').eq('id', 1).maybeSingle(),
+  const [{ data: settings }, { data: estadoDelivery }, indicadores, emAndamento] = await Promise.all([
+    supabase.from('settings').select('market_name').eq('id', 1).maybeSingle(),
+    supabase.rpc('delivery_estado'),
     veIndicadores
       ? supabase.rpc('dashboard_hoje').then(({ data }) => data as Indicadores | null)
       : Promise.resolve(null),
@@ -79,10 +81,12 @@ export default async function PainelHome() {
         <p className="text-muted">{settings?.market_name ?? 'Mercado Massa 24h'}</p>
       </div>
 
-      <InterruptorDelivery
-        ativo={settings?.delivery_enabled ?? false}
-        podeAlterar={staff.permissions.has(PERMISSIONS.configDeliveryStatus)}
-      />
+      {estadoDelivery ? (
+        <EstadoDeliveryCard
+          estado={estadoDelivery as EstadoDelivery}
+          podeAlterar={staff.permissions.has(PERMISSIONS.configDeliveryStatus)}
+        />
+      ) : null}
 
       {/* O que fazer primeiro vem antes dos numeros do dia. Sem atalhos para
           as telas: o menu (lateral no computador, barra com "Mais" no

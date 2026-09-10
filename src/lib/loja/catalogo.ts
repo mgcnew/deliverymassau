@@ -2,6 +2,8 @@ import 'server-only'
 
 import { cache } from 'react'
 
+import type { DiaHorario, EstadoDelivery } from '@/lib/horario'
+
 import { createClient } from '@/lib/supabase/server'
 import type { UnitType } from '@/lib/types'
 
@@ -10,7 +12,10 @@ export type ConfiguracaoPublica = {
   market_phone: string | null
   market_logo_path: string | null
   market_address: string | null
+  /** Calculado pelo banco (horario + abrir/fechar manual), nao mais uma chave. */
   delivery_enabled: boolean
+  delivery: EstadoDelivery
+  delivery_hours: DiaHorario[]
   delivery_closed_message: string
   min_order_value: number
   pix_key: string | null

@@ -21,6 +21,9 @@ import {
   type ConfigState,
 } from './actions'
 import { EditorBandeiras, SUGESTOES } from './bandeiras'
+import { HorarioDelivery } from './horario-delivery'
+import { EstadoDeliveryCard } from '../estado-delivery'
+import type { DiaHorario, EstadoDelivery } from '@/lib/horario'
 
 function Resultado({ estado }: { estado: ConfigState }) {
   if (estado.erro) return <Alert tone="error">{estado.erro}</Alert>
@@ -91,19 +94,22 @@ export function SecaoMercado({
 
 export function SecaoDelivery({
   valores,
+  estado,
+  dias,
   podeAbrirFechar,
   podeMinimo,
 }: {
   valores: {
-    delivery_enabled: boolean
     delivery_closed_message: string
     min_order_value: number
     weight_tolerance_pct: number
   }
+  estado: EstadoDelivery
+  dias: DiaHorario[]
   podeAbrirFechar: boolean
   podeMinimo: boolean
 }) {
-  const [estadoStatus, acaoStatus, pendenteStatus] = useActionState<ConfigState, FormData>(
+  const [estadoMensagem, acaoMensagem, pendenteMensagem] = useActionState<ConfigState, FormData>(
     salvarDelivery,
     {},
   )
@@ -111,47 +117,35 @@ export function SecaoDelivery({
     salvarDelivery,
     {},
   )
-  const [aberto, setAberto] = useState(valores.delivery_enabled)
 
   return (
     <>
+      <EstadoDeliveryCard estado={estado} podeAlterar={podeAbrirFechar} />
+
       {podeAbrirFechar ? (
-        <Card>
-          <CardTitle>Delivery aberto</CardTitle>
-          <form action={acaoStatus} className="space-y-4">
-            <label className="flex items-center gap-3 rounded-xl border border-line p-3">
-              <input
-                type="checkbox"
-                name="delivery_enabled"
-                className="size-6 accent-[var(--brand)]"
-                checked={aberto}
-                onChange={(e) => setAberto(e.target.checked)}
-              />
-              <span>
-                <span className="block font-bold">
-                  {aberto ? 'Recebendo pedidos' : 'Fechado para novos pedidos'}
-                </span>
-                <span className="block text-sm text-muted">
-                  Fechado, o portal continua no ar avisando o cliente. Pedidos em andamento seguem
-                  normalmente.
-                </span>
-              </span>
-            </label>
+        <>
+          <HorarioDelivery dias={dias} />
 
-            <Field label="Mensagem quando estiver fechado">
-              <Textarea
-                name="delivery_closed_message"
-                defaultValue={valores.delivery_closed_message}
-                maxLength={160}
-              />
-            </Field>
-
-            <Resultado estado={estadoStatus} />
-            <Button type="submit" disabled={pendenteStatus}>
-              {pendenteStatus ? 'Salvando...' : 'Salvar'}
-            </Button>
-          </form>
-        </Card>
+          <Card>
+            <CardTitle>Aviso de fechado</CardTitle>
+            <form action={acaoMensagem} className="space-y-4">
+              <Field
+                label="Mensagem para o cliente"
+                hint="Aparece no topo da loja enquanto o delivery estiver fechado, junto de quando abre."
+              >
+                <Textarea
+                  name="delivery_closed_message"
+                  defaultValue={valores.delivery_closed_message}
+                  maxLength={160}
+                />
+              </Field>
+              <Resultado estado={estadoMensagem} />
+              <Button type="submit" disabled={pendenteMensagem}>
+                {pendenteMensagem ? 'Salvando...' : 'Salvar mensagem'}
+              </Button>
+            </form>
+          </Card>
+        </>
       ) : null}
 
       {podeMinimo ? (

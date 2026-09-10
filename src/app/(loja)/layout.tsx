@@ -10,9 +10,11 @@ import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 import { getConfiguracaoPublica } from '@/lib/loja/catalogo'
 import { moeda } from '@/lib/format'
+import { quando, resumoLoja, semanaAgrupada } from '@/lib/horario'
 
 export default async function LojaLayout({ children }: LayoutProps<'/'>) {
   const config = await getConfiguracaoPublica()
+  const horarioSemana = semanaAgrupada(config?.delivery_hours ?? [])
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -24,7 +26,10 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
         <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-4 py-4 sm:gap-4">
           <Link href="/loja" className="min-w-0 flex-1">
             <Logo altura={44} />
-            <p className="text-xs font-semibold text-muted">Delivery aberto 24 horas</p>
+            {/* Era "Delivery aberto 24 horas" fixo; agora diz o que vale agora. */}
+            <p className="text-xs font-semibold text-muted">
+              {config?.delivery ? resumoLoja(config.delivery) : 'Delivery'}
+            </p>
           </Link>
           <LinkMeusPedidos />
           <ThemeToggle />
@@ -37,6 +42,9 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
       {!config?.delivery_enabled ? (
         <p className="bg-amber-100 px-4 py-3 text-center text-sm font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
           {config?.delivery_closed_message ?? 'Delivery temporariamente indisponivel.'}
+          {config?.delivery?.abre_em
+            ? ` Abrimos ${quando(config.delivery.abre_em, config.delivery.fuso)}.`
+            : ''}
         </p>
       ) : null}
 
@@ -47,6 +55,16 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
           <p className="font-bold text-foreground">{config?.market_name ?? 'Mercado Massa 24h'}</p>
           {config?.market_address ? <p>{config.market_address}</p> : null}
           {config?.market_phone ? <p>WhatsApp {config.market_phone}</p> : null}
+          {horarioSemana.length ? (
+            <div className="pt-1">
+              <p className="font-semibold text-foreground">Horario do delivery</p>
+              {horarioSemana.map((l) => (
+                <p key={l.dias}>
+                  {l.dias}: {l.horario}
+                </p>
+              ))}
+            </div>
+          ) : null}
           <p>
             Pedido minimo de {moeda(config?.min_order_value ?? 0)} em produtos, sem contar a taxa de
             entrega.

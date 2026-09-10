@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 import { Abas, type Aba } from '@/components/ui/abas'
+import type { DiaHorario, EstadoDelivery } from '@/lib/horario'
 import {
   SecaoDelivery,
   SecaoMercado,
@@ -18,13 +19,29 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps<'/pa
   const { aba } = await searchParams
   const supabase = await createClient()
 
-  const [{ data: config }, { data: metodos }, { data: zonas }, { data: bairros }] =
-    await Promise.all([
+  const [
+    { data: config },
+    { data: metodos },
+    { data: zonas },
+    { data: bairros },
+    { data: estadoDelivery },
+    { data: horarios },
+  ] = await Promise.all([
       supabase.from('settings').select('*').eq('id', 1).maybeSingle(),
       supabase.from('payment_methods').select('code, label, is_active, brands').order('sort_order'),
       supabase.from('delivery_zones').select('id, name, fee, is_active').order('sort_order').order('name'),
       supabase.from('zone_neighborhoods').select('id, name, zone_id').order('name'),
+      supabase.rpc('delivery_estado'),
+      supabase.from('delivery_hours').select('weekday, mode, opens_at, closes_at').order('weekday'),
     ])
+
+  // "08:00:00" do banco -> "08:00", como o <input type="time"> espera.
+  const dias: DiaHorario[] = (horarios ?? []).map((h) => ({
+    weekday: h.weekday,
+    mode: h.mode as DiaHorario['mode'],
+    opens_at: h.opens_at ? String(h.opens_at).slice(0, 5) : null,
+    closes_at: h.closes_at ? String(h.closes_at).slice(0, 5) : null,
+  }))
 
   const zonasComBairros: ZonaComBairros[] = (zonas ?? []).map((z) => ({
     id: z.id,
@@ -61,14 +78,15 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps<'/pa
 
   const podeAbrirFechar = pode(PERMISSIONS.configDeliveryStatus)
   const podeMinimo = pode(PERMISSIONS.configPedidoMinimo)
-  if (config && (podeAbrirFechar || podeMinimo)) {
+  if (config && estadoDelivery && (podeAbrirFechar || podeMinimo)) {
     abas.push({
       id: 'delivery',
       rotulo: 'Delivery',
       conteudo: (
         <SecaoDelivery
+          estado={estadoDelivery as EstadoDelivery}
+          dias={dias}
           valores={{
-            delivery_enabled: config.delivery_enabled,
             delivery_closed_message: config.delivery_closed_message,
             min_order_value: Number(config.min_order_value),
             weight_tolerance_pct: Number(config.weight_tolerance_pct),

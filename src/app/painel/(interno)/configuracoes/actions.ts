@@ -73,11 +73,12 @@ export async function salvarDelivery(_prev: ConfigState, formData: FormData): Pr
   const supabase = await createClient()
   const dados: Record<string, unknown> = {}
 
-  if (formData.has('delivery_enabled')) {
+  // Aberto/fechado nao passa mais por aqui: e o horario + os botoes
+  // "Abrir agora"/"Fechar agora" (definirManual). Daqui sai so a mensagem.
+  if (formData.has('delivery_closed_message')) {
     if (!staff.permissions.has(PERMISSIONS.configDeliveryStatus)) {
-      return { erro: 'Voce nao pode abrir ou fechar o delivery.' }
+      return { erro: 'Voce nao pode alterar o aviso de delivery fechado.' }
     }
-    dados.delivery_enabled = formData.get('delivery_enabled') === 'on'
     dados.delivery_closed_message =
       String(formData.get('delivery_closed_message') ?? '').trim() ||
       'Delivery temporariamente indisponivel.'
@@ -104,20 +105,54 @@ export async function salvarDelivery(_prev: ConfigState, formData: FormData): Pr
 }
 
 /**
- * Interruptor do painel: abre/fecha o delivery num toque.
+ * "Abrir agora" / "Fechar agora": excecao por cima do horario, que vale ate
+ * a proxima troca dele e depois volta sozinha ao automatico (migration 0038).
  *
- * Mexe SO no delivery_enabled -- diferente do formulario de configuracoes,
- * que grava tambem a mensagem de fechado. Se este tocasse na mensagem,
- * abrir e fechar pelo atalho apagaria o texto que a pessoa escreveu la.
+ * Primeiro volta ao horario e pergunta ao banco como fica: se o horario ja
+ * deixa no estado pedido, nao ha excecao a gravar. Senao, grava o manual com
+ * prazo na proxima troca (nulo quando o horario e 24h e nao troca nunca).
  */
-export async function alternarDelivery(ativo: boolean): Promise<ConfigState> {
+export async function definirManual(estado: 'aberto' | 'fechado'): Promise<ConfigState> {
+  const guard = await exigir(PERMISSIONS.configDeliveryStatus)
+  if (guard.erro) return guard
+
+  const supabase = await createClient()
+
+  const limpar = await supabase
+    .from('settings')
+    .update({ delivery_override: null, delivery_override_until: null, delivery_enabled: true })
+    .eq('id', 1)
+    .select('id')
+  if (limpar.error) return { erro: limpar.error.message }
+  if (!limpar.data?.length) return { erro: BLOQUEADO }
+
+  const { data: regra, error: erroRegra } = await supabase.rpc('delivery_estado')
+  if (erroRegra || !regra) return { erro: 'Nao foi possivel consultar o horario. Tente de novo.' }
+
+  const pelaRegra = regra as { aberto: boolean; troca_horario: string | null }
+  if (pelaRegra.aberto !== (estado === 'aberto')) {
+    const { error } = await supabase
+      .from('settings')
+      .update({ delivery_override: estado, delivery_override_until: pelaRegra.troca_horario })
+      .eq('id', 1)
+    if (error) return { erro: error.message }
+  }
+
+  depois()
+  return { ok: estado === 'aberto' ? 'Delivery aberto.' : 'Delivery fechado.' }
+}
+
+/** Desfaz o abrir/fechar manual antes do prazo: volta a valer so o horario. */
+export async function voltarAoHorario(): Promise<ConfigState> {
   const guard = await exigir(PERMISSIONS.configDeliveryStatus)
   if (guard.erro) return guard
 
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('settings')
-    .update({ delivery_enabled: ativo })
+    // delivery_enabled volta a true junto: a chave antiga desligada tambem
+    // conta como fechado manual (ver 0038).
+    .update({ delivery_override: null, delivery_override_until: null, delivery_enabled: true })
     .eq('id', 1)
     .select('id')
 
@@ -125,7 +160,59 @@ export async function alternarDelivery(ativo: boolean): Promise<ConfigState> {
   if (!data?.length) return { erro: BLOQUEADO }
 
   depois()
-  return { ok: ativo ? 'Delivery aberto.' : 'Delivery fechado.' }
+  return { ok: 'Seguindo o horario.' }
+}
+
+export type DiaHorarioEntrada = {
+  weekday: number
+  mode: 'horario' | '24h' | 'fechado'
+  opens_at: string
+  closes_at: string
+}
+
+const HORA_VALIDA = /^([01]\d|2[0-3]):[0-5]\d$/
+
+/** Horario da semana inteira, salvo de uma vez (os 7 dias ja existem no banco). */
+export async function salvarHorarios(dias: DiaHorarioEntrada[]): Promise<ConfigState> {
+  const guard = await exigir(PERMISSIONS.configDeliveryStatus)
+  if (guard.erro) return guard
+
+  if (dias.length !== 7 || new Set(dias.map((d) => d.weekday)).size !== 7) {
+    return { erro: 'Informe o horario dos 7 dias da semana.' }
+  }
+  for (const d of dias) {
+    if (d.mode !== 'horario') continue
+    if (!HORA_VALIDA.test(d.opens_at) || !HORA_VALIDA.test(d.closes_at)) {
+      return { erro: 'Confira os horarios: use o formato 08:00.' }
+    }
+    if (d.opens_at === d.closes_at) {
+      return { erro: 'Abertura e fechamento iguais: para o dia inteiro, escolha "24 horas".' }
+    }
+  }
+
+  const supabase = await createClient()
+  // Um update por dia: a RLS so libera UPDATE (as linhas ja existem), e um
+  // upsert pediria permissao de INSERT.
+  const resultados = await Promise.all(
+    dias.map((d) =>
+      supabase
+        .from('delivery_hours')
+        .update({
+          mode: d.mode,
+          opens_at: d.mode === 'horario' ? d.opens_at : null,
+          closes_at: d.mode === 'horario' ? d.closes_at : null,
+        })
+        .eq('weekday', d.weekday)
+        .select('weekday'),
+    ),
+  )
+
+  const falha = resultados.find((r) => r.error)
+  if (falha?.error) return { erro: falha.error.message }
+  if (resultados.some((r) => !r.data?.length)) return { erro: BLOQUEADO }
+
+  depois()
+  return { ok: 'Horario salvo.' }
 }
 
 export async function salvarPix(_prev: ConfigState, formData: FormData): Promise<ConfigState> {
