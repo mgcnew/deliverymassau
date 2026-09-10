@@ -310,6 +310,7 @@ const PAGAMENTO: Record<string, string> = {
   dinheiro: 'Dinheiro',
   debito: 'Cartao de debito',
   credito: 'Cartao de credito',
+  voucher: 'Voucher',
 }
 
 export function Produtos({ dados }: { dados: Relatorio['produtos'] }) {

@@ -14,6 +14,7 @@ const PAGAMENTO: Record<PaymentMethod, string> = {
   dinheiro: 'DINHEIRO',
   debito: 'CARTAO DE DEBITO',
   credito: 'CARTAO DE CREDITO',
+  voucher: 'VALE-ALIMENTACAO/REFEICAO',
 }
 
 function linha(esquerda: string, direita: string) {
@@ -135,7 +136,9 @@ export default async function ImprimirPedidoPage({
 
         <hr />
 
-        <p className="font-bold">PAGAMENTO: {PAGAMENTO[pagamento]}</p>
+        <p className="font-bold">PAGAMENTO: {PAGAMENTO[pagamento]}
+          {pedido.payment_brand ? ` - ${String(pedido.payment_brand).toUpperCase()}` : ''}
+        </p>
 
         {pagamento === 'dinheiro' && pedido.needs_change ? (
           <div className="destaque">

@@ -9,7 +9,7 @@ import { moeda, quantidade as formatarQuantidade } from '@/lib/format'
 import { ORDER_STATUS } from '@/lib/orders/status'
 import { AcompanharPedidoAoVivo } from '@/lib/tempo-real/acompanhar-pedido-ao-vivo'
 import type { OrderStatus, PaymentMethod, UnitType } from '@/lib/types'
-import { PAGAMENTO_CURTO } from '../tipos'
+import { rotuloPagamento } from '../tipos'
 import { AcoesPedido } from './acoes-pedido'
 
 export const metadata = { title: 'Pedido | Mercado Massa 24h' }
@@ -136,7 +136,7 @@ export default async function PedidoDetalhePage({ params }: PageProps<'/painel/p
           </div>
           <div className="flex justify-between pt-2">
             <dt>Pagamento</dt>
-            <dd className="font-bold">{PAGAMENTO_CURTO[pedido.payment_method as PaymentMethod]}</dd>
+            <dd className="font-bold">{rotuloPagamento(pedido.payment_method as PaymentMethod, pedido.payment_brand)}</dd>
           </div>
           {pedido.needs_change ? (
             <div className="flex justify-between">

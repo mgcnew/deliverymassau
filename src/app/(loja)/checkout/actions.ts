@@ -16,6 +16,8 @@ export type EntradaPedido = {
     referencia?: string
   }
   pagamento: PaymentMethod
+  /** Bandeira do voucher. O banco confere se esta entre as aceitas. */
+  bandeira?: string
   precisaTroco: boolean
   trocoPara?: number
   observacao?: string
@@ -46,6 +48,7 @@ export async function criarPedido(entrada: EntradaPedido): Promise<ResultadoPedi
         reference: entrada.endereco.referencia ?? null,
       },
       payment_method: entrada.pagamento,
+      payment_brand: entrada.bandeira ?? null,
       needs_change: entrada.precisaTroco,
       change_for: entrada.trocoPara ?? null,
       note: entrada.observacao ?? null,
@@ -132,6 +135,9 @@ function traduzirErro(mensagem: string, detalhe?: string | null): ResultadoPedid
 
     case 'PAGAMENTO_INDISPONIVEL':
       return { erro: 'Essa forma de pagamento nao esta disponivel agora.' }
+
+    case 'BANDEIRA_INVALIDA':
+      return { erro: 'Escolha a bandeira do seu vale entre as que aceitamos.' }
 
     case 'TROCO_SO_DINHEIRO':
       return { erro: 'Troco so faz sentido para pagamento em dinheiro.' }

@@ -42,6 +42,7 @@ type PedidoPublico = {
   delivery_fee: number
   total: number
   payment_method: PaymentMethod
+  payment_brand: string | null
   needs_change: boolean
   change_for: number | null
   change_amount: number | null
@@ -56,6 +57,7 @@ const PAGAMENTO: Record<PaymentMethod, string> = {
   dinheiro: 'Dinheiro',
   debito: 'Cartao de debito',
   credito: 'Cartao de credito',
+  voucher: 'Vale-alimentacao / refeicao',
 }
 
 export default async function PedidoPage({ params, searchParams }: PageProps<'/pedido/[token]'>) {
@@ -214,7 +216,10 @@ export default async function PedidoPage({ params, searchParams }: PageProps<'/p
           <p className="text-sm text-muted">Ref: {pedido.address.reference}</p>
         ) : null}
         <p className="pt-2 text-sm">
-          Pagamento na entrega: <strong>{PAGAMENTO[pedido.payment_method]}</strong>
+          Pagamento na entrega: <strong>
+            {PAGAMENTO[pedido.payment_method]}
+            {pedido.payment_brand ? ` - ${pedido.payment_brand}` : ''}
+          </strong>
         </p>
         {pedido.needs_change && pedido.change_for ? (
           <p className="text-sm">

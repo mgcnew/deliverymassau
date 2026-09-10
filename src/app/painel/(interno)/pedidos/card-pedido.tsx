@@ -8,7 +8,7 @@ import { Printer } from 'lucide-react'
 import { moeda } from '@/lib/format'
 import { ORDER_STATUS } from '@/lib/orders/status'
 import { iniciarSeparacao } from './actions'
-import { PAGAMENTO_CURTO, tempoRelativo, type PedidoOperacional } from './tipos'
+import { rotuloPagamento, tempoRelativo, type PedidoOperacional } from './tipos'
 
 export function CardPedido({
   pedido,
@@ -64,7 +64,7 @@ export function CardPedido({
           {pedido.itens} {pedido.itens === 1 ? 'item' : 'itens'}
         </span>
         <span className="rounded-full bg-foreground/5 px-2 py-0.5">
-          {PAGAMENTO_CURTO[pedido.payment_method]}
+          {rotuloPagamento(pedido.payment_method, pedido.payment_brand)}
         </span>
         {pedido.needs_change ? (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">

@@ -15,7 +15,8 @@ export type ConfiguracaoPublica = {
   min_order_value: number
   pix_key: string | null
   pix_receiver_name: string | null
-  payment_methods: Array<{ code: string; label: string }>
+  /** brands: bandeiras aceitas (cartoes e voucher). No voucher o cliente escolhe uma. */
+  payment_methods: Array<{ code: string; label: string; brands: string[] }>
 }
 
 export type ProdutoVitrine = {

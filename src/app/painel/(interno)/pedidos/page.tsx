@@ -10,7 +10,7 @@ import type { PedidoOperacional } from './tipos'
 export const metadata = { title: 'Pedidos | Mercado Massa 24h' }
 
 const CAMPOS =
-  'id, order_number, status, created_at, customer_name, customer_phone, address_district, total, payment_method, needs_change, change_amount, delivery_person_id, order_items(count)'
+  'id, order_number, status, created_at, customer_name, customer_phone, address_district, total, payment_method, payment_brand, needs_change, change_amount, delivery_person_id, order_items(count)'
 
 const EM_ANDAMENTO = ['recebido', 'separando', 'aguardando_entregador', 'saiu_para_entrega']
 

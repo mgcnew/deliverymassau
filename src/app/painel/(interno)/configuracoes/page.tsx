@@ -21,7 +21,7 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps<'/pa
   const [{ data: config }, { data: metodos }, { data: zonas }, { data: bairros }] =
     await Promise.all([
       supabase.from('settings').select('*').eq('id', 1).maybeSingle(),
-      supabase.from('payment_methods').select('code, label, is_active').order('sort_order'),
+      supabase.from('payment_methods').select('code, label, is_active, brands').order('sort_order'),
       supabase.from('delivery_zones').select('id, name, fee, is_active').order('sort_order').order('name'),
       supabase.from('zone_neighborhoods').select('id, name, zone_id').order('name'),
     ])

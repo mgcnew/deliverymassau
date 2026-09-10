@@ -23,6 +23,7 @@ const PAGAMENTO: Record<PaymentMethod, string> = {
   dinheiro: 'DINHEIRO',
   debito: 'CARTAO DE DEBITO',
   credito: 'CARTAO DE CREDITO',
+  voucher: 'VALE-ALIMENTACAO/REFEICAO',
 }
 
 type ItemNota = {
@@ -55,6 +56,7 @@ type PedidoNota = {
   delivery_fee: number
   total: number
   payment_method: PaymentMethod
+  payment_brand: string | null
   customer_note: string | null
   items: ItemNota[]
 }
@@ -175,7 +177,9 @@ export default async function NotaPage({ params }: PageProps<'/nota/[token]'>) {
 
         <hr />
 
-        <p className="font-bold">PAGAMENTO: {PAGAMENTO[pedido.payment_method]}</p>
+        <p className="font-bold">PAGAMENTO: {PAGAMENTO[pedido.payment_method]}
+          {pedido.payment_brand ? ` - ${pedido.payment_brand.toUpperCase()}` : ''}
+        </p>
 
         {pedido.customer_note ? (
           <>

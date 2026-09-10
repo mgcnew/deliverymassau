@@ -15,7 +15,7 @@ import {
   linkWhatsapp,
 } from '@/lib/orders/navegacao'
 import { assumirEntrega, finalizarEntrega, iniciarEntrega, liberarEntrega } from '../pedidos/actions'
-import { PAGAMENTO_CURTO } from '../pedidos/tipos'
+import { rotuloPagamento } from '../pedidos/tipos'
 import type { EntregaCard } from './tipos'
 
 export function CardEntrega({
@@ -94,7 +94,7 @@ export function CardEntrega({
       <div className="rounded-xl bg-foreground/[0.04] p-3">
         <p className="text-sm text-muted">Receber na entrega</p>
         <p className="text-2xl font-black">{moeda(Number(entrega.total))}</p>
-        <p className="font-bold">{PAGAMENTO_CURTO[entrega.payment_method]}</p>
+        <p className="font-bold">{rotuloPagamento(entrega.payment_method, entrega.payment_brand)}</p>
         {entrega.needs_change ? (
           <p className="font-bold text-amber-800">
             Troco para {moeda(Number(entrega.change_for ?? 0))} - levar{' '}

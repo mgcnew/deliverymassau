@@ -12,7 +12,7 @@ export type OrderStatus =
   | 'cancelado'
 
 export type OrderItemStatus = 'pendente' | 'separado' | 'indisponivel'
-export type PaymentMethod = 'pix' | 'dinheiro' | 'debito' | 'credito'
+export type PaymentMethod = 'pix' | 'dinheiro' | 'debito' | 'credito' | 'voucher'
 export type ZoneMatchType = 'bairro' | 'regiao' | 'raio'
 export type FulfillmentType = 'entrega' | 'retirada'
 
@@ -117,6 +117,8 @@ export type Order = {
   total: number
   status: OrderStatus
   payment_method: PaymentMethod
+  /** Bandeira escolhida pelo cliente - hoje so no voucher (ex.: "Alelo"). */
+  payment_brand: string | null
   needs_change: boolean
   change_for: number | null
   change_amount: number | null

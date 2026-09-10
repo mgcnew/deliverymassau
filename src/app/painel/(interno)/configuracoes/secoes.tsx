@@ -20,6 +20,7 @@ import {
   salvarZona,
   type ConfigState,
 } from './actions'
+import { EditorBandeiras, SUGESTOES } from './bandeiras'
 
 function Resultado({ estado }: { estado: ConfigState }) {
   if (estado.erro) return <Alert tone="error">{estado.erro}</Alert>
@@ -196,7 +197,7 @@ export function SecaoPagamentos({
   pix,
   podePix,
 }: {
-  metodos: Array<{ code: string; label: string; is_active: boolean }>
+  metodos: Array<{ code: string; label: string; is_active: boolean; brands: string[] }>
   pix: { pix_key: string | null; pix_receiver_name: string | null }
   podePix: boolean
 }) {
@@ -210,41 +211,42 @@ export function SecaoPagamentos({
         <CardTitle>Formas de pagamento</CardTitle>
         <div className="space-y-2">
           {metodos.map((m) => (
-            <div
-              key={m.code}
-              className="flex items-center justify-between gap-3 rounded-xl border border-line p-3"
-            >
-              <span className="font-semibold">{m.label}</span>
-              {m.is_active ? (
-                <ConfirmarAcao
-                  className={buttonClass('secondary')}
-                  disabled={transicao}
-                  titulo={`Desativar ${m.label}?`}
-                  descricao="O cliente deixa de ver essa forma de pagamento no checkout ate voce ativar de novo."
-                  rotuloConfirmar="Desativar"
-                  onConfirmar={async () => {
-                    const r = await alternarPagamento(m.code, false)
-                    setErro(r.erro ?? null)
-                    return r
-                  }}
-                >
-                  Desativar
-                </ConfirmarAcao>
-              ) : (
-                <Button
-                  type="button"
-                  variant="primary"
-                  disabled={transicao}
-                  onClick={() =>
-                    startTransition(async () => {
-                      const r = await alternarPagamento(m.code, true)
+            <div key={m.code} className="space-y-3 rounded-xl border border-line p-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-semibold">{m.label}</span>
+                {m.is_active ? (
+                  <ConfirmarAcao
+                    className={buttonClass('secondary')}
+                    disabled={transicao}
+                    titulo={`Desativar ${m.label}?`}
+                    descricao="O cliente deixa de ver essa forma de pagamento no checkout ate voce ativar de novo."
+                    rotuloConfirmar="Desativar"
+                    onConfirmar={async () => {
+                      const r = await alternarPagamento(m.code, false)
                       setErro(r.erro ?? null)
-                    })
-                  }
-                >
-                  Ativar
-                </Button>
-              )}
+                      return r
+                    }}
+                  >
+                    Desativar
+                  </ConfirmarAcao>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    // Voucher sem bandeira: o cliente nao teria o que escolher.
+                    disabled={transicao || (m.code === 'voucher' && m.brands.length === 0)}
+                    onClick={() =>
+                      startTransition(async () => {
+                        const r = await alternarPagamento(m.code, true)
+                        setErro(r.erro ?? null)
+                      })
+                    }
+                  >
+                    Ativar
+                  </Button>
+                )}
+              </div>
+              {m.code in SUGESTOES ? <EditorBandeiras code={m.code} bandeiras={m.brands} /> : null}
             </div>
           ))}
           {erro ? <Alert tone="error">{erro}</Alert> : null}

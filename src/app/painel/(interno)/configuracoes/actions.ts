@@ -155,6 +155,17 @@ export async function alternarPagamento(code: string, ativo: boolean): Promise<C
 
   const supabase = await createClient()
 
+  // Voucher sem bandeira: o cliente teria que escolher o vale numa lista
+  // vazia (a loja nem mostraria a opcao - ver migration 0037).
+  if (ativo && code === 'voucher') {
+    const { data: voucher } = await supabase
+      .from('payment_methods')
+      .select('brands')
+      .eq('code', 'voucher')
+      .maybeSingle()
+    if (!voucher?.brands?.length) return { erro: 'Adicione pelo menos uma bandeira antes de ativar o voucher.' }
+  }
+
   // Nunca deixar o cliente sem nenhuma forma de pagar.
   if (!ativo) {
     const { count } = await supabase
@@ -167,6 +178,57 @@ export async function alternarPagamento(code: string, ativo: boolean): Promise<C
   const { data, error } = await supabase
     .from('payment_methods')
     .update({ is_active: ativo })
+    .eq('code', code)
+    .select('code')
+
+  if (error) return { erro: error.message }
+  if (!data?.length) return { erro: BLOQUEADO }
+
+  depois()
+  return {}
+}
+
+/** So faz sentido listar bandeira onde ha maquininha: cartoes e voucher. */
+const COM_BANDEIRAS = ['debito', 'credito', 'voucher']
+
+/**
+ * Lista de bandeiras aceitas de uma forma de pagamento, salva inteira a cada
+ * mudanca (a tela adiciona e remove uma por vez).
+ */
+export async function salvarBandeiras(code: string, bandeiras: string[]): Promise<ConfigState> {
+  const guard = await exigir(PERMISSIONS.configPagamentos)
+  if (guard.erro) return guard
+  if (!COM_BANDEIRAS.includes(code)) return { erro: 'Esta forma de pagamento nao usa bandeiras.' }
+
+  // Sem repetir "Elo" e "elo", sem vazio, nome curto: a bandeira vai parar no
+  // pedido, na via impressa e no card do entregador.
+  const vistas = new Set<string>()
+  const limpas: string[] = []
+  for (const bruta of bandeiras) {
+    const nome = bruta.replace(/\s+/g, ' ').trim().slice(0, 40)
+    const chave = nome.toLocaleLowerCase('pt-BR')
+    if (!nome || vistas.has(chave)) continue
+    vistas.add(chave)
+    limpas.push(nome)
+  }
+  if (limpas.length > 30) return { erro: 'Limite de 30 bandeiras por forma de pagamento.' }
+
+  const supabase = await createClient()
+
+  if (code === 'voucher' && limpas.length === 0) {
+    const { data: voucher } = await supabase
+      .from('payment_methods')
+      .select('is_active')
+      .eq('code', 'voucher')
+      .maybeSingle()
+    if (voucher?.is_active) {
+      return { erro: 'O voucher esta ativo: desative antes de remover a ultima bandeira.' }
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('payment_methods')
+    .update({ brands: limpas })
     .eq('code', code)
     .select('code')
 

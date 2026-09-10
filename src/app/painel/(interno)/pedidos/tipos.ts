@@ -10,6 +10,7 @@ export type PedidoOperacional = {
   address_district: string | null
   total: number
   payment_method: PaymentMethod
+  payment_brand: string | null
   needs_change: boolean
   change_amount: number | null
   itens: number
@@ -21,6 +22,12 @@ export const PAGAMENTO_CURTO: Record<PaymentMethod, string> = {
   dinheiro: 'Dinheiro',
   debito: 'Debito',
   credito: 'Credito',
+  voucher: 'Voucher',
+}
+
+/** "Voucher - Alelo": a bandeira diz ao entregador qual maquininha/opcao usar. */
+export function rotuloPagamento(metodo: PaymentMethod, bandeira: string | null) {
+  return bandeira ? `${PAGAMENTO_CURTO[metodo]} - ${bandeira}` : PAGAMENTO_CURTO[metodo]
 }
 
 export function minutosDesde(iso: string): number {

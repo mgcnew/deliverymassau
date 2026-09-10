@@ -22,7 +22,7 @@ import type { PaymentMethod } from '@/lib/types'
 import { criarPedido } from './actions'
 
 type Bairro = { bairro: string; taxa: number }
-type FormaPagamento = { code: string; label: string }
+type FormaPagamento = { code: string; label: string; brands?: string[] }
 
 const ETAPAS = ['Seus dados', 'Endereco', 'Pagamento', 'Revisao'] as const
 
@@ -55,6 +55,9 @@ export function CheckoutForm({
     status: 'encontrado' | 'sem_cobertura' | 'nao_encontrado' | 'erro'
   } | null>(null)
   const [pagamento, setPagamento] = useState<PaymentMethod | ''>('')
+  // So o voucher pede a bandeira: o entregador precisa saber qual vale vai
+  // passar na maquininha. Nos cartoes as bandeiras sao so informacao.
+  const [bandeira, setBandeira] = useState('')
   const [precisaTroco, setPrecisaTroco] = useState(false)
   const [trocoPara, setTrocoPara] = useState('')
   const [observacao, setObservacao] = useState('')
@@ -180,11 +183,14 @@ export function CheckoutForm({
     )
   }
 
+  const formaEscolhida = formasPagamento.find((f) => f.code === pagamento)
+
   const podeAvancar =
     (etapa === 0 && nome.trim().length > 1 && telefone.replace(/\D/g, '').length >= 10) ||
     (etapa === 1 && bairro && rua.trim() && numero.trim()) ||
     (etapa === 2 &&
       pagamento &&
+      (pagamento !== 'voucher' || bandeira) &&
       (!precisaTroco || (Number.isFinite(trocoNumero) && trocoNumero > total)))
 
   function enviar(ignorarPreco = false) {
@@ -202,6 +208,7 @@ export function CheckoutForm({
           referencia: referencia.trim() || undefined,
         },
         pagamento: pagamento as PaymentMethod,
+        bandeira: pagamento === 'voucher' ? bandeira : undefined,
         precisaTroco,
         trocoPara: precisaTroco ? trocoNumero : undefined,
         observacao: observacao.trim() || undefined,
@@ -392,12 +399,54 @@ export function CheckoutForm({
                     onChange={() => {
                       setPagamento(f.code as PaymentMethod)
                       if (f.code !== 'dinheiro') setPrecisaTroco(false)
+                      if (f.code !== 'voucher') setBandeira('')
                     }}
                   />
                   {f.label}
                 </label>
               ))}
             </fieldset>
+
+            {formaEscolhida?.brands?.length ? (
+              pagamento === 'voucher' ? (
+                <fieldset className="space-y-2 rounded-xl border border-line p-3">
+                  <legend className="px-1 text-sm font-semibold">Qual e o seu vale?</legend>
+                  <p className="text-sm text-muted">
+                    Aceitamos estas bandeiras. O entregador leva a maquininha certa.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {formaEscolhida.brands.map((b) => (
+                      <label
+                        key={b}
+                        className={`flex h-11 cursor-pointer items-center rounded-full border px-4 text-sm font-bold ${
+                          bandeira === b
+                            ? 'border-brand bg-brand text-brand-foreground'
+                            : 'border-line bg-surface'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="bandeira"
+                          value={b}
+                          checked={bandeira === b}
+                          onChange={() => setBandeira(b)}
+                          className="sr-only"
+                        />
+                        {b}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted">
+                    Seu vale nao esta na lista? Escolha outra forma de pagamento.
+                  </p>
+                </fieldset>
+              ) : (
+                <p className="rounded-xl bg-foreground/5 px-3 py-2 text-sm">
+                  <span className="font-semibold">Bandeiras aceitas:</span>{' '}
+                  {formaEscolhida.brands.join(', ')}
+                </p>
+              )
+            ) : null}
 
             {pagamento === 'dinheiro' ? (
               <div className="space-y-3 rounded-xl border border-line p-3">
@@ -491,6 +540,13 @@ export function CheckoutForm({
               <div className="flex justify-between text-lg font-black">
                 <dt>Total</dt>
                 <dd>{moeda(total)}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt>Pagamento na entrega</dt>
+                <dd className="text-right font-semibold">
+                  {formaEscolhida?.label}
+                  {pagamento === 'voucher' && bandeira ? ` - ${bandeira}` : ''}
+                </dd>
               </div>
               {precisaTroco && trocoEstimado > 0 ? (
                 <div className="flex justify-between">
