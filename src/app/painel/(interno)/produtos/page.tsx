@@ -1,10 +1,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { FileUp, ListChecks, Tags } from 'lucide-react'
 
 import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { ButtonLink } from '@/components/ui/button'
+import { MenuMais } from '@/components/ui/menu-mais'
 import { Card, Empty } from '@/components/ui/card'
 import { precoPorUnidade } from '@/lib/format'
 import { variantesDoCodigo } from '@/lib/produtos/codigo-barras'
@@ -81,6 +83,11 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
     })
     return `/painel/produtos?${sp.toString()}`
   }
+  const podeCriar = staff.permissions.has(PERMISSIONS.produtosCriar)
+  const podeLote =
+    staff.permissions.has(PERMISSIONS.produtosEditar) ||
+    staff.permissions.has(PERMISSIONS.produtosDesativar) ||
+    staff.permissions.has(PERMISSIONS.produtosExcluir)
   // Esta lista, exatamente como esta (filtro, busca, categoria, pagina): vai
   // junto para a edicao e e para ela que o salvar volta.
   const aqui = link({ p: String(pagina) })
@@ -89,26 +96,44 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
     <div className="w-full space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-black">Produtos</h1>
-        <div className="flex gap-2">
-          <ButtonLink href="/painel/categorias" variant="secondary">
-            Categorias
-          </ButtonLink>
-          {staff.permissions.has(PERMISSIONS.produtosEditar) ||
-          staff.permissions.has(PERMISSIONS.produtosDesativar) ||
-          staff.permissions.has(PERMISSIONS.produtosExcluir) ? (
-            <ButtonLink href="/painel/produtos/lote" variant="secondary">
-              Editar em lote
+        {/* So "Novo" fica a vista; o resto entra no "Mais" - eram quatro
+            botoes lado a lado disputando o olhar. */}
+        <div className="relative flex gap-2">
+          <MenuMais
+            ancora="pai"
+            itens={[
+              {
+                href: '/painel/categorias',
+                rotulo: 'Categorias',
+                descricao: 'Criar, renomear e ordenar',
+                icone: <Tags size={18} aria-hidden />,
+              },
+              ...(podeLote
+                ? [
+                    {
+                      href: '/painel/produtos/lote',
+                      rotulo: 'Editar em lote',
+                      descricao: 'Precos, nomes e exclusao de varios de uma vez',
+                      icone: <ListChecks size={18} aria-hidden />,
+                    },
+                  ]
+                : []),
+              ...(podeCriar
+                ? [
+                    {
+                      href: '/painel/produtos/importar',
+                      rotulo: 'Importar planilha',
+                      descricao: 'Atualizar precos e cadastrar pelo CSV do PDV',
+                      icone: <FileUp size={18} aria-hidden />,
+                    },
+                  ]
+                : []),
+            ]}
+          />
+          {podeCriar ? (
+            <ButtonLink href={`/painel/produtos/novo?volta=${encodeURIComponent(aqui)}`}>
+              Novo
             </ButtonLink>
-          ) : null}
-          {staff.permissions.has(PERMISSIONS.produtosCriar) ? (
-            <>
-              <ButtonLink href="/painel/produtos/importar" variant="secondary">
-                Importar
-              </ButtonLink>
-              <ButtonLink href={`/painel/produtos/novo?volta=${encodeURIComponent(aqui)}`}>
-                Novo
-              </ButtonLink>
-            </>
           ) : null}
         </div>
       </div>
