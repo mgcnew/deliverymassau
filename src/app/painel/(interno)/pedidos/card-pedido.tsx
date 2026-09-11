@@ -3,19 +3,33 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { Printer } from 'lucide-react'
+import { Bike, Clock, Printer } from 'lucide-react'
 
 import { moeda } from '@/lib/format'
 import { ORDER_STATUS } from '@/lib/orders/status'
 import { iniciarSeparacao } from './actions'
-import { rotuloPagamento, tempoRelativo, type PedidoOperacional } from './tipos'
+import {
+  COR_URGENCIA,
+  minutosDesde,
+  rotuloPagamento,
+  tempoRelativo,
+  urgencia,
+  type PedidoOperacional,
+} from './tipos'
 
+/**
+ * Um pedido na fila. A coluna (ou a etapa escolhida no celular) ja diz o
+ * status, entao o cartao nao repete: fala so o que muda de um pedido para
+ * outro - quem, quanto, ha quanto tempo e o que fazer agora.
+ */
 export function CardPedido({
   pedido,
+  agora,
   podeSeparar,
   podeImprimir,
 }: {
   pedido: PedidoOperacional
+  agora: number
   podeSeparar: boolean
   podeImprimir: boolean
 }) {
@@ -24,42 +38,52 @@ export function CardPedido({
   const [erro, setErro] = useState<string | null>(null)
 
   const novo = pedido.status === 'recebido'
-  const status = ORDER_STATUS[pedido.status]
+  const finalizado = pedido.status === 'entregue' || pedido.status === 'cancelado'
+  const minutos = minutosDesde(pedido.created_at, agora)
+  const nivel = finalizado ? 'ok' : urgencia(pedido.status, minutos)
 
   return (
     <article
-      className={`space-y-2 rounded-2xl border bg-surface p-3 ${
+      className={`space-y-2.5 rounded-2xl border bg-surface p-3 ${
         novo ? 'border-brand shadow-[0_0_0_3px_rgba(214,31,43,0.12)]' : 'border-line'
       }`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <Link href={`/painel/pedidos/${pedido.id}`} className="min-w-0">
+      <Link href={`/painel/pedidos/${pedido.id}`} className="block min-w-0 rounded-lg">
+        <div className="flex items-baseline justify-between gap-2">
           <p className="flex items-center gap-2 text-lg font-black leading-tight">
             #{pedido.order_number}
             {novo ? (
-              <span className="size-2.5 animate-pulse rounded-full bg-brand" aria-label="novo" />
+              <>
+                <span aria-hidden className="size-2.5 rounded-full bg-brand motion-safe:animate-pulse" />
+                <span className="sr-only">novo</span>
+              </>
             ) : null}
           </p>
-          <p className="truncate text-sm font-semibold">{pedido.customer_name}</p>
-          <p className="truncate text-sm text-muted">{pedido.address_district ?? 'sem bairro'}</p>
-        </Link>
-
-        <div className="shrink-0 text-right">
-          <p className="font-black">{moeda(Number(pedido.total))}</p>
-          <p className="text-xs text-muted">{tempoRelativo(pedido.created_at)}</p>
+          <p className="shrink-0 font-black tabular-nums">{moeda(Number(pedido.total))}</p>
         </div>
-      </div>
 
-      {/* Status centralizado sozinho: alinha embaixo do titulo centralizado
-          da coluna no quadro do desktop, sem depender de quantas outras
-          etiquetas o pedido tem. */}
-      <div className="flex justify-center">
-        <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${status.tone}`}>
-          {status.short}
-        </span>
-      </div>
+        <p className="truncate text-sm font-semibold">{pedido.customer_name}</p>
 
-      <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-bold">
+        {/* Idade na linha do bairro: o nome do cliente fica com a largura
+            toda, que nas colunas estreitas do computador faz diferenca. O
+            relogio muda de cor quando a etapa passa do tempo, e o icone
+            aparece junto para nao depender so da cor. */}
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="min-w-0 truncate text-sm text-muted">{pedido.address_district ?? 'sem bairro'}</p>
+          <p className={`flex shrink-0 items-center gap-1 text-xs tabular-nums ${COR_URGENCIA[nivel]}`}>
+            {nivel !== 'ok' ? <Clock size={13} aria-hidden /> : null}
+            {tempoRelativo(minutos)}
+            {nivel === 'atraso' ? <span className="sr-only">, atrasado</span> : null}
+          </p>
+        </div>
+      </Link>
+
+      <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
+        {finalizado ? (
+          <span className={`rounded-full border px-2 py-0.5 ${ORDER_STATUS[pedido.status].tone}`}>
+            {ORDER_STATUS[pedido.status].short}
+          </span>
+        ) : null}
         <span className="rounded-full bg-foreground/5 px-2 py-0.5">
           {pedido.itens} {pedido.itens === 1 ? 'item' : 'itens'}
         </span>
@@ -73,7 +97,8 @@ export function CardPedido({
         ) : null}
       </div>
 
-      {pedido.status === 'recebido' && (podeSeparar || podeImprimir) ? (
+      {/* Uma acao por etapa: o que a pessoa no balcao faz com este pedido agora. */}
+      {novo && (podeSeparar || podeImprimir) ? (
         <div className="flex gap-2">
           {podeSeparar ? (
             <button
@@ -90,7 +115,7 @@ export function CardPedido({
                   router.push(`/painel/pedidos/${pedido.id}/separacao`)
                 })
               }
-              className="h-11 flex-1 rounded-xl bg-brand font-bold text-brand-foreground"
+              className="h-11 min-w-0 flex-1 rounded-xl bg-brand font-bold text-brand-foreground disabled:opacity-70"
             >
               {transicao ? 'Abrindo...' : 'Separar'}
             </button>
@@ -101,7 +126,7 @@ export function CardPedido({
               href={`/painel/pedidos/${pedido.id}/imprimir?auto=1`}
               aria-label={`Imprimir via do pedido #${pedido.order_number}`}
               title="Imprimir via termica"
-              className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface"
+              className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface hover:bg-foreground/5"
             >
               <Printer size={20} aria-hidden />
             </Link>
@@ -112,14 +137,27 @@ export function CardPedido({
       {pedido.status === 'separando' ? (
         <Link
           href={`/painel/pedidos/${pedido.id}/separacao`}
-          className="flex h-11 w-full items-center justify-center rounded-xl border border-line font-bold"
+          className="flex h-11 w-full items-center justify-center rounded-xl border border-line font-bold hover:bg-foreground/5"
         >
           Continuar separacao
         </Link>
       ) : null}
 
+      {pedido.status === 'aguardando_entregador' || pedido.status === 'saiu_para_entrega' ? (
+        <p className="flex items-center gap-2 rounded-xl bg-foreground/5 px-2.5 py-2 text-sm font-semibold leading-tight">
+          <Bike size={16} aria-hidden className="shrink-0" />
+          <span className="min-w-0 break-words">
+            {pedido.entregador
+              ? pedido.status === 'saiu_para_entrega'
+                ? `Com ${pedido.entregador}`
+                : `${pedido.entregador} vai levar`
+              : 'Aguardando entregador'}
+          </span>
+        </p>
+      ) : null}
+
       {erro ? (
-        <p role="status" aria-live="polite" className="text-sm font-semibold text-rose-700">
+        <p role="status" aria-live="polite" className="text-sm font-semibold text-[var(--tone-error-fg)]">
           {erro}
         </p>
       ) : null}

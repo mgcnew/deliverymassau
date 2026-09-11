@@ -3,18 +3,26 @@ import { requirePermission } from '@/lib/auth'
 import { diaDeHoje, diaValido, intervaloDoDia, rotuloDoDia, somarDias } from '@/lib/datas'
 import { getFuso } from '@/lib/painel/mercado'
 import { createClient } from '@/lib/supabase/server'
-import { FiltroDia } from './filtro-dia'
 import { PainelPedidos } from './painel-pedidos'
 import type { PedidoOperacional } from './tipos'
 
 export const metadata = { title: 'Pedidos | Mercado Massa 24h' }
 
 const CAMPOS =
-  'id, order_number, status, created_at, customer_name, customer_phone, address_district, total, payment_method, payment_brand, needs_change, change_amount, delivery_person_id, order_items(count)'
+  'id, order_number, status, created_at, customer_name, customer_phone, address_district, total, payment_method, payment_brand, needs_change, change_amount, delivery_person_id, order_items(count), entregador:profiles!orders_delivery_person_id_fkey(name)'
 
 const EM_ANDAMENTO = ['recebido', 'separando', 'aguardando_entregador', 'saiu_para_entrega']
 
-type LinhaPedido = Omit<PedidoOperacional, 'itens'> & { order_items: Array<{ count: number }> }
+type LinhaPedido = Omit<PedidoOperacional, 'itens' | 'entregador'> & {
+  order_items: Array<{ count: number }>
+  entregador: { name: string } | null
+}
+
+// Fora do componente: o "agora" do servidor so serve para a primeira
+// pintura bater com a hidratacao (depois o relogio do navegador assume).
+function agoraDoServidor() {
+  return Date.now()
+}
 
 export default async function PedidosPage({ searchParams }: PageProps<'/painel/pedidos'>) {
   const [staff, fuso, params] = await Promise.all([
@@ -45,25 +53,25 @@ export default async function PedidosPage({ searchParams }: PageProps<'/painel/p
   ])
 
   const mapear = (linhas: LinhaPedido[] | null): PedidoOperacional[] =>
-    (linhas ?? []).map(({ order_items, ...resto }) => ({
+    (linhas ?? []).map(({ order_items, entregador, ...resto }) => ({
       ...resto,
       itens: order_items?.[0]?.count ?? 0,
+      entregador: entregador?.name ?? null,
     }))
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-black">Pedidos</h1>
-        <FiltroDia dia={dia} hoje={hoje} ontem={somarDias(hoje, -1)} />
-      </div>
-
-      <PainelPedidos
-        pedidos={mapear(abertos as LinhaPedido[] | null)}
-        finalizados={mapear(fechados as LinhaPedido[] | null)}
-        rotuloDia={rotuloDoDia(dia, fuso)}
-        podeSeparar={staff.permissions.has(PERMISSIONS.pedidosSeparar)}
-        podeImprimir={staff.permissions.has(PERMISSIONS.pedidosImprimir)}
-      />
-    </div>
+    <PainelPedidos
+      pedidos={mapear(abertos as LinhaPedido[] | null)}
+      finalizados={mapear(fechados as LinhaPedido[] | null)}
+      dia={dia}
+      hoje={hoje}
+      ontem={somarDias(hoje, -1)}
+      rotuloDia={rotuloDoDia(dia, fuso)}
+      etapaInicial={typeof params.etapa === 'string' ? params.etapa : undefined}
+      gavetaAberta={params.finalizados === '1'}
+      agoraServidor={agoraDoServidor()}
+      podeSeparar={staff.permissions.has(PERMISSIONS.pedidosSeparar)}
+      podeImprimir={staff.permissions.has(PERMISSIONS.pedidosImprimir)}
+    />
   )
 }

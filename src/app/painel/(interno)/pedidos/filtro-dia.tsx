@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 
 /**
- * Filtro de dia dos pedidos finalizados.
+ * Filtro de dia dos pedidos finalizados (fica dentro da gaveta deles).
  *
  * Hoje/Ontem sao <Link> de proposito: sao os dois cliques do dia a dia e
  * assim funcionam como navegacao normal (prefetch, voltar do navegador).
@@ -28,10 +28,13 @@ export function FiltroDia({
   dia,
   hoje,
   ontem,
+  hrefDoDia,
 }: {
   dia: string
   hoje: string
   ontem: string
+  /** Endereco de cada dia: quem usa decide o que mais vai junto na URL. */
+  hrefDoDia: (dia: string) => string
 }) {
   const router = useRouter()
   const raiz = useRef<HTMLDivElement>(null)
@@ -71,9 +74,7 @@ export function FiltroDia({
 
   function escolher(diaEscolhido: string) {
     setAberto(false)
-    router.push(
-      diaEscolhido === hoje ? '/painel/pedidos' : `/painel/pedidos?dia=${diaEscolhido}`,
-    )
+    router.push(hrefDoDia(diaEscolhido))
   }
 
   // Grade do mes visivel: celulas vazias ate o dia da semana do dia 1.
@@ -86,17 +87,18 @@ export function FiltroDia({
   }).format(new Date(Date.UTC(visivel.ano, visivel.mes, 1)))
 
   const base = 'flex h-11 items-center rounded-xl px-4 text-sm font-bold'
-  const escolhido = 'bg-brand text-brand-foreground'
+  // Neutro de proposito: vermelho na tela de pedidos e sinal de pedido novo.
+  const escolhido = 'bg-foreground text-background'
   const solto = 'border border-line bg-surface'
   const outroDia = dia !== hoje && dia !== ontem
 
   return (
     <div ref={raiz} className="relative flex flex-wrap items-center gap-2">
-      <Link href="/painel/pedidos" className={`${base} ${dia === hoje ? escolhido : solto}`}>
+      <Link href={hrefDoDia(hoje)} className={`${base} ${dia === hoje ? escolhido : solto}`}>
         Hoje
       </Link>
       <Link
-        href={`/painel/pedidos?dia=${ontem}`}
+        href={hrefDoDia(ontem)}
         className={`${base} ${dia === ontem ? escolhido : solto}`}
       >
         Ontem
@@ -117,7 +119,7 @@ export function FiltroDia({
         <div
           role="dialog"
           aria-label="Escolher dia"
-          className="absolute right-0 top-13 z-30 w-72 rounded-xl border border-line bg-surface p-3 shadow-xl"
+          className="absolute left-0 top-13 z-30 w-72 rounded-xl border border-line bg-surface p-3 shadow-xl"
         >
           <div className="flex items-center justify-between">
             <button
@@ -160,11 +162,11 @@ export function FiltroDia({
                   onClick={() => escolher(valor)}
                   className={`mx-auto flex size-9 items-center justify-center rounded-full text-sm font-semibold ${
                     ativo
-                      ? 'bg-brand font-black text-brand-foreground'
+                      ? 'bg-foreground font-black text-background'
                       : futuro
                         ? 'text-muted/40'
                         : 'hover:bg-foreground/5'
-                  } ${valor === hoje && !ativo ? 'border border-brand text-brand' : ''}`}
+                  } ${valor === hoje && !ativo ? 'border border-foreground/50 font-black' : ''}`}
                 >
                   {i + 1}
                 </button>
