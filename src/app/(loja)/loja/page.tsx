@@ -45,7 +45,7 @@ export default async function VitrinePage() {
 
       {ofertas.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-xl font-black text-brand">🔥 Ofertas</h2>
+          <h2 className="flex items-center gap-2 text-xl font-black text-brand-ink">🔥 Ofertas</h2>
           <GradeProdutos produtos={ofertas} />
         </section>
       ) : null}

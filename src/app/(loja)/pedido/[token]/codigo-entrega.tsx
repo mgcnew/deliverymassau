@@ -11,7 +11,7 @@ export function CodigoEntrega({ codigo, numeroPedido }: { codigo: string; numero
   return (
     <div className="space-y-2 rounded-2xl border-2 border-dashed border-brand bg-brand/5 p-4 text-center">
       <p className="font-bold">Codigo de confirmacao da entrega</p>
-      <p className="text-4xl font-black tracking-[0.3em] text-brand">{codigo}</p>
+      <p className="text-4xl font-black tracking-[0.3em] text-brand-ink">{codigo}</p>
       <p className="text-sm text-muted">
         Guarde este numero e fale para o entregador quando ele chegar. Isso evita fraude na
         entrega.

@@ -51,7 +51,7 @@ export function ProdutoCard({ produto }: { produto: ProdutoVitrine }) {
                 {moeda(Number(produto.original_price))}
               </span>
             ) : null}
-            <span className="font-black text-brand">
+            <span className="font-black text-brand-ink">
               {precoPorUnidade(Number(produto.price), produto.sold_by_weight, produto.unit_type)}
             </span>
           </p>

@@ -177,7 +177,7 @@ export function FiltroPeriodo({ de, ate, hoje }: { de: string; ate: string; hoje
                     ativo
                       ? 'bg-brand font-black text-brand-foreground'
                       : noIntervalo
-                        ? 'bg-brand/15 text-brand'
+                        ? 'bg-brand/15 text-brand-ink'
                         : futuro
                           ? 'text-muted/40'
                           : 'hover:bg-foreground/5'

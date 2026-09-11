@@ -72,7 +72,7 @@ export default async function ClientePage({ params }: PageProps<'/painel/cliente
             href={linkWhatsapp(cliente.phone)}
             target="_blank"
             rel="noreferrer"
-            className="font-semibold text-brand underline"
+            className="font-semibold text-brand-ink underline"
           >
             {telefone(cliente.phone)}
           </a>

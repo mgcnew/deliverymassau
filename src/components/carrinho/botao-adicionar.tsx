@@ -68,7 +68,7 @@ export function BotaoAdicionar({
         type="button"
         aria-label="Diminuir"
         onClick={() => ajustar(produto.id, -passo)}
-        className="flex h-full w-11 items-center justify-center text-brand"
+        className="flex h-full w-11 items-center justify-center text-brand-ink"
       >
         <Minus size={18} />
       </button>
@@ -80,7 +80,7 @@ export function BotaoAdicionar({
         type="button"
         aria-label="Aumentar"
         onClick={() => ajustar(produto.id, passo)}
-        className="flex h-full w-11 items-center justify-center text-brand"
+        className="flex h-full w-11 items-center justify-center text-brand-ink"
       >
         <Plus size={18} />
       </button>

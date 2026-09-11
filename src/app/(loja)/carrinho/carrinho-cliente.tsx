@@ -88,7 +88,7 @@ export function CarrinhoCliente({
                     type="button"
                     aria-label="Diminuir"
                     onClick={() => ajustar(item.productId, -passo)}
-                    className="flex h-full w-11 items-center justify-center text-brand"
+                    className="flex h-full w-11 items-center justify-center text-brand-ink"
                   >
                     <Minus size={18} />
                   </button>
@@ -101,7 +101,7 @@ export function CarrinhoCliente({
                     type="button"
                     aria-label="Aumentar"
                     onClick={() => ajustar(item.productId, passo)}
-                    className="flex h-full w-11 items-center justify-center text-brand"
+                    className="flex h-full w-11 items-center justify-center text-brand-ink"
                   >
                     <Plus size={18} />
                   </button>
@@ -140,7 +140,7 @@ export function CarrinhoCliente({
             <div className="h-2 overflow-hidden rounded-full bg-foreground/10">
               <div className="h-full bg-brand" style={{ width: `${progresso * 100}%` }} />
             </div>
-            <p className="font-semibold text-brand">
+            <p className="font-semibold text-brand-ink">
               Faltam {moeda(falta)} para atingir o pedido minimo de {moeda(pedidoMinimo)}.
             </p>
             <Link href="/loja" className="inline-block font-semibold underline">

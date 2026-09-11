@@ -64,7 +64,7 @@ export function SeletorCategoria({
         aria-expanded={aberto}
         onClick={() => setAberto((v) => !v)}
         className={`flex h-10 items-center gap-2 rounded-full border bg-surface px-4 text-sm font-bold ${
-          selecionada ? 'border-brand text-brand' : 'border-line'
+          selecionada ? 'border-brand text-brand-ink' : 'border-line'
         }`}
       >
         {rotulo}
@@ -91,7 +91,7 @@ export function SeletorCategoria({
                   aria-selected={ativa}
                   onClick={() => escolher(opcao.id)}
                   className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold hover:bg-foreground/5 ${
-                    ativa ? 'text-brand' : ''
+                    ativa ? 'text-brand-ink' : ''
                   }`}
                 >
                   {opcao.name}

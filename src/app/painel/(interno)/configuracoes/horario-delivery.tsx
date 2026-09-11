@@ -79,7 +79,7 @@ export function HorarioDelivery({ dias }: { dias: DiaHorario[] }) {
                 <button
                   type="button"
                   onClick={() => copiarParaTodos(l)}
-                  className="text-sm font-semibold text-brand"
+                  className="text-sm font-semibold text-brand-ink"
                 >
                   Copiar para todos
                 </button>

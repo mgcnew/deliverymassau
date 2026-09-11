@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/painel/log
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 p-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <Logo altura={44} />
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">Painel interno</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-brand-ink">Painel interno</p>
       </div>
 
       <Card>

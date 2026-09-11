@@ -69,7 +69,7 @@ export default async function PedidoDetalhePage({ params }: PageProps<'/painel/p
       <Card>
         <CardTitle>Cliente</CardTitle>
         <p className="text-lg font-bold">{pedido.customer_name}</p>
-        <a href={whatsapp} className="font-semibold text-brand underline" target="_blank" rel="noreferrer">
+        <a href={whatsapp} className="font-semibold text-brand-ink underline" target="_blank" rel="noreferrer">
           {pedido.customer_phone}
         </a>
         <p className="pt-2">

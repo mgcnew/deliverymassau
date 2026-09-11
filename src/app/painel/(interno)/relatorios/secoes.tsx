@@ -44,7 +44,7 @@ export function Kpi({
       <p className="text-sm font-semibold text-muted">{titulo}</p>
       <p
         className={`break-words text-xl font-black tabular-nums sm:text-2xl lg:text-3xl ${
-          destaque ? 'text-brand' : ''
+          destaque ? 'text-brand-ink' : ''
         }`}
       >
         {valor}

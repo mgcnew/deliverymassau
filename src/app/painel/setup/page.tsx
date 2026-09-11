@@ -27,7 +27,7 @@ export default async function SetupPage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 p-6">
       <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">Primeiro acesso</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-brand-ink">Primeiro acesso</p>
         <h1 className="text-2xl font-black">Criar o administrador</h1>
         <p className="mt-1 text-sm text-muted">
           Esta tela some assim que existir o primeiro funcionario cadastrado.

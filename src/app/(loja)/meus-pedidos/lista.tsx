@@ -184,7 +184,7 @@ function PedidoAtual({ token, resumo }: { token: string; resumo: Resumo }) {
       {resumo.delivery_code && resumo.fulfillment === 'entrega' ? (
         <div className="rounded-xl border-2 border-dashed border-brand bg-brand/5 p-3 text-center">
           <p className="text-sm font-bold">Codigo de confirmacao da entrega</p>
-          <p className="text-3xl font-black tracking-[0.3em] text-brand">{resumo.delivery_code}</p>
+          <p className="text-3xl font-black tracking-[0.3em] text-brand-ink">{resumo.delivery_code}</p>
           <p className="text-sm text-muted">Fale este numero ao entregador quando ele chegar.</p>
         </div>
       ) : null}

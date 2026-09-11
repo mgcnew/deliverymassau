@@ -320,7 +320,7 @@ export function CheckoutForm({
         {ETAPAS.map((rotulo, i) => (
           <li key={rotulo} className="flex-1">
             <div className={`h-1.5 rounded-full ${i <= etapa ? 'bg-brand' : 'bg-foreground/10'}`} />
-            <span className={`text-xs font-semibold ${i === etapa ? 'text-brand' : 'text-muted'}`}>
+            <span className={`text-xs font-semibold ${i === etapa ? 'text-brand-ink' : 'text-muted'}`}>
               {rotulo}
             </span>
           </li>
@@ -335,7 +335,7 @@ export function CheckoutForm({
                 <span>Preenchido com os dados do seu ultimo pedido.</span>
                 <button
                   type="button"
-                  className="shrink-0 font-semibold text-brand underline"
+                  className="shrink-0 font-semibold text-brand-ink underline"
                   onClick={() => {
                     setNome('')
                     setTelefone('')
@@ -366,7 +366,7 @@ export function CheckoutForm({
                 <span>Endereco do seu ultimo pedido.</span>
                 <button
                   type="button"
-                  className="shrink-0 font-semibold text-brand underline"
+                  className="shrink-0 font-semibold text-brand-ink underline"
                   onClick={() => {
                     setCep('')
                     setRua('')

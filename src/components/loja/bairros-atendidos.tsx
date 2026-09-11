@@ -50,7 +50,7 @@ export function BairrosAtendidos({ bairros }: { bairros: Array<{ bairro: string;
         <div className="space-y-3 border-t border-line p-4">
           {faixas.map(([taxa, nomes]) => (
             <div key={taxa}>
-              <p className="text-sm font-black text-brand">{moeda(taxa)}</p>
+              <p className="text-sm font-black text-brand-ink">{moeda(taxa)}</p>
               <p className="text-sm leading-relaxed text-muted">{nomes.join(' · ')}</p>
             </div>
           ))}
@@ -85,7 +85,7 @@ export function FaixasDeEntrega({ faixas }: { faixas: Array<{ up_to_km: number; 
               <p className="text-xs text-muted">
                 {i === 0 ? 'Ate' : `${kmTexto(ordenadas[i - 1].up_to_km)} a`} {kmTexto(f.up_to_km)} km
               </p>
-              <p className="font-black text-brand">{f.fee === 0 ? 'Gratis' : moeda(f.fee)}</p>
+              <p className="font-black text-brand-ink">{f.fee === 0 ? 'Gratis' : moeda(f.fee)}</p>
             </li>
           ))}
         </ul>

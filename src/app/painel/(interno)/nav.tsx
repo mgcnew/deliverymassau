@@ -128,7 +128,7 @@ export function Nav({ items }: { items: NavItem[] }) {
               key={item.href}
               href={item.href}
               className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold ${
-                isActive(item.href) ? 'text-brand' : 'text-muted'
+                isActive(item.href) ? 'text-brand-ink' : 'text-muted'
               }`}
             >
               <Icon size={22} aria-hidden />
@@ -144,7 +144,7 @@ export function Nav({ items }: { items: NavItem[] }) {
             aria-controls="menu-mais"
             onClick={() => setMaisAbertoEm(maisAberto ? null : pathname)}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold ${
-              maisAberto || maisAtivo ? 'text-brand' : 'text-muted'
+              maisAberto || maisAtivo ? 'text-brand-ink' : 'text-muted'
             }`}
           >
             <Ellipsis size={22} aria-hidden />

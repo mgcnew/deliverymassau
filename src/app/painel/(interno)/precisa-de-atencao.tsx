@@ -114,7 +114,7 @@ export function PrecisaDeAtencao({ pedidos }: { pedidos: PedidoEmAndamento[] }) 
           {linhas.length > MOSTRAR ? (
             <Link
               href="/painel/pedidos"
-              className="block border-t border-line px-4 py-3 text-center text-sm font-bold text-brand"
+              className="block border-t border-line px-4 py-3 text-center text-sm font-bold text-brand-ink"
             >
               Ver todos os {linhas.length} pedidos em andamento
             </Link>

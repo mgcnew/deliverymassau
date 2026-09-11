@@ -32,7 +32,7 @@ function Numero({
     <Card className={`h-full ${destaque ? 'border-brand' : ''}`}>
       <p className="text-sm font-semibold text-muted">{titulo}</p>
       <p
-        className={`break-words text-xl font-black tabular-nums sm:text-2xl lg:text-3xl ${destaque ? 'text-brand' : ''}`}
+        className={`break-words text-xl font-black tabular-nums sm:text-2xl lg:text-3xl ${destaque ? 'text-brand-ink' : ''}`}
       >
         {valor.replace(/ /g, ' ')}
       </p>

@@ -81,7 +81,7 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
               </span>
             </p>
           ) : null}
-          <p className="text-3xl font-black text-brand">
+          <p className="text-3xl font-black text-brand-ink">
             {precoPorUnidade(preco, produto.sold_by_weight, produto.unit_type)}
           </p>
 

@@ -105,7 +105,7 @@ export function AlertasEntregador({ chavePublica }: { chavePublica: string }) {
       {estado === 'ligado' ? (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3 py-2">
           <p className="flex items-center gap-2 text-sm font-semibold">
-            <BellRing size={16} className="text-brand" aria-hidden />
+            <BellRing size={16} className="text-brand-ink" aria-hidden />
             Avisos ligados neste aparelho
           </p>
           <button

@@ -179,7 +179,7 @@ export function PainelPedidos({
                 >
                   <span
                     className={`text-2xl font-black leading-none tabular-nums ${
-                      chamando ? 'text-brand' : total === 0 && !selecionada ? 'text-muted' : ''
+                      chamando ? 'text-brand-ink' : total === 0 && !selecionada ? 'text-muted' : ''
                     }`}
                   >
                     {total}

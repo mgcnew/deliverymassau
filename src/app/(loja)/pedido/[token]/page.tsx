@@ -88,7 +88,7 @@ export default async function PedidoPage({ params, searchParams }: PageProps<'/p
       ) : null}
 
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">Seu pedido</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-brand-ink">Seu pedido</p>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-3xl font-black">#{pedido.order_number}</h1>
           <span
