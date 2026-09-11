@@ -1,19 +1,21 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import type { MouseEvent } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { RolagemHorizontal } from '@/components/ui/rolagem-horizontal'
 import type { CategoriaVitrine } from '@/lib/loja/catalogo'
 
 /**
- * Sempre aponta pra /loja, que ja lista todas as categorias empilhadas na
- * mesma pagina. Quando ja esta la, a rolagem ate a secao e feita na mao
- * (scrollIntoView) em vez de depender do Next rolar sozinho pelo href com
- * #hash -- isso se mostrou pouco confiavel de pagina pra pagina (às vezes
- * nao rolava nada, as vezes parava no meio). Chegando de outra rota (ex:
- * /c/[slug]), o Link navega normal e o navegador rola pro #hash sozinho.
+ * Faixa de categorias das paginas de categoria e da busca.
+ *
+ * - Cada pilula abre a pagina da categoria (/c/slug), uma categoria por vez.
+ *   Antes elas rolavam a home ate a secao: a pessoa caia 12 mil pixels abaixo
+ *   e a faixa ficava la em cima, fora de alcance, e o "voltar" nao desfazia.
+ * - A faixa gruda logo abaixo do cabecalho: trocar de categoria e sempre um
+ *   toque, em qualquer ponto da lista.
+ * - A pilula da categoria aberta rola para dentro da tela ao chegar - com 18
+ *   categorias, a de "Pet" ficava escondida na ponta da faixa.
  */
 export function CategoriasChips({
   categorias,
@@ -22,56 +24,42 @@ export function CategoriasChips({
   categorias: CategoriaVitrine[]
   ativa?: string
 }) {
-  const pathname = usePathname()
-  const naLoja = pathname === '/loja'
+  const ativaRef = useRef<HTMLAnchorElement>(null)
 
-  function aoClicar(slug: string | null) {
-    return (evento: MouseEvent<HTMLAnchorElement>) => {
-      if (!naLoja) return
+  useEffect(() => {
+    ativaRef.current?.scrollIntoView({ block: 'nearest', inline: 'center' })
+  }, [ativa])
 
-      evento.preventDefault()
-      // O Next intercepta history.replaceState pra sincronizar o proprio
-      // router -- e ele mesmo mexe no scroll nessa hora. Por isso a troca de
-      // URL vem ANTES: qualquer coisa que o Next faca com o scroll acontece
-      // primeiro, e o scrollIntoView daqui e que fica valendo por ultimo.
-      history.replaceState(null, '', slug ? `/loja#cat-${slug}` : '/loja')
-      const alvo = slug ? document.getElementById(`cat-${slug}`) : null
-      if (alvo) {
-        alvo.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      }
-    }
-  }
+  const pilula = (selecionada: boolean) =>
+    `flex h-11 items-center rounded-full px-4 text-sm font-bold ${
+      selecionada ? 'bg-brand text-brand-foreground' : 'border border-line bg-surface hover:bg-foreground/5'
+    }`
 
   return (
-    <nav aria-label="Categorias">
+    <nav
+      aria-label="Categorias"
+      style={{ top: 'var(--altura-cabecalho, 0px)' }}
+      className="sticky z-10 -mx-4 bg-background px-4 py-2"
+    >
       <RolagemHorizontal>
-        <ul className="flex w-max gap-2 pb-1">
-        <li>
-          <Link
-            href="/loja"
-            onClick={aoClicar(null)}
-            className={`block rounded-full px-4 py-2.5 text-sm font-bold ${
-              ativa ? 'border border-line bg-surface' : 'bg-brand text-brand-foreground'
-            }`}
-          >
-            Tudo
-          </Link>
-        </li>
-        {categorias.map((c) => (
-          <li key={c.id}>
-            <Link
-              href={`/loja#cat-${c.slug}`}
-              onClick={aoClicar(c.slug)}
-              className={`block rounded-full px-4 py-2.5 text-sm font-bold ${
-                ativa === c.slug ? 'bg-brand text-brand-foreground' : 'border border-line bg-surface'
-              }`}
-            >
-              {c.name}
+        <ul className="flex w-max gap-2">
+          <li>
+            <Link href="/loja" className={pilula(false)}>
+              Inicio
             </Link>
           </li>
-        ))}
+          {categorias.map((c) => (
+            <li key={c.id}>
+              <Link
+                ref={ativa === c.slug ? ativaRef : undefined}
+                href={`/c/${c.slug}`}
+                aria-current={ativa === c.slug ? 'page' : undefined}
+                className={pilula(ativa === c.slug)}
+              >
+                {c.name}
+              </Link>
+            </li>
+          ))}
         </ul>
       </RolagemHorizontal>
     </nav>

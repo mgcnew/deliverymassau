@@ -71,27 +71,28 @@ export const getCategorias = cache(async (): Promise<CategoriaVitrine[]> => {
 })
 
 /**
- * Vitrine da home: so o comeco de cada categoria, com o total ao lado.
- *
- * Antes a home trazia o catalogo inteiro e agrupava aqui. Isso funcionava
- * com dezenas de produtos e desabou com milhares - a pagina passou de 2 MB
- * e o PostgREST cortava em 1.000 itens, escondendo o resto sem avisar.
+ * Os mais pedidos no bairro (ranking dos ultimos 90 dias, migration 0043),
+ * so os que da para comprar agora. Loja nova ou sem vendas: lista vazia.
  */
-export const getVitrine = cache(
-  async (porCategoria = 12): Promise<Map<string, { itens: ProdutoVitrine[]; total: number }>> => {
+export const getMaisPedidos = cache(async (limite = 12): Promise<ProdutoVitrine[]> => {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('product_popularity')
+    .select(`posicao, products!inner(${CAMPOS_PRODUTO})`)
+    .eq('products.is_active', true)
+    .eq('products.is_available', true)
+    .order('posicao')
+    .limit(limite)
+  return (data ?? []).map((linha) => linha.products as unknown as ProdutoVitrine)
+})
+
+/** Foto de capa e total de cada categoria, para a grade da home. */
+export const getCapasCategorias = cache(
+  async (): Promise<Map<string, { imagem: string | null; total: number }>> => {
     const supabase = await createClient()
-    const { data } = await supabase.rpc('get_showcase', { p_por_categoria: porCategoria })
-
-    const linhas = (data ?? []) as Array<ProdutoVitrine & { total_da_categoria: number }>
-    const porId = new Map<string, { itens: ProdutoVitrine[]; total: number }>()
-
-    for (const { total_da_categoria, ...produto } of linhas) {
-      const grupo = porId.get(produto.category_id) ?? { itens: [], total: Number(total_da_categoria) }
-      grupo.itens.push(produto)
-      porId.set(produto.category_id, grupo)
-    }
-
-    return porId
+    const { data } = await supabase.rpc('get_capas_categorias')
+    const linhas = (data ?? []) as Array<{ category_id: string; image_path: string | null; total: number }>
+    return new Map(linhas.map((l) => [l.category_id, { imagem: l.image_path, total: Number(l.total) }]))
   },
 )
 
@@ -105,6 +106,18 @@ export const getProdutosPaginados = cache(
   }): Promise<{ itens: ProdutoVitrine[]; total: number }> => {
     const supabase = await createClient()
     const de = (opcoes.pagina - 1) * opcoes.porPagina
+
+    // Categoria: mais pedidos primeiro (a ordenacao junta outra tabela, por
+    // isso vem de uma funcao do banco e nao do select direto).
+    if (opcoes.categoriaId && !opcoes.busca) {
+      const { data } = await supabase.rpc('get_categoria_pagina', {
+        p_categoria: opcoes.categoriaId,
+        p_limite: opcoes.porPagina,
+        p_offset: de,
+      })
+      const pagina = (data ?? { itens: [], total: 0 }) as { itens: ProdutoVitrine[]; total: number }
+      return { itens: pagina.itens ?? [], total: Number(pagina.total ?? 0) }
+    }
 
     let query = supabase
       .from('products')

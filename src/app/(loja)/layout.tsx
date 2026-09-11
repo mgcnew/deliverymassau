@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { BarraCarrinho } from '@/components/carrinho/barra-carrinho'
 import { BotaoSair } from '@/components/loja/botao-sair'
 import { LinkMeusPedidos } from '@/components/loja/link-meus-pedidos'
+import { MedirCabecalho } from '@/components/loja/medir-cabecalho'
 import { RodapeEquipe } from '@/components/loja/rodape-equipe'
 import { ConviteInstalar } from '@/components/pwa/convite-instalar'
 import { Logo } from '@/components/ui/logo'
@@ -20,7 +21,8 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
     <div className="flex min-h-dvh flex-col">
       {/* Mesmo padrao neutro do cabecalho do painel (bg-surface, nao mais
           vermelho fixo) -- a logo troca de versao com o tema, igual la. */}
-      <header className="sticky top-0 z-20 border-b border-line bg-surface">
+      <header id="cabecalho-loja" className="sticky top-0 z-20 border-b border-line bg-surface">
+        <MedirCabecalho alvo="cabecalho-loja" />
         {/* gap menor no celular: com o Sair, a logo encolhe um pouco em vez
             de empurrar os botoes para fora da tela. */}
         <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-4 py-4 sm:gap-4">
@@ -45,6 +47,11 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
           {config?.delivery?.abre_em
             ? ` Abrimos ${quando(config.delivery.abre_em, config.delivery.fuso)}.`
             : ''}
+          {/* "Indisponivel" sozinho soa como "nao da para usar". Da: o
+              carrinho fica guardado no aparelho ate a hora de finalizar. */}
+          <span className="block font-semibold">
+            Pode ir montando o carrinho: ele fica guardado para voce finalizar quando abrirmos.
+          </span>
         </p>
       ) : null}
 
@@ -93,7 +100,13 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
         </div>
       </footer>
 
-      <BarraCarrinho />
+      <BarraCarrinho
+        pedidoMinimo={Number(config?.min_order_value ?? 0)}
+        aberto={config?.delivery_enabled ?? false}
+        abreEm={
+          config?.delivery?.abre_em ? quando(config.delivery.abre_em, config.delivery.fuso) : null
+        }
+      />
     </div>
   )
 }

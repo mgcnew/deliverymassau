@@ -5,7 +5,7 @@ import { LinkVoltar } from '@/components/ui/link-voltar'
 import { BotaoAdicionar } from '@/components/carrinho/botao-adicionar'
 import { GradeProdutos } from '@/components/loja/produto-card'
 import { Card } from '@/components/ui/card'
-import { moeda, precoPorUnidade, UNIT_LABEL } from '@/lib/format'
+import { moeda, nomeLegivel, precoPorUnidade, UNIT_LABEL } from '@/lib/format'
 import {
   emPromocao,
   getCategorias,
@@ -19,7 +19,7 @@ import { urlImagemProduto } from '@/lib/supabase/storage'
 export async function generateMetadata({ params }: PageProps<'/p/[slug]'>) {
   const { slug } = await params
   const produto = await getProdutoPorSlug(slug)
-  return { title: produto ? `${produto.name} | Mercado Massa 24h` : 'Mercado Massa 24h' }
+  return { title: produto ? `${nomeLegivel(produto.name)} | Mercado Massa 24h` : 'Mercado Massa 24h' }
 }
 
 export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
@@ -65,7 +65,7 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
 
         <div className="space-y-3">
           <div>
-            <h1 className="text-2xl font-black leading-tight">{produto.name}</h1>
+            <h1 className="text-2xl font-black leading-tight">{nomeLegivel(produto.name)}</h1>
             {produto.short_description ? (
               <p className="text-muted">{produto.short_description}</p>
             ) : null}

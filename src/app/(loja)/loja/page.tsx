@@ -1,84 +1,100 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { BairrosAtendidos, FaixasDeEntrega } from '@/components/loja/bairros-atendidos'
 import { CampoBusca } from '@/components/loja/busca'
-import { CategoriasChips } from '@/components/loja/categorias-chips'
-import { GradeProdutos } from '@/components/loja/produto-card'
-import { RolarParaHash } from '@/components/loja/rolar-para-hash'
+import { FileiraProdutos } from '@/components/loja/produto-card'
 import { Empty } from '@/components/ui/card'
 import { modoEfetivo } from '@/lib/entrega/cotar'
 import {
   getBairrosAtendidos,
+  getCapasCategorias,
   getCategorias,
   getConfiguracaoPublica,
+  getMaisPedidos,
   getProdutosEmPromocao,
-  getVitrine,
 } from '@/lib/loja/catalogo'
+import { IconeCategoria } from '@/lib/loja/icones-categoria'
+import { urlImagemProduto } from '@/lib/supabase/storage'
 
 /**
- * Quantos produtos cada categoria mostra na home antes do "ver todos".
- * Doze = duas linhas no computador, seis no celular: da pra sentir o que a
- * categoria tem sem transformar a home num catalogo inteiro.
+ * Home da loja: uma porta de entrada, nao o catalogo inteiro.
+ *
+ * Antes eram as 18 categorias empilhadas com 12 produtos cada - 38 telas de
+ * rolagem no celular - e as pilulas so rolavam a pagina ate a secao. Agora,
+ * como nos apps de mercado: busca, as categorias todas a vista (cada uma
+ * abre a sua pagina) e duas fileiras curtas com o que vale olhar primeiro.
  */
-const POR_CATEGORIA = 12
+
+/** Mais pedidos so aparece com amostra que valha: com 2 itens parece vazio. */
+const MINIMO_MAIS_PEDIDOS = 4
 
 export default async function VitrinePage() {
-  const [categorias, vitrine, ofertas, bairros, config] = await Promise.all([
+  const [categorias, capas, maisPedidos, ofertas, bairros, config] = await Promise.all([
     getCategorias(),
-    getVitrine(POR_CATEGORIA),
-    getProdutosEmPromocao({ limite: POR_CATEGORIA }),
+    getCapasCategorias(),
+    getMaisPedidos(12),
+    getProdutosEmPromocao({ limite: 12 }),
     getBairrosAtendidos(),
     getConfiguracaoPublica(),
   ])
 
-  const secoes = categorias
-    .map((categoria) => ({ categoria, grupo: vitrine.get(categoria.id) }))
-    .filter((s): s is { categoria: (typeof categorias)[number]; grupo: NonNullable<typeof s.grupo> } =>
-      Boolean(s.grupo?.itens.length),
-    )
+  // Categoria sem nenhum produto ativo nao entra: seria uma porta para o vazio.
+  const comProdutos = categorias.filter((c) => (capas.get(c.id)?.total ?? 0) > 0)
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-5 p-4">
-      <RolarParaHash />
+    <main className="mx-auto w-full max-w-5xl space-y-7 p-4">
       <CampoBusca />
-      <CategoriasChips categorias={categorias} />
 
-      {ofertas.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-xl font-black text-brand-ink">🔥 Ofertas</h2>
-          <GradeProdutos produtos={ofertas} />
-        </section>
-      ) : null}
-
-      {secoes.length === 0 ? (
+      {comProdutos.length === 0 ? (
         <Empty>Ainda nao ha produtos no catalogo.</Empty>
       ) : (
-        secoes.map(({ categoria, grupo }) => (
-          <section key={categoria.id} id={`cat-${categoria.slug}`} className="scroll-mt-24 space-y-3">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-xl font-black">{categoria.name}</h2>
-              {grupo.total > grupo.itens.length ? (
-                <span className="text-sm text-muted">
-                  {grupo.total.toLocaleString('pt-BR')} produtos
-                </span>
-              ) : null}
-            </div>
-
-            <GradeProdutos produtos={grupo.itens} />
-
-            {/* So aparece quando ha mais do que cabe aqui - senao viraria um
-                botao que leva a mesma lista que a pessoa acabou de ver. */}
-            {grupo.total > grupo.itens.length ? (
-              <Link
-                href={`/c/${categoria.slug}`}
-                className="flex h-12 items-center justify-center rounded-xl border border-line bg-surface font-bold"
-              >
-                Ver todos os {grupo.total.toLocaleString('pt-BR')} de {categoria.name}
-              </Link>
-            ) : null}
-          </section>
-        ))
+        <section aria-labelledby="titulo-categorias" className="space-y-3">
+          <h2 id="titulo-categorias" className="text-xl font-black">
+            Categorias
+          </h2>
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {comProdutos.map((c) => {
+              const capa = capas.get(c.id)
+              const imagem = urlImagemProduto(capa?.imagem ?? null)
+              const total = capa?.total ?? 0
+              return (
+                <li key={c.id}>
+                  <Link
+                    href={`/c/${c.slug}`}
+                    className="flex h-full items-center gap-3 rounded-2xl border border-line bg-surface p-2 pr-3 hover:border-foreground/30"
+                  >
+                    {/* Foto de um produto de verdade da categoria (o mais
+                        pedido que tem foto): reconhece-se o corredor pelo que
+                        tem nele, nao por um desenho generico. */}
+                    <span className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-white">
+                      {imagem ? (
+                        <Image src={imagem} alt="" fill sizes="56px" className="object-contain p-1" />
+                      ) : (
+                        <span className="flex size-full items-center justify-center text-muted">
+                          <IconeCategoria slug={c.slug} size={26} strokeWidth={1.75} />
+                        </span>
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="line-clamp-2 text-sm font-bold leading-tight">{c.name}</span>
+                      <span className="block text-xs text-muted">
+                        {total.toLocaleString('pt-BR')} {total === 1 ? 'produto' : 'produtos'}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
       )}
+
+      {ofertas.length > 0 ? <FileiraProdutos id="titulo-ofertas" titulo="Ofertas" produtos={ofertas} /> : null}
+
+      {maisPedidos.length >= MINIMO_MAIS_PEDIDOS ? (
+        <FileiraProdutos id="titulo-mais-pedidos" titulo="Mais pedidos no bairro" produtos={maisPedidos} />
+      ) : null}
 
       {modoEfetivo(config?.delivery_fee_mode) === 'distancia' ? (
         <FaixasDeEntrega faixas={(config?.delivery_bands ?? []).map((f) => ({ up_to_km: Number(f.up_to_km), fee: Number(f.fee) }))} />

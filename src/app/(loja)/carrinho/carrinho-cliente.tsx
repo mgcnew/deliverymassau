@@ -6,7 +6,7 @@ import { Minus, Plus, Trash2 } from 'lucide-react'
 
 import { useCarrinho } from '@/components/carrinho/use-carrinho'
 import { Card, Empty } from '@/components/ui/card'
-import { moeda, quantidade as formatarQuantidade } from '@/lib/format'
+import { moeda, nomeLegivel, quantidade as formatarQuantidade } from '@/lib/format'
 import { subtotalItem } from '@/lib/carrinho/tipos'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 
@@ -63,7 +63,7 @@ export function CarrinhoCliente({
                 )}
 
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold leading-tight">{item.name}</p>
+                  <p className="font-semibold leading-tight">{nomeLegivel(item.name)}</p>
                   <p className="text-sm text-muted">
                     {formatarQuantidade(item.quantity, item.soldByWeight, item.unitType)} ×{' '}
                     {moeda(item.price)}
@@ -74,7 +74,7 @@ export function CarrinhoCliente({
 
                 <button
                   type="button"
-                  aria-label={`Remover ${item.name}`}
+                  aria-label={`Remover ${nomeLegivel(item.name)}`}
                   onClick={() => remover(item.productId)}
                   className="h-10 rounded-lg px-2 text-muted hover:bg-foreground/5"
                 >

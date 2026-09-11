@@ -1,8 +1,8 @@
 'use client'
 
-import { Minus, Plus } from 'lucide-react'
+import { Minus, Plus, Trash2 } from 'lucide-react'
 
-import { moeda } from '@/lib/format'
+import { moeda, nomeLegivel } from '@/lib/format'
 import type { ProdutoVitrine } from '@/lib/loja/catalogo'
 import type { ItemCarrinho } from '@/lib/carrinho/tipos'
 import { useCarrinho } from './use-carrinho'
@@ -83,6 +83,70 @@ export function BotaoAdicionar({
         className="flex h-full w-11 items-center justify-center text-brand-ink"
       >
         <Plus size={18} />
+      </button>
+    </div>
+  )
+}
+
+/**
+ * Versao do cartao da vitrine: um "+" redondo no canto da foto (o padrao dos
+ * apps de mercado), que vira o seletor de quantidade depois do primeiro
+ * toque. O cartao fica ~50px mais baixo que com o botao "Adicionar" de
+ * largura inteira - cabe quase o dobro de produto na tela - e a tela para
+ * de ter seis botoes vermelhos iguais disputando o olho.
+ *
+ * Quem chama posiciona (fica por cima da foto, embaixo a direita).
+ */
+export function BotaoAdicionarCompacto({ produto }: { produto: ProdutoVitrine }) {
+  const { adicionar, ajustar, remover, quantidadeDe, carregado } = useCarrinho()
+  const quantidade = carregado ? quantidadeDe(produto.id) : 0
+  const nome = nomeLegivel(produto.name)
+
+  if (!produto.is_available) return null
+
+  const passo = produto.sold_by_weight ? Number(produto.weight_step ?? 0.1) : 1
+  const minimo = produto.sold_by_weight ? Number(produto.min_weight ?? 0.1) : 1
+
+  if (quantidade <= 0) {
+    return (
+      <button
+        type="button"
+        onClick={() => adicionar(paraItem(produto, minimo))}
+        aria-label={`Adicionar ${nome}`}
+        className="flex size-11 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-[0_2px_8px_rgba(0,0,0,0.25)] hover:bg-brand-strong"
+      >
+        <Plus size={22} strokeWidth={2.75} aria-hidden />
+      </button>
+    )
+  }
+
+  const rotulo = produto.sold_by_weight
+    ? `${Math.round(quantidade * 1000)} g`
+    : `${quantidade} ${produto.unit_type === 'unidade' ? 'un' : produto.unit_type}`
+  // No minimo, o "-" tira do carrinho: com peso, descer abaixo do minimo
+  // deixaria uma quantidade que o mercado nao vende.
+  const noMinimo = quantidade - passo < minimo - 1e-9
+
+  return (
+    <div className="flex h-11 w-full items-center justify-between rounded-full border-2 border-brand bg-surface shadow-[0_2px_8px_rgba(0,0,0,0.2)]">
+      <button
+        type="button"
+        aria-label={noMinimo ? `Tirar ${nome} do carrinho` : `Diminuir ${nome}`}
+        onClick={() => (noMinimo ? remover(produto.id) : ajustar(produto.id, -passo))}
+        className="flex size-11 shrink-0 items-center justify-center rounded-full text-brand-ink"
+      >
+        {noMinimo ? <Trash2 size={17} aria-hidden /> : <Minus size={18} aria-hidden />}
+      </button>
+      <span aria-live="polite" className="min-w-0 truncate text-sm font-black tabular-nums">
+        {rotulo}
+      </span>
+      <button
+        type="button"
+        aria-label={`Aumentar ${nome}`}
+        onClick={() => ajustar(produto.id, passo)}
+        className="flex size-11 shrink-0 items-center justify-center rounded-full text-brand-ink"
+      >
+        <Plus size={18} aria-hidden />
       </button>
     </div>
   )

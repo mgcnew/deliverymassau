@@ -67,3 +67,39 @@ export function telefone(digitos: string | null | undefined): string {
 export function dataHora(iso: string | null | undefined): string {
   return iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-'
 }
+
+const CONECTIVOS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'com', 'sem', 'em', 'p/', 'c/', 's/'])
+// Siglas que ficam maiusculas ("Leite UHT", nao "Leite Uht").
+const SIGLAS = new Set(['UHT', 'PET', 'TP', 'DF', 'FPS', 'LED', 'USB', 'AA', 'AAA'])
+const MEDIDA = /^(\d+(?:[.,]\d+)?)(kg|g|mg|ml|l|lt|litros?|un|m|cm|mm|w)$/i
+
+/**
+ * "ADORO COXA CONG. 1KG" -> "Adoro Coxa Cong. 1kg".
+ *
+ * Os nomes vem do PDV em caixa alta e abreviados; em maiusculas a leitura
+ * fica lenta, principalmente para quem nao tem costume com app. So mexe em
+ * nome que esta INTEIRO em maiusculas - nome que a equipe digitou com
+ * cuidado ("Pao frances") fica como esta. E so exibicao: busca e banco
+ * continuam com o nome original.
+ */
+export function nomeLegivel(nome: string): string {
+  if (/\p{Ll}/u.test(nome)) return nome
+  return nome
+    .split(/(\s+)/)
+    .map((parte, i) => {
+      if (/^\s+$/.test(parte) || parte === '') return parte
+      if (SIGLAS.has(parte)) return parte
+      const medida = parte.match(MEDIDA)
+      if (medida) {
+        const unidade = medida[2].toLowerCase()
+        return medida[1] + (unidade.startsWith('l') ? 'L' : unidade)
+      }
+      // Codigos com numero no meio ("LV10PG8", "C/15") ficam como vieram.
+      if (/\d/.test(parte) && !/^c\/\d+$/i.test(parte)) return parte
+      const minuscula = parte.toLocaleLowerCase('pt-BR')
+      if (i > 0 && CONECTIVOS.has(minuscula.replace(/\d+$/, ''))) return minuscula
+      // Abreviacao grudada ("BISC.ROSCA") vira "Bisc.Rosca".
+      return minuscula.replace(/(^|\.)(\p{L})/gu, (_, ponto, letra) => ponto + letra.toLocaleUpperCase('pt-BR'))
+    })
+    .join('')
+}
