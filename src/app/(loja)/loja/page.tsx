@@ -62,14 +62,14 @@ export default async function VitrinePage() {
                 <li key={c.id}>
                   <Link
                     href={`/c/${c.slug}`}
-                    className="flex h-full items-center gap-3 rounded-2xl border border-line bg-surface p-2 pr-3 hover:border-foreground/30"
+                    className="flex h-full items-center gap-2 rounded-2xl border border-line bg-surface p-2 hover:border-foreground/30"
                   >
                     {/* Foto de um produto de verdade da categoria (o mais
                         pedido que tem foto): reconhece-se o corredor pelo que
                         tem nele, nao por um desenho generico. */}
-                    <span className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-white">
+                    <span className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-white">
                       {imagem ? (
-                        <Image src={imagem} alt="" fill sizes="56px" className="object-contain p-1" />
+                        <Image src={imagem} alt="" fill sizes="48px" className="object-contain p-1" />
                       ) : (
                         <span className="flex size-full items-center justify-center text-muted">
                           <IconeCategoria slug={c.slug} size={26} strokeWidth={1.75} />
@@ -77,7 +77,7 @@ export default async function VitrinePage() {
                       )}
                     </span>
                     <span className="min-w-0">
-                      <span className="line-clamp-2 text-sm font-bold leading-tight">{c.name}</span>
+                      <span className="line-clamp-3 hyphens-auto break-words text-sm font-bold leading-tight">{c.name}</span>
                       <span className="block text-xs text-muted">
                         {total.toLocaleString('pt-BR')} {total === 1 ? 'produto' : 'produtos'}
                       </span>

@@ -1,14 +1,17 @@
 import { createElement } from 'react'
 import {
   Apple,
+  Baby,
   Bath,
   Beef,
   Candy,
   Cigarette,
   Coffee,
+  CookingPot,
   Cookie,
   Croissant,
   CupSoda,
+  Droplets,
   Milk,
   Package,
   PawPrint,
@@ -19,6 +22,7 @@ import {
   Soup,
   SprayCan,
   Utensils,
+  Wheat,
   type LucideIcon,
   type LucideProps,
 } from 'lucide-react'
@@ -48,6 +52,11 @@ const ICONES: Record<string, LucideIcon> = {
   pet: PawPrint,
   salgadinhos: Popcorn,
   medicamentos: Pill,
+  'arroz-feijao-e-graos': Wheat,
+  'massas-e-instantaneos': CookingPot,
+  'oleos-e-temperos': Droplets,
+  'farinhas-acucar-e-confeitaria': Wheat,
+  bebe: Baby,
 }
 
 export function IconeCategoria({ slug, ...props }: { slug?: string } & LucideProps) {

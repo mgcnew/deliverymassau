@@ -198,3 +198,51 @@ update public.products p
 A tabela `public.products_categoria_backup` tem RLS ligada e nenhuma política:
 não é acessível pela API, só pelo servidor. Pode ser descartada quando a
 classificação estiver estável.
+
+## Categorias do cliente (11/09/2026)
+
+Mesmo depois da reclassificação de agosto, "Mercearia" seguia com 1.918
+produtos e virou gaveta de tudo (escova de dente, água sanitária, cerveja,
+chinelo, fralda, cigarro). E "Frios e laticínios" e "Congelados" estavam
+desligadas: 184 produtos só apareciam pela busca.
+
+Agora são **20 categorias, sem "Mercearia"**, com o nome que o cliente
+procura: Hortifrúti, Açougue, Padaria, Frios e laticínios, Café da manhã,
+Arroz, feijão e grãos, Massas e instantâneos, Óleos e temperos, Molhos e
+conservas, Farinhas, açúcar e confeitaria, Congelados, Bebidas, Biscoitos e
+salgadinhos, Doces e chocolates, Higiene e beleza, Bebê, Limpeza, Casa e
+utilidades, Pet e Tabacaria.
+
+- Cada produto foi classificado pelo nome (regras + revisão um a um dos que
+  a regra não resolvia) numa planilha revisada pelo mercado, carregada em
+  `reclassificacao_0044` e aplicada pela migration 0045.
+- Categorias renomeadas mantêm o slug: `/c/matinais` abre "Café da manhã",
+  `/c/cigarro` abre "Tabacaria", `/c/bazar-e-utilidades` abre "Casa e
+  utilidades", `/c/biscoitos-e-snacks` abre "Biscoitos e salgadinhos".
+- Mercearia, Salgadinhos e Medicamentos ficaram vazias e **desligadas** (não
+  apagadas).
+- 10 itens que eram atalhos do caixa ("CANCELAR COMPRA", "DIVERSOS", chips
+  de celular...) foram **desativados** — continuam no cadastro.
+
+### Como voltar atrás
+
+```sql
+-- produtos: categoria e ativo/inativo como estavam
+update public.products p
+   set category_id = b.category_id, is_active = b.is_active
+  from public.products_categoria_backup_0044 b
+ where b.id = p.id
+   and (p.category_id is distinct from b.category_id or p.is_active is distinct from b.is_active);
+
+-- categorias: nome, ordem e visibilidade como estavam
+update public.categories c
+   set name = b.name, sort_order = b.sort_order, is_active = b.is_active
+  from public.categories_backup_0044 b
+ where b.id = c.id;
+-- as 5 novas (arroz-feijao-e-graos, massas-e-instantaneos, oleos-e-temperos,
+-- farinhas-acucar-e-confeitaria, bebe) ficam vazias: desligue-as.
+```
+
+As tabelas `products_categoria_backup_0044`, `categories_backup_0044` e
+`reclassificacao_0044` têm RLS ligada e nenhuma política (só o servidor lê).
+Podem ser descartadas quando a nova organização estiver estável.
