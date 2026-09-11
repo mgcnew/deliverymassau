@@ -5,12 +5,14 @@ import { createClient } from '@supabase/supabase-js'
 /**
  * Cliente com service_role. IGNORA RLS.
  *
- * Dois usos, ambos por falta de outro caminho:
+ * Tres usos, todos por falta de outro caminho:
  *  1. criar/apagar usuarios no auth;
  *  2. enviar as notificacoes de pedido novo (lib/push/enviar.ts) - quem
  *     dispara e o balconista, mas os aparelhos inscritos sao de OUTRAS
  *     pessoas, e a RLS de push_subscriptions (de proposito) so deixa cada
  *     um enxergar os proprios.
+ *  3. gravar a cotacao da entrega por distancia (lib/entrega/cotar.ts): so
+ *     o servidor pode, senao o navegador inventaria a propria taxa.
  *
  * Nunca importar em Client Component. Nunca usar para ler/gravar dados de
  * negocio - pedido, produto, cliente e permissao passam pela RLS.

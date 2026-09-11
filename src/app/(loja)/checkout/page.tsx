@@ -1,6 +1,7 @@
 import { LinkVoltar } from '@/components/ui/link-voltar'
 import { redirect } from 'next/navigation'
 
+import { modoEfetivo } from '@/lib/entrega/cotar'
 import { getBairrosAtendidos, getConfiguracaoPublica } from '@/lib/loja/catalogo'
 import { CheckoutForm } from './checkout-form'
 
@@ -21,6 +22,8 @@ export default async function CheckoutPage() {
         bairros={bairros}
         formasPagamento={config.payment_methods ?? []}
         pedidoMinimo={Number(config.min_order_value ?? 0)}
+        modoTaxa={modoEfetivo(config.delivery_fee_mode)}
+        whatsapp={config.market_phone}
       />
     </main>
   )

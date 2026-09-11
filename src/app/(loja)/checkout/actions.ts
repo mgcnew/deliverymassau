@@ -1,5 +1,8 @@
 'use server'
 
+import { headers } from 'next/headers'
+
+import { cotarEntrega, type Cotacao, type EnderecoCotacao } from '@/lib/entrega/cotar'
 import { createClient } from '@/lib/supabase/server'
 import { moeda } from '@/lib/format'
 import type { PaymentMethod } from '@/lib/types'
@@ -24,11 +27,15 @@ export type EntradaPedido = {
   itens: Array<{ product_id: string; quantity: number; note?: string }>
   /** Total que o cliente viu na tela. Se divergir, o banco recusa e a gente confirma de novo. */
   totalEsperado?: number
+  /** Taxa por distancia: id da cotacao feita pelo servidor (cotarEntregaDoCheckout). */
+  cotacao?: string
 }
 
 export type ResultadoPedido = {
   erro?: string
   precisaConfirmarPreco?: boolean
+  /** Cotacao vencida ou de outro endereco: o checkout volta ao endereco. */
+  refazerCotacao?: boolean
   totalNovo?: number
   pedido?: { numero: number; token: string; total: number; troco: number | null }
 }
@@ -58,6 +65,7 @@ export async function criarPedido(entrada: EntradaPedido): Promise<ResultadoPedi
         note: i.note ?? null,
       })),
       ...(entrada.totalEsperado !== undefined ? { expected_total: entrada.totalEsperado } : {}),
+      ...(entrada.cotacao ? { delivery_quote: entrada.cotacao } : {}),
     },
   })
 
@@ -136,6 +144,13 @@ function traduzirErro(mensagem: string, detalhe?: string | null): ResultadoPedid
     case 'PAGAMENTO_INDISPONIVEL':
       return { erro: 'Essa forma de pagamento nao esta disponivel agora.' }
 
+    case 'COTACAO_EXPIRADA':
+    case 'COTACAO_ENDERECO':
+      return {
+        erro: 'O valor da entrega precisa ser conferido de novo. Confirme o endereco para continuar.',
+        refazerCotacao: true,
+      }
+
     case 'BANDEIRA_INVALIDA':
       return { erro: 'Escolha a bandeira do seu vale entre as que aceitamos.' }
 
@@ -162,5 +177,23 @@ function lerJson(texto?: string | null): Record<string, unknown> | null {
     return JSON.parse(texto) as Record<string, unknown>
   } catch {
     return null
+  }
+}
+
+/**
+ * Taxa de entrega por distancia: chamada quando o cliente confirma o
+ * endereco. O IP entra so como contador de uso (resumido num hash), para
+ * ninguem esgotar a cota do Google de proposito.
+ */
+export async function cotarEntregaDoCheckout(endereco: EnderecoCotacao): Promise<Cotacao> {
+  if (!endereco.rua.trim() || !endereco.numero.trim() || !endereco.bairro.trim()) {
+    return { erro: 'Preencha rua, numero e bairro.' }
+  }
+  const h = await headers()
+  const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip') || 'desconhecido'
+  try {
+    return await cotarEntrega(endereco, ip)
+  } catch {
+    return { erro: 'Nao foi possivel calcular a entrega agora. Tente de novo.' }
   }
 }

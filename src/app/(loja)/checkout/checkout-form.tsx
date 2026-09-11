@@ -17,24 +17,40 @@ import {
   salvarDadosCheckout,
 } from '@/lib/carrinho/store'
 import { subtotalItem } from '@/lib/carrinho/tipos'
+import { kmTexto } from '@/lib/entrega/faixas'
 import { buscarEnderecoPorCep } from '@/lib/loja/cep'
 import type { PaymentMethod } from '@/lib/types'
-import { criarPedido } from './actions'
+import { cotarEntregaDoCheckout, criarPedido } from './actions'
 
 type Bairro = { bairro: string; taxa: number }
 type FormaPagamento = { code: string; label: string; brands?: string[] }
 
 const ETAPAS = ['Seus dados', 'Endereco', 'Pagamento', 'Revisao'] as const
 
+/** Cotacao de entrega por distancia, presa ao endereco para o qual foi feita. */
+type CotacaoTela = { id: string; taxa: number; rotulo: string; km?: number; reserva?: boolean; chave: string }
+
+function chaveEndereco(rua: string, numero: string, bairro: string, cep: string) {
+  const n = (t: string) => normalizarComparacao(t.trim())
+  return `${n(rua)}|${n(numero)}|${n(bairro)}|${cep.replace(/\D/g, '')}`
+}
+
 export function CheckoutForm({
   bairros,
   formasPagamento,
   pedidoMinimo,
+  modoTaxa = 'bairro',
+  whatsapp,
 }: {
   bairros: Bairro[]
   formasPagamento: FormaPagamento[]
   pedidoMinimo: number
+  /** 'distancia': a taxa vem do servidor (km pelo Google), nao da lista de bairros. */
+  modoTaxa?: 'bairro' | 'distancia'
+  /** Telefone do mercado, para o "chame no WhatsApp" quando a entrega nao da. */
+  whatsapp?: string | null
 }) {
+  const porDistancia = modoTaxa === 'distancia'
   const router = useRouter()
   const { itens, subtotal, carregado, limpar } = useCarrinho()
   const [etapa, setEtapa] = useState(0)
@@ -61,6 +77,9 @@ export function CheckoutForm({
   const [precisaTroco, setPrecisaTroco] = useState(false)
   const [trocoPara, setTrocoPara] = useState('')
   const [observacao, setObservacao] = useState('')
+  const [cotacao, setCotacao] = useState<CotacaoTela | null>(null)
+  const [avisoEntrega, setAvisoEntrega] = useState<string | null>(null)
+  const [cotando, iniciarCotacao] = useTransition()
 
   // Dados do ultimo pedido feito neste aparelho (nome, telefone, endereco).
   // No servidor sempre null -- o preenchimento acontece so depois de hidratar.
@@ -82,7 +101,9 @@ export function CheckoutForm({
     setTelefone(dadosSalvos.telefone)
   }
   if (dadosSalvos?.endereco && !enderecoPreenchido) {
-    const bairroValido = bairros.some((b) => b.bairro === dadosSalvos.endereco.bairro)
+    // Por distancia qualquer bairro serve (o que vale e o km); por bairro, so
+    // um que ainda esteja na lista.
+    const bairroValido = porDistancia || bairros.some((b) => b.bairro === dadosSalvos.endereco.bairro)
     setEnderecoPreenchido(true)
     setCep(dadosSalvos.endereco.cep)
     setRua(dadosSalvos.endereco.rua)
@@ -98,10 +119,16 @@ export function CheckoutForm({
     }
   }
 
-  const taxa = useMemo(
+  // A cotacao so vale para o endereco em que foi feita: mexeu em rua, numero,
+  // bairro ou CEP, some - e o Continuar cota de novo.
+  const chaveAtual = chaveEndereco(rua, numero, bairro, cep)
+  const cotacaoValida = cotacao && cotacao.chave === chaveAtual ? cotacao : null
+
+  const taxaBairro = useMemo(
     () => bairros.find((b) => b.bairro === bairro)?.taxa ?? 0,
     [bairro, bairros],
   )
+  const taxa = porDistancia ? (cotacaoValida?.taxa ?? 0) : taxaBairro
   const total = Math.round((subtotal + taxa) * 100) / 100
   const trocoNumero = Number(trocoPara.replace(/\./g, '').replace(',', '.'))
   const trocoEstimado = precisaTroco && trocoNumero > total ? trocoNumero - total : 0
@@ -136,6 +163,12 @@ export function CheckoutForm({
         }
 
         if (!rua.trim() && endereco.rua) setRua(endereco.rua)
+
+        if (porDistancia) {
+          if (endereco.bairro) setBairro(endereco.bairro)
+          setResultadoCep({ digitos: digitosCep, status: 'encontrado' })
+          return
+        }
 
         const alvo = normalizarComparacao(endereco.bairro)
         const encontrado = bairros.find((b) => normalizarComparacao(b.bairro) === alvo)
@@ -218,6 +251,7 @@ export function CheckoutForm({
           note: i.note || undefined,
         })),
         ...(ignorarPreco ? {} : { totalEsperado: total }),
+        ...(porDistancia && cotacaoValida ? { cotacao: cotacaoValida.id } : {}),
       })
 
       if (resultado.pedido) {
@@ -239,10 +273,46 @@ export function CheckoutForm({
         return
       }
 
+      if (resultado.refazerCotacao) {
+        setCotacao(null)
+        setEtapa(1)
+        setAvisoEntrega(resultado.erro ?? null)
+        return
+      }
       setConfirmarPreco(Boolean(resultado.precisaConfirmarPreco))
       setErro(resultado.erro ?? 'Nao foi possivel concluir o pedido.')
     })
   }
+
+  // Endereco -> pagamento: por distancia, primeiro a taxa (cotacao no
+  // servidor). Endereco ja cotado segue direto.
+  function continuar() {
+    if (etapa !== 1 || !porDistancia || cotacaoValida) {
+      setEtapa(etapa + 1)
+      return
+    }
+    setAvisoEntrega(null)
+    iniciarCotacao(async () => {
+      const r = await cotarEntregaDoCheckout({ rua, numero, bairro, cep })
+      if ('ok' in r) {
+        setCotacao({ id: r.cotacao, taxa: r.taxa, rotulo: r.rotulo, km: r.km, reserva: r.reserva, chave: chaveAtual })
+        setEtapa(2)
+      } else if ('fora' in r) {
+        setAvisoEntrega(
+          `Este endereco fica ${r.km ? `a ${kmTexto(r.km)} km, ` : ''}fora da nossa area de entrega${
+            r.limiteKm ? ` (ate ${kmTexto(r.limiteKm)} km)` : ''
+          }.`,
+        )
+      } else if ('erro' in r) {
+        setAvisoEntrega(r.erro)
+      } else {
+        // O mercado voltou a cobrar por bairro enquanto o cliente preenchia.
+        setEtapa(2)
+      }
+    })
+  }
+
+  const linkWhats = whatsapp ? `https://wa.me/55${whatsapp.replace(/\D/g, '')}` : null
 
   return (
     <div className="space-y-4">
@@ -349,16 +419,23 @@ export function CheckoutForm({
               </Alert>
             ) : null}
 
-            <Field label="Bairro" hint="A taxa de entrega depende do bairro.">
-              <Select value={bairro} onChange={(e) => setBairro(e.target.value)}>
-                <option value="">Escolha o bairro...</option>
-                {bairros.map((b) => (
-                  <option key={b.bairro} value={b.bairro}>
-                    {b.bairro} - {moeda(b.taxa)}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+            {porDistancia ? (
+              // Por distancia qualquer bairro serve: o que vale e o km.
+              <Field label="Bairro">
+                <Input value={bairro} onChange={(e) => setBairro(e.target.value)} />
+              </Field>
+            ) : (
+              <Field label="Bairro" hint="A taxa de entrega depende do bairro.">
+                <Select value={bairro} onChange={(e) => setBairro(e.target.value)}>
+                  <option value="">Escolha o bairro...</option>
+                  {bairros.map((b) => (
+                    <option key={b.bairro} value={b.bairro}>
+                      {b.bairro} - {moeda(b.taxa)}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
             <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
               <Field label="Rua">
                 <Input value={rua} onChange={(e) => setRua(e.target.value)} />
@@ -377,6 +454,25 @@ export function CheckoutForm({
             <Field label="Ponto de referencia">
               <Input value={referencia} onChange={(e) => setReferencia(e.target.value)} />
             </Field>
+
+            {porDistancia ? (
+              <p className="text-sm text-muted">
+                A taxa de entrega e calculada pela distancia ate o seu endereco, ao continuar.
+              </p>
+            ) : null}
+            {avisoEntrega ? (
+              <Alert tone="error">
+                {avisoEntrega}
+                {linkWhats ? (
+                  <>
+                    {' '}
+                    <a href={linkWhats} target="_blank" rel="noreferrer" className="font-bold underline">
+                      Chamar no WhatsApp
+                    </a>
+                  </>
+                ) : null}
+              </Alert>
+            ) : null}
           </>
         ) : null}
 
@@ -534,7 +630,13 @@ export function CheckoutForm({
                 <dd>{moeda(subtotal)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt>Taxa de entrega ({bairro})</dt>
+                <dt>
+                  {porDistancia && cotacaoValida
+                    ? `Entrega (${cotacaoValida.rotulo}${
+                        cotacaoValida.km !== undefined ? ` - ${kmTexto(cotacaoValida.km)} km` : ''
+                      })`
+                    : `Taxa de entrega (${bairro})`}
+                </dt>
                 <dd>{moeda(taxa)}</dd>
               </div>
               <div className="flex justify-between text-lg font-black">
@@ -579,10 +681,10 @@ export function CheckoutForm({
               type="button"
               size="lg"
               className="flex-1"
-              disabled={!podeAvancar}
-              onClick={() => setEtapa(etapa + 1)}
+              disabled={!podeAvancar || cotando}
+              onClick={continuar}
             >
-              Continuar
+              {cotando ? 'Calculando entrega...' : 'Continuar'}
             </Button>
           ) : confirmarPreco ? (
             <Button

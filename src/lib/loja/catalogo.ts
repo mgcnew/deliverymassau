@@ -16,6 +16,9 @@ export type ConfiguracaoPublica = {
   delivery_enabled: boolean
   delivery: EstadoDelivery
   delivery_hours: DiaHorario[]
+  /** Como a taxa e calculada: pelo bairro (lista) ou pela distancia (faixas de km). */
+  delivery_fee_mode?: 'bairro' | 'distancia'
+  delivery_bands?: Array<{ up_to_km: number; fee: number }>
   delivery_closed_message: string
   min_order_value: number
   pix_key: string | null

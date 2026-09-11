@@ -1,12 +1,19 @@
 import Link from 'next/link'
 
-import { BairrosAtendidos } from '@/components/loja/bairros-atendidos'
+import { BairrosAtendidos, FaixasDeEntrega } from '@/components/loja/bairros-atendidos'
 import { CampoBusca } from '@/components/loja/busca'
 import { CategoriasChips } from '@/components/loja/categorias-chips'
 import { GradeProdutos } from '@/components/loja/produto-card'
 import { RolarParaHash } from '@/components/loja/rolar-para-hash'
 import { Empty } from '@/components/ui/card'
-import { getBairrosAtendidos, getCategorias, getProdutosEmPromocao, getVitrine } from '@/lib/loja/catalogo'
+import { modoEfetivo } from '@/lib/entrega/cotar'
+import {
+  getBairrosAtendidos,
+  getCategorias,
+  getConfiguracaoPublica,
+  getProdutosEmPromocao,
+  getVitrine,
+} from '@/lib/loja/catalogo'
 
 /**
  * Quantos produtos cada categoria mostra na home antes do "ver todos".
@@ -16,11 +23,12 @@ import { getBairrosAtendidos, getCategorias, getProdutosEmPromocao, getVitrine }
 const POR_CATEGORIA = 12
 
 export default async function VitrinePage() {
-  const [categorias, vitrine, ofertas, bairros] = await Promise.all([
+  const [categorias, vitrine, ofertas, bairros, config] = await Promise.all([
     getCategorias(),
     getVitrine(POR_CATEGORIA),
     getProdutosEmPromocao({ limite: POR_CATEGORIA }),
     getBairrosAtendidos(),
+    getConfiguracaoPublica(),
   ])
 
   const secoes = categorias
@@ -72,7 +80,11 @@ export default async function VitrinePage() {
         ))
       )}
 
-      <BairrosAtendidos bairros={bairros} />
+      {modoEfetivo(config?.delivery_fee_mode) === 'distancia' ? (
+        <FaixasDeEntrega faixas={(config?.delivery_bands ?? []).map((f) => ({ up_to_km: Number(f.up_to_km), fee: Number(f.fee) }))} />
+      ) : (
+        <BairrosAtendidos bairros={bairros} />
+      )}
     </main>
   )
 }

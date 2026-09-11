@@ -1,3 +1,4 @@
+import { kmTexto } from '@/lib/entrega/faixas'
 import { moeda } from '@/lib/format'
 
 /**
@@ -58,6 +59,40 @@ export function BairrosAtendidos({ bairros }: { bairros: Array<{ bairro: string;
           </p>
         </div>
       </details>
+    </section>
+  )
+}
+
+/**
+ * "Onde entregamos" quando a taxa e por distancia: no lugar dos bairros, as
+ * faixas de km - e o que decide o preco. O km exato so aparece no checkout,
+ * depois do endereco.
+ */
+export function FaixasDeEntrega({ faixas }: { faixas: Array<{ up_to_km: number; fee: number }> }) {
+  if (!faixas.length) return null
+  const ordenadas = [...faixas].sort((a, b) => a.up_to_km - b.up_to_km)
+
+  return (
+    <section className="pt-2">
+      <div className="rounded-2xl border border-line bg-surface p-4">
+        <h2 className="text-lg font-black">Onde entregamos</h2>
+        <p className="text-sm text-muted">
+          Ate {kmTexto(ordenadas.at(-1)!.up_to_km)} km do mercado. A taxa depende da distancia:
+        </p>
+        <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {ordenadas.map((f, i) => (
+            <li key={f.up_to_km} className="rounded-xl bg-foreground/5 px-3 py-2">
+              <p className="text-xs text-muted">
+                {i === 0 ? 'Ate' : `${kmTexto(ordenadas[i - 1].up_to_km)} a`} {kmTexto(f.up_to_km)} km
+              </p>
+              <p className="font-black text-brand">{f.fee === 0 ? 'Gratis' : moeda(f.fee)}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs text-muted">
+          A distancia e a taxa exatas aparecem no fechamento do pedido.
+        </p>
+      </div>
     </section>
   )
 }

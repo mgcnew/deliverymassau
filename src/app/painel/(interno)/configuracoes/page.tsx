@@ -11,6 +11,7 @@ import {
   SecaoZonas,
   type ZonaComBairros,
 } from './secoes'
+import { TaxaEntrega, type ConfigTaxa } from './taxa-entrega'
 
 export const metadata = { title: 'Configuracoes | Mercado Massa 24h' }
 
@@ -26,6 +27,7 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps<'/pa
     { data: bairros },
     { data: estadoDelivery },
     { data: horarios },
+    { data: faixas },
   ] = await Promise.all([
       supabase.from('settings').select('*').eq('id', 1).maybeSingle(),
       supabase.from('payment_methods').select('code, label, is_active, brands').order('sort_order'),
@@ -33,6 +35,7 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps<'/pa
       supabase.from('zone_neighborhoods').select('id, name, zone_id').order('name'),
       supabase.rpc('delivery_estado'),
       supabase.from('delivery_hours').select('weekday, mode, opens_at, closes_at').order('weekday'),
+      supabase.from('delivery_distance_bands').select('up_to_km, fee').order('up_to_km'),
     ])
 
   // "08:00:00" do banco -> "08:00", como o <input type="time"> espera.
@@ -98,11 +101,33 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps<'/pa
     })
   }
 
-  if (pode(PERMISSIONS.configTaxaEntrega)) {
+  if (pode(PERMISSIONS.configTaxaEntrega) && config) {
+    const configTaxa: ConfigTaxa = {
+      modo: config.delivery_fee_mode === 'distancia' ? 'distancia' : 'bairro',
+      faixas: (faixas ?? []).map((f) => ({ up_to_km: Number(f.up_to_km), fee: Number(f.fee) })),
+      mercadoEndereco: config.market_address,
+      mercadoCidade: config.market_city,
+      lat: config.market_lat,
+      lng: config.market_lng,
+      // So o servidor conhece a chave: a tela recebe apenas se ela existe.
+      googleConfigurado: Boolean(process.env.GOOGLE_MAPS_API_KEY),
+    }
     abas.push({
+      // id mantido ("bairros") para os links antigos de ?aba= continuarem valendo.
       id: 'bairros',
-      rotulo: 'Bairros e taxas',
-      conteudo: <SecaoZonas zonas={zonasComBairros} />,
+      rotulo: 'Taxa de entrega',
+      conteudo: (
+        <>
+          <TaxaEntrega config={configTaxa} />
+          {configTaxa.modo === 'distancia' ? (
+            <p className="text-sm text-muted">
+              Cobrando por distancia, os bairros abaixo servem de reserva: quando o Google nao
+              consegue calcular um endereco, vale a taxa do bairro.
+            </p>
+          ) : null}
+          <SecaoZonas zonas={zonasComBairros} />
+        </>
+      ),
     })
   }
 

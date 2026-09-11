@@ -6,6 +6,8 @@ import { PERMISSIONS } from '@/lib/permissions'
 import { getStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { BUCKET_PRODUTOS } from '@/lib/supabase/storage'
+import { lerConfigEntrega, medirEndereco } from '@/lib/entrega/cotar'
+import { faixaPara } from '@/lib/entrega/faixas'
 import { paraNumero } from '@/lib/format'
 
 export type ConfigState = { erro?: string; ok?: string }
@@ -407,4 +409,114 @@ export async function removerBairro(id: string): Promise<ConfigState> {
 
   depois()
   return {}
+}
+
+// --- Taxa por distancia (migration 0041) ------------------------------------
+
+/** Por bairro (zonas) ou por distancia (faixas de km, Google). */
+export async function salvarModoTaxa(modo: 'bairro' | 'distancia'): Promise<ConfigState> {
+  const guard = await exigir(PERMISSIONS.configTaxaEntrega)
+  if (guard.erro) return guard
+
+  const supabase = await createClient()
+  if (modo === 'distancia') {
+    const { count } = await supabase
+      .from('delivery_distance_bands')
+      .select('id', { count: 'exact', head: true })
+    if (!count) return { erro: 'Cadastre pelo menos uma faixa de distancia antes de ativar.' }
+  }
+
+  const { data, error } = await supabase
+    .from('settings')
+    .update({ delivery_fee_mode: modo })
+    .eq('id', 1)
+    .select('id')
+  if (error) return { erro: error.message }
+  if (!data?.length) return { erro: BLOQUEADO }
+
+  depois()
+  return { ok: modo === 'distancia' ? 'Taxa por distancia ativada.' : 'Taxa por bairro ativada.' }
+}
+
+export type FaixaEntrada = { up_to_km: string; fee: string }
+
+/** A tabela inteira de faixas, gravada de uma vez (salvar_faixas_distancia). */
+export async function salvarFaixas(faixas: FaixaEntrada[]): Promise<ConfigState> {
+  const guard = await exigir(PERMISSIONS.configTaxaEntrega)
+  if (guard.erro) return guard
+
+  const limpas = faixas
+    .filter((f) => f.up_to_km.trim() || f.fee.trim())
+    .map((f) => ({ up_to_km: paraNumero(f.up_to_km), fee: paraNumero(f.fee) }))
+
+  for (const f of limpas) {
+    if (!Number.isFinite(f.up_to_km) || f.up_to_km <= 0 || f.up_to_km > 100) {
+      return { erro: 'Distancia invalida: use km entre 0,1 e 100.' }
+    }
+    if (!Number.isFinite(f.fee) || f.fee < 0) return { erro: 'Valor de taxa invalido.' }
+  }
+  const kms = limpas.map((f) => f.up_to_km)
+  if (new Set(kms).size !== kms.length) return { erro: 'Ha duas faixas com a mesma distancia.' }
+  if (limpas.length > 20) return { erro: 'No maximo 20 faixas.' }
+
+  const supabase = await createClient()
+  if (!limpas.length) {
+    const { data: config } = await supabase.from('settings').select('delivery_fee_mode').eq('id', 1).maybeSingle()
+    if (config?.delivery_fee_mode === 'distancia') {
+      return { erro: 'A taxa por distancia esta ativa: volte para "por bairro" antes de apagar todas as faixas.' }
+    }
+  }
+
+  const { error } = await supabase.rpc('salvar_faixas_distancia', { p_faixas: limpas })
+  if (error) return { erro: error.message.includes('SEM_PERMISSAO') ? BLOQUEADO : error.message }
+
+  depois()
+  return { ok: 'Faixas salvas.' }
+}
+
+/** Ponto de saida exato (opcional). Vazio = sai do endereco do mercado. */
+export async function salvarOrigem(lat: string, lng: string): Promise<ConfigState> {
+  const guard = await exigir(PERMISSIONS.configTaxaEntrega)
+  if (guard.erro) return guard
+
+  const vazio = !lat.trim() && !lng.trim()
+  const la = Number(lat.replace(',', '.'))
+  const lo = Number(lng.replace(',', '.'))
+  if (!vazio && (!Number.isFinite(la) || !Number.isFinite(lo) || Math.abs(la) > 90 || Math.abs(lo) > 180)) {
+    return { erro: 'Coordenadas invalidas. Ex.: -23,6721 e -46,7421.' }
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('settings')
+    .update({ market_lat: vazio ? null : la, market_lng: vazio ? null : lo })
+    .eq('id', 1)
+    .select('id')
+  if (error) return { erro: error.message }
+  if (!data?.length) return { erro: BLOQUEADO }
+
+  depois()
+  return { ok: vazio ? 'Saida pelo endereco do mercado.' : 'Ponto de saida salvo.' }
+}
+
+export type TesteEndereco = { erro?: string; km?: number; faixa?: { up_to_km: number; fee: number } | null }
+
+const MOTIVO_TESTE: Record<string, string> = {
+  'sem-chave': 'A chave do Google (GOOGLE_MAPS_API_KEY) ainda nao esta configurada no servidor.',
+  'sem-origem': 'Preencha o endereco do mercado (aba Mercado) ou as coordenadas do ponto de saida.',
+  'nao-encontrado': 'O Google nao encontrou este endereco.',
+  impreciso: 'O Google so achou o endereco aproximado (sem o numero). No checkout, cairia na taxa do bairro.',
+  'sem-rota': 'O Google nao encontrou rota de carro ate este endereco.',
+  erro: 'O Google nao respondeu. Confira a chave e as cotas no Google Cloud.',
+}
+
+/** "Testar endereco": mostra km e faixa sem gravar cotacao. Conta na cota do Google. */
+export async function testarEndereco(rua: string, numero: string, bairro: string): Promise<TesteEndereco> {
+  const guard = await exigir(PERMISSIONS.configTaxaEntrega)
+  if (guard.erro) return { erro: guard.erro }
+  if (!rua.trim() || !numero.trim() || !bairro.trim()) return { erro: 'Preencha rua, numero e bairro.' }
+
+  const [rota, { faixas }] = await Promise.all([medirEndereco({ rua, numero, bairro }), lerConfigEntrega()])
+  if (!rota.ok) return { erro: MOTIVO_TESTE[rota.motivo] ?? 'Nao foi possivel calcular.' }
+  return { km: rota.km, faixa: faixaPara(rota.km, faixas) }
 }
