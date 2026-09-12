@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { FileUp, ListChecks, Tags } from 'lucide-react'
+import { ClipboardCheck, FileUp, ListChecks, Tags } from 'lucide-react'
 
 import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
@@ -88,6 +88,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
     staff.permissions.has(PERMISSIONS.produtosEditar) ||
     staff.permissions.has(PERMISSIONS.produtosDesativar) ||
     staff.permissions.has(PERMISSIONS.produtosExcluir)
+  const podeConferir = staff.permissions.has(PERMISSIONS.conferenciaRealizar)
   // Esta lista, exatamente como esta (filtro, busca, categoria, pagina): vai
   // junto para a edicao e e para ela que o salvar volta.
   const aqui = link({ p: String(pagina) })
@@ -115,6 +116,16 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
                       rotulo: 'Editar em lote',
                       descricao: 'Precos, nomes e exclusao de varios de uma vez',
                       icone: <ListChecks size={18} aria-hidden />,
+                    },
+                  ]
+                : []),
+              ...(podeConferir
+                ? [
+                    {
+                      href: '/painel/produtos/conferencia',
+                      rotulo: 'Conferencia de estoque',
+                      descricao: 'Bipar a prateleira para saber o que a loja tem mesmo',
+                      icone: <ClipboardCheck size={18} aria-hidden />,
                     },
                   ]
                 : []),

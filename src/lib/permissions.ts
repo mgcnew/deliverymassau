@@ -22,6 +22,9 @@ export const PERMISSIONS = {
   produtosAlterarDisponibilidade: 'produtos.alterar_disponibilidade',
   categoriasGerenciar: 'categorias.gerenciar',
 
+  conferenciaRealizar: 'conferencia.realizar',
+  conferenciaAplicar: 'conferencia.aplicar',
+
   entregasVer: 'entregas.ver',
   entregasVerTodas: 'entregas.ver_todas',
   entregasAssumir: 'entregas.assumir',

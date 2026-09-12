@@ -23,3 +23,24 @@ export function variantesDoCodigo(texto: string): string[] {
   }
   return [...variantes]
 }
+
+/**
+ * Chave de comparacao do codigo: digitos sem os zeros a esquerda.
+ *
+ * Mesma regra de variantesDoCodigo, do lado de ca. Enquanto aquela ABRE um
+ * codigo em todas as grafias possiveis para procurar no banco, esta FECHA
+ * cada codigo numa forma so - o que permite indexar o catalogo inteiro num
+ * Map na memoria do aparelho e resolver a bipada sem ir ao servidor. E o que
+ * faz a conferencia funcionar no corredor sem sinal.
+ *
+ * As duas precisam concordar: se aqui o "0070847022015" e o "70847022015"
+ * caem na mesma chave, la eles se acham pela mesma razao.
+ *
+ * Devolve null quando o texto nao parece codigo de barras - inclusive o que
+ * a camera le de QR code e Code-128, que sao texto livre.
+ */
+export function chaveDoCodigo(texto: string): string | null {
+  const codigo = texto.replace(/\s/g, '')
+  if (!/^\d{8,14}$/.test(codigo)) return null
+  return codigo.replace(/^0+/, '') || '0'
+}
