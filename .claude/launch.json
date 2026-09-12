@@ -5,6 +5,7 @@
       "name": "massa24h",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+      "autoPort": true,
       "port": 3000
     }
   ]
