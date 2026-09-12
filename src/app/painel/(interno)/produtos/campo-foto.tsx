@@ -5,6 +5,7 @@ import { Camera, ImagePlus, Link2, Loader2 } from 'lucide-react'
 
 import { Input } from '@/components/ui/field'
 import { comprimirImagem } from '@/lib/produtos/comprimir-imagem'
+import { LinkImagens } from './link-imagens'
 
 /**
  * Tres jeitos de por foto no produto, porque sao tres situacoes diferentes:
@@ -26,9 +27,12 @@ import { comprimirImagem } from '@/lib/produtos/comprimir-imagem'
  */
 export function CampoFoto({
   imagemAtualUrl,
+  nome,
   disabled,
 }: {
   imagemAtualUrl: string | null
+  /** Nome como esta no formulario agora, para a busca de imagem sair certa. */
+  nome: string
   disabled?: boolean
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -182,11 +186,14 @@ export function CampoFoto({
         />
       </div>
 
-      <p className="text-sm text-muted">
-        {colou
-          ? 'Imagem colada da area de transferencia.'
-          : 'JPG, PNG ou WEBP de ate 3 MB. Voce tambem pode copiar a imagem e apertar Ctrl+V.'}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-x-4">
+        <p className="text-sm text-muted">
+          {colou
+            ? 'Imagem colada da area de transferencia.'
+            : 'JPG, PNG ou WEBP de ate 3 MB. Voce tambem pode copiar a imagem e apertar Ctrl+V.'}
+        </p>
+        <LinkImagens termo={nome}>Procurar pelo nome</LinkImagens>
+      </div>
 
       {/* Input real: e o que o Server Action le em formData.get('imagem'). */}
       <input

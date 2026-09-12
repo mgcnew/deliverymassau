@@ -6,6 +6,7 @@ import { Barcode } from 'lucide-react'
 import { Input } from '@/components/ui/field'
 import { LeitorCodigoBarras, useLeitorDisponivel } from '@/components/ui/leitor-codigo-barras'
 import { verificarCodigoBarras } from './actions'
+import { LinkImagens } from './link-imagens'
 
 export function CampoCodigoBarras({
   produtoId,
@@ -64,11 +65,18 @@ export function CampoCodigoBarras({
         ) : null}
       </div>
 
-      {!suportado ? (
-        <p className="text-sm text-muted">
-          Leitura por camera nao disponivel neste navegador. Digite o codigo manualmente.
-        </p>
-      ) : null}
+      <div className="flex flex-wrap items-center justify-between gap-x-4">
+        {!suportado ? (
+          <p className="text-sm text-muted">
+            Leitura por camera nao disponivel neste navegador. Digite o codigo manualmente.
+          </p>
+        ) : (
+          <span />
+        )}
+        {/* Buscar pelo codigo acha a embalagem exata, com o gramagem certa -
+            pelo nome vem o produto da linha, as vezes de outro tamanho. */}
+        <LinkImagens termo={valor}>Procurar imagem por este codigo</LinkImagens>
+      </div>
 
       {duplicado ? (
         <p className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">

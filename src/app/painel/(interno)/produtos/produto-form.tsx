@@ -51,6 +51,7 @@ export function ProdutoForm({
   emAbas?: { inicial: string; extras?: Aba[] }
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(salvarProduto, {})
+  const [nome, setNome] = useState(valores.name)
   const [porPeso, setPorPeso] = useState(valores.sold_by_weight)
   const [unidade, setUnidade] = useState<UnitType>(valores.unit_type)
 
@@ -97,7 +98,15 @@ export function ProdutoForm({
   const secaoDados = (
     <>
       <Field label="Nome">
-        <Input name="name" defaultValue={valores.name} required disabled={somenteLeitura} />
+        {/* Controlado por causa do atalho de buscar imagem na aba da foto: ele
+            precisa do nome como esta AGORA, nao do que veio do banco. */}
+        <Input
+          name="name"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          required
+          disabled={somenteLeitura}
+        />
       </Field>
 
       <Field label="Categoria">
@@ -222,7 +231,7 @@ export function ProdutoForm({
 
   const secaoFoto = (
     <>
-      <CampoFoto imagemAtualUrl={valores.imagemUrl} disabled={somenteLeitura} />
+      <CampoFoto imagemAtualUrl={valores.imagemUrl} nome={nome} disabled={somenteLeitura} />
       <CampoCodigoBarras
         produtoId={valores.id}
         defaultValue={valores.barcode}
