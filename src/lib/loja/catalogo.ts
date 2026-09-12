@@ -4,8 +4,29 @@ import { cache } from 'react'
 
 import type { DiaHorario, EstadoDelivery } from '@/lib/horario'
 
+import { normalizarBusca } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import type { UnitType } from '@/lib/types'
+
+/**
+ * Filtro de busca por nome, para a vitrine e para a busca do cliente.
+ *
+ * Compara pelo nome normalizado (coluna gerada, 0049) e nao pelo nome cru: o
+ * cadastro veio do PDV sem acento, entao "café" no ilike do nome original
+ * achava zero produto enquanto "cafe" achava 43. Normalizando os dois lados,
+ * tanto faz como o cliente escreve.
+ *
+ * `like` e nao `ilike` porque a coluna ja e minuscula - e assim o indice
+ * trigrama e usado de verdade. O termo normalizado so tem letra, numero e
+ * espaco, entao nao ha curinga para escapar.
+ */
+function comBusca<T extends { like: (coluna: string, padrao: string) => T }>(
+  query: T,
+  busca: string | undefined,
+): T {
+  const termo = normalizarBusca(busca ?? '')
+  return termo ? query.like('name_normalized', `%${termo}%`) : query
+}
 
 export type ConfiguracaoPublica = {
   market_name: string
@@ -130,7 +151,7 @@ export const getProdutosPaginados = cache(
       .range(de, de + opcoes.porPagina - 1)
 
     if (opcoes.categoriaId) query = query.eq('category_id', opcoes.categoriaId)
-    if (opcoes.busca) query = query.ilike('name', `%${opcoes.busca}%`)
+    query = comBusca(query, opcoes.busca)
 
     const { data, count } = await query
     return { itens: (data ?? []) as ProdutoVitrine[], total: count ?? 0 }
@@ -149,7 +170,7 @@ export const getProdutos = cache(
       .order('name')
 
     if (opcoes?.categoriaId) query = query.eq('category_id', opcoes.categoriaId)
-    if (opcoes?.busca) query = query.ilike('name', `%${opcoes.busca}%`)
+    query = comBusca(query, opcoes?.busca)
     if (opcoes?.limite) query = query.limit(opcoes.limite)
 
     const { data } = await query

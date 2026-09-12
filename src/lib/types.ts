@@ -69,6 +69,11 @@ export type Product = {
   is_available: boolean
   sort_order: number
   barcode: string | null
+  /**
+   * Derivada pelo banco a partir de name (coluna gerada, 0049). So existe para
+   * a busca comparar sem acento - nao se escreve nela, e ninguem precisa ler.
+   */
+  name_normalized?: string
 }
 
 export type DeliveryZone = {
