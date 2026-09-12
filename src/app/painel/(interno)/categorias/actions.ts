@@ -119,3 +119,39 @@ export async function moverCategoria(id: string, direcao: 'cima' | 'baixo'): Pro
   revalidatePath('/painel/categorias')
   return {}
 }
+
+/**
+ * Exclui a categoria - so a que nao tem produto nenhum.
+ *
+ * Nao ha checagem de contagem aqui de proposito: quem garante e o
+ * ON DELETE RESTRICT de products.category_id, no banco. Contar antes seria
+ * uma segunda verdade, e entre a contagem e o delete alguem pode ter movido
+ * um produto para ca. A tela esconde o botao quando ha produto; o banco e
+ * quem recusa.
+ *
+ * Categoria com produto se resolve desativando (sai da loja, o cadastro
+ * fica) ou movendo os produtos antes - nao apagando junto.
+ */
+export async function excluirCategoria(id: string): Promise<FormState> {
+  const guard = await exigirGerenciar()
+  if (guard.error) return guard
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('categories').delete().eq('id', id).select('id')
+
+  if (error) {
+    // 23503 = a chave estrangeira barrou: ainda ha produto apontando para ca.
+    if (error.code === '23503') {
+      return {
+        error: 'Esta categoria ainda tem produtos. Mova os produtos ou desative a categoria.',
+      }
+    }
+    return { error: error.message }
+  }
+  if (!data?.length) return { error: BLOQUEADO }
+
+  revalidatePath('/painel/categorias')
+  revalidatePath('/painel/produtos')
+  revalidatePath('/loja')
+  return {}
+}

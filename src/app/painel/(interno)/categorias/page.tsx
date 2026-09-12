@@ -12,17 +12,24 @@ export default async function CategoriasPage() {
   const podeGerenciar = staff.permissions.has(PERMISSIONS.categoriasGerenciar)
   const supabase = await createClient()
 
-  const [{ data: categorias }, { data: produtos }] = await Promise.all([
-    supabase.from('categories').select('id, name, is_active, sort_order').order('sort_order').order('name'),
-    supabase.from('products').select('category_id'),
-  ])
+  // A contagem vem do banco agregada, e nao de baixar products para contar
+  // aqui: sao 5 mil linhas, o PostgREST corta a resposta num teto e a soma
+  // sairia menor que a verdade. Aqui isso importa mais que em outras telas -
+  // e este numero que decide se a categoria pode ser excluida.
+  const { data: categorias } = await supabase
+    .from('categories')
+    .select('id, name, is_active, sort_order, products(count)')
+    .order('sort_order')
+    .order('name')
 
-  const contagem = new Map<string, number>()
-  for (const p of produtos ?? []) {
-    contagem.set(p.category_id, (contagem.get(p.category_id) ?? 0) + 1)
-  }
-
-  const lista = categorias ?? []
+  const lista = (categorias ?? []) as Array<{
+    id: string
+    name: string
+    is_active: boolean
+    sort_order: number
+    products: Array<{ count: number }> | null
+  }>
+  const contagem = new Map(lista.map((c) => [c.id, c.products?.[0]?.count ?? 0]))
 
   return (
     <div className="w-full space-y-4">

@@ -1,12 +1,14 @@
 'use client'
 
 import { useActionState, useState, useTransition } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button, buttonClass } from '@/components/ui/button'
+import { ConfirmarAcao } from '@/components/ui/confirmar-acao'
 import { Input } from '@/components/ui/field'
 import {
   alternarCategoriaAtiva,
+  excluirCategoria,
   moverCategoria,
   renomearCategoria,
   type FormState,
@@ -92,6 +94,26 @@ export function LinhaCategoria({
           >
             {ativa ? 'Desativar' : 'Ativar'}
           </Button>
+
+          {/* Excluir so aparece na categoria sem produto. Com produto, o
+              caminho e desativar (sai da loja, o cadastro fica) ou mover os
+              produtos - e o banco recusa de qualquer forma. */}
+          {produtos === 0 ? (
+            <ConfirmarAcao
+              titulo={`Excluir "${nome}"`}
+              descricao="A categoria nao tem nenhum produto, entao nada do catalogo se perde. Nao da para desfazer."
+              rotuloConfirmar="Excluir"
+              className={buttonClass('ghost', 'md', 'text-muted')}
+              aria-label={`Excluir categoria ${nome}`}
+              onConfirmar={async () => {
+                const r = await excluirCategoria(id)
+                // ConfirmarAcao fala "erro"; as acoes daqui falam "error".
+                if (r.error) return { erro: r.error }
+              }}
+            >
+              <Trash2 size={18} aria-hidden />
+            </ConfirmarAcao>
+          ) : null}
         </div>
       ) : null}
 
