@@ -70,6 +70,12 @@ export type Product = {
   sort_order: number
   barcode: string | null
   /**
+   * A conferencia nunca tira este produto do catalogo: pao da padaria,
+   * fatiados, hortifruti. Nao diz nada sobre estar disponivel agora - isso
+   * segue em is_available, na mao de quem esta no balcao.
+   */
+  always_stocked: boolean
+  /**
    * Derivada pelo banco a partir de name (coluna gerada, 0049). So existe para
    * a busca comparar sem acento - nao se escreve nela, e ninguem precisa ler.
    */

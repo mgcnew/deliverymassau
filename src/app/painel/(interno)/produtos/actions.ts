@@ -56,6 +56,31 @@ export async function alternarDisponibilidade(id: string, disponivel: boolean): 
   return {}
 }
 
+/**
+ * "Sempre tem": a conferencia deixa de tirar este produto do catalogo.
+ *
+ * Exige produtos.editar e nao alterar_disponibilidade, apesar de parecer
+ * assunto de estoque: e decisao de cadastro, de quem monta o catalogo, e vale
+ * para sempre. O que o balcao decide todo dia continua sendo "acabou"/"voltou".
+ */
+export async function alternarSempreTem(id: string, sempre: boolean): Promise<FormState> {
+  const guard = await exigir(PERMISSIONS.produtosEditar)
+  if (guard.error) return guard
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('products')
+    .update({ always_stocked: sempre })
+    .eq('id', id)
+    .select('id')
+  if (error) return { error: error.message }
+  if (!data?.length) return { error: BLOQUEADO }
+
+  revalidatePath('/painel/produtos')
+  revalidatePath(`/painel/produtos/${id}`)
+  return {}
+}
+
 export async function alternarAtivo(id: string, ativo: boolean): Promise<FormState> {
   const guard = await exigir(PERMISSIONS.produtosDesativar)
   if (guard.error) return guard

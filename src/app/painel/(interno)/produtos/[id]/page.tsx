@@ -62,10 +62,12 @@ export default async function ProdutoPage({
                     id={produto.id}
                     ativo={produto.is_active}
                     disponivel={produto.is_available}
+                    sempreTem={produto.always_stocked}
                     podeDesativar={staff.permissions.has(PERMISSIONS.produtosDesativar)}
                     podeAlterarDisponibilidade={staff.permissions.has(
                       PERMISSIONS.produtosAlterarDisponibilidade,
                     )}
+                    podeEditar={staff.permissions.has(PERMISSIONS.produtosEditar)}
                     podeExcluir={staff.permissions.has(PERMISSIONS.produtosExcluir)}
                     jaVendeu={(vendas ?? 0) > 0}
                   />

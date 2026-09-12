@@ -20,6 +20,7 @@ export type Edicao = {
   original_price?: string
   category_id?: string
   is_active?: boolean
+  always_stocked?: boolean
 }
 
 export type Rascunho = {
@@ -102,6 +103,7 @@ export function valorAtual(r: { base: ProdutoLote; mudar: Edicao }) {
     original_price: r.mudar.original_price ?? escreverPreco(r.base.original_price),
     category_id: r.mudar.category_id ?? r.base.category_id,
     is_active: r.mudar.is_active ?? r.base.is_active,
+    always_stocked: r.mudar.always_stocked ?? r.base.always_stocked,
   }
 }
 
@@ -165,6 +167,10 @@ export function paraItem(id: string, r: Rascunho): ItemLote {
   if (r.mudar.is_active !== undefined) {
     esperado.is_active = r.base.is_active
     mudar.is_active = r.mudar.is_active
+  }
+  if (r.mudar.always_stocked !== undefined) {
+    esperado.always_stocked = r.base.always_stocked
+    mudar.always_stocked = r.mudar.always_stocked
   }
   return { id, esperado, mudar }
 }

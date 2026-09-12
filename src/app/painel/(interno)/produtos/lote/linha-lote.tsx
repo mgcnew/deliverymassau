@@ -77,6 +77,10 @@ export function LinhaLote({
           {produto.barcode ? <span>{produto.barcode}</span> : null}
           {!v.is_active && !mudou('is_active') ? <Selo>inativo</Selo> : null}
           {mudou('is_active') ? <Selo forte>{v.is_active ? 'reativar' : 'inativar'}</Selo> : null}
+          {v.always_stocked && !mudou('always_stocked') ? <Selo>sempre tem</Selo> : null}
+          {mudou('always_stocked') ? (
+            <Selo forte>{v.always_stocked ? 'sempre tem' : 'nao sempre'}</Selo>
+          ) : null}
           {excluir ? <Selo perigo>excluir</Selo> : null}
         </p>
       </div>

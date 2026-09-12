@@ -15,6 +15,7 @@ export type ProdutoLote = {
   original_price: number | null
   category_id: string
   is_active: boolean
+  always_stocked: boolean
   barcode: string | null
 }
 
@@ -25,6 +26,7 @@ export type CamposLote = {
   original_price: number | null
   category_id: string
   is_active: boolean
+  always_stocked: boolean
 }
 
 export type ItemLote = {
@@ -64,7 +66,7 @@ export async function buscarProdutosLote(
   const supabase = await createClient()
   let query = supabase
     .from('products')
-    .select('id, name, price, original_price, category_id, is_active, barcode', { count: 'exact' })
+    .select('id, name, price, original_price, category_id, is_active, always_stocked, barcode', { count: 'exact' })
     .order('name')
     .limit(LIMITE_BUSCA)
 
@@ -83,6 +85,7 @@ export async function buscarProdutosLote(
       original_price: p.original_price === null ? null : Number(p.original_price),
       category_id: p.category_id,
       is_active: p.is_active,
+      always_stocked: p.always_stocked,
       barcode: p.barcode,
     })),
     total: count ?? 0,

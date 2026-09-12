@@ -5,22 +5,31 @@ import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
 import { ConfirmarAcao } from '@/components/ui/confirmar-acao'
-import { alternarAtivo, alternarDisponibilidade, excluirProduto } from '../actions'
+import {
+  alternarAtivo,
+  alternarDisponibilidade,
+  alternarSempreTem,
+  excluirProduto,
+} from '../actions'
 
 export function EstadoProduto({
   id,
   ativo,
   disponivel,
+  sempreTem,
   podeDesativar,
   podeAlterarDisponibilidade,
+  podeEditar,
   podeExcluir,
   jaVendeu,
 }: {
   id: string
   ativo: boolean
   disponivel: boolean
+  sempreTem: boolean
   podeDesativar: boolean
   podeAlterarDisponibilidade: boolean
+  podeEditar: boolean
   podeExcluir: boolean
   /** Produto que ja saiu em pedido nao pode ser apagado - so desativado. */
   jaVendeu: boolean
@@ -48,6 +57,31 @@ export function EstadoProduto({
           }
         >
           {disponivel ? 'Marcar que acabou' : 'Marcar como disponivel'}
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+        <div className="min-w-0">
+          <p className="font-semibold">Sempre tem</p>
+          <p className="text-sm text-muted">
+            {sempreTem
+              ? 'A conferencia de estoque nunca tira este produto do catalogo. Quando acabar, marque acima.'
+              : 'Para o que a loja sempre trabalha e e reposto no dia: pao, fatiados, hortifruti. A conferencia deixa de exigir que ele seja bipado.'}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant={sempreTem ? 'secondary' : 'primary'}
+          disabled={!podeEditar || transicao}
+          onClick={() =>
+            startTransition(async () => {
+              const r = await alternarSempreTem(id, !sempreTem)
+              setErro(r.error ?? null)
+              if (!r.error) router.refresh()
+            })
+          }
+        >
+          {sempreTem ? 'Deixar de marcar' : 'Marcar "sempre tem"'}
         </Button>
       </div>
 

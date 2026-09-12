@@ -114,7 +114,10 @@ export function EdicaoEmLote({
     guardar(proximos, [id])
   }
 
-  function emGrupo(acao: 'inativar' | 'reativar' | 'excluir') {
+  // "sempre tem" entra aqui, e nao numa coluna da linha: a linha ja divide
+  // espaco com nome, categoria e dois precos, e o caso de uso e marcar uma
+  // categoria inteira de uma vez (filtra Padaria, seleciona tudo, marca).
+  function emGrupo(acao: 'inativar' | 'reativar' | 'excluir' | 'sempre' | 'nao-sempre') {
     const proximos = { ...rascunhos }
     const ids = [...selecionados]
     for (const id of ids) {
@@ -124,7 +127,12 @@ export function EdicaoEmLote({
       const r: Rascunho =
         acao === 'excluir'
           ? { ...atual, excluir: true }
-          : { ...atual, mudar: aplicarEdicao(atual.base, atual.mudar, 'is_active', acao === 'reativar') }
+          : acao === 'sempre' || acao === 'nao-sempre'
+            ? {
+                ...atual,
+                mudar: aplicarEdicao(atual.base, atual.mudar, 'always_stocked', acao === 'sempre'),
+              }
+            : { ...atual, mudar: aplicarEdicao(atual.base, atual.mudar, 'is_active', acao === 'reativar') }
       comRascunho(proximos, id, r)
     }
     guardar(proximos, ids)
@@ -140,7 +148,17 @@ export function EdicaoEmLote({
 
   // --- Salvar --------------------------------------------------------------
 
-  const resumo = { precos: 0, ofertas: 0, nomes: 0, categorias: 0, inativar: 0, reativar: 0, excluir: 0 }
+  const resumo = {
+    precos: 0,
+    ofertas: 0,
+    nomes: 0,
+    categorias: 0,
+    inativar: 0,
+    reativar: 0,
+    sempre: 0,
+    naoSempre: 0,
+    excluir: 0,
+  }
   for (const r of Object.values(rascunhos)) {
     if (r.excluir) {
       resumo.excluir++
@@ -152,6 +170,8 @@ export function EdicaoEmLote({
     if (r.mudar.category_id !== undefined) resumo.categorias++
     if (r.mudar.is_active === false) resumo.inativar++
     if (r.mudar.is_active === true) resumo.reativar++
+    if (r.mudar.always_stocked === true) resumo.sempre++
+    if (r.mudar.always_stocked === false) resumo.naoSempre++
   }
 
   function revisar() {
@@ -373,6 +393,16 @@ export function EdicaoEmLote({
               </Button>
             </>
           ) : null}
+          {podeEditar ? (
+            <>
+              <Button type="button" variant="secondary" onClick={() => emGrupo('sempre')}>
+                Sempre tem
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => emGrupo('nao-sempre')}>
+                Nao sempre
+              </Button>
+            </>
+          ) : null}
           {podeExcluir ? (
             <Button type="button" variant="danger" onClick={() => emGrupo('excluir')}>
               Excluir
@@ -476,6 +506,8 @@ export function EdicaoEmLote({
           {resumo.categorias ? <li>{resumo.categorias} troca(s) de categoria</li> : null}
           {resumo.inativar ? <li>{resumo.inativar} para inativar</li> : null}
           {resumo.reativar ? <li>{resumo.reativar} para reativar</li> : null}
+          {resumo.sempre ? <li>{resumo.sempre} para marcar &quot;sempre tem&quot;</li> : null}
+          {resumo.naoSempre ? <li>{resumo.naoSempre} para deixar de marcar &quot;sempre tem&quot;</li> : null}
           {resumo.excluir ? (
             <li className="font-semibold text-[var(--tone-error-fg)]">
               {resumo.excluir} para excluir - os que ja venderam sao desativados, nao apagados
