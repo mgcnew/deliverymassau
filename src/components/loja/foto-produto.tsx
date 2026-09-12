@@ -3,21 +3,24 @@ import Image from 'next/image'
 /**
  * Foto do produto dentro de um quadro de proporcao fixa.
  *
- * O problema: as fotos do catalogo vem de todo jeito - foto de estudio
- * quadrada do fornecedor, foto vertical tirada no celular no proprio
- * mercado. Preenchendo o quadro (object-cover), foto vertical perde topo e
- * base: some o gargalo da garrafa, some a marca do pacote. Cabendo inteira
- * (object-contain), nada se perde, mas sobram faixas mortas dos lados.
+ * O problema: as fotos do catalogo vem de todo jeito. Medindo o acervo, a
+ * proporcao vai de 0,37 (embalagem alta e estreita) a 1,42, e so 58% sao
+ * quadradas - nenhuma proporcao de quadro serve para todas. Preenchendo o
+ * quadro (object-cover), a embalagem alta perde quase tudo. Cabendo inteira
+ * (object-contain), nada se perde, mas sobra faixa em volta.
  *
- * A saida e mostrar a foto inteira por cima e preencher o resto com a
- * PROPRIA foto, desfocada. Nada e cortado, o quadro nunca fica com buraco
- * cinza, e a cor do fundo combina sempre com o produto.
+ * A saida nao e escolher entre cortar e sobrar: e fazer a sobra desaparecer.
+ * As fotos sao de estudio sobre branco puro (as bordas medem 255,255,255),
+ * entao o quadro tambem e branco - nos dois temas, ver --foto. A foto se
+ * funde com a chapa e o limite entre uma e outra some.
  *
- * As duas camadas usam a mesma URL e o mesmo `sizes` de proposito: o
- * navegador baixa um arquivo so e desenha duas vezes.
- *
- * Quem chama precisa ser `relative` e `overflow-hidden` - o desfoque sangra
- * alem da borda (por causa do scale) e precisa ser aparado ali.
+ * Antes havia aqui uma copia desfocada da propria foto preenchendo a sobra.
+ * A ideia era boa e resolvia a minoria de fotos que nao tem fundo branco (as
+ * tiradas no proprio mercado), mas cobrava caro pelo resto: desenhava a
+ * imagem duas vezes, e o desfoque puxava transparencia de fora da borda, o
+ * que sujava a faixa de cinza justamente nas fotos brancas - a maioria. Uma
+ * chapa branca acerta a maioria sem efeito nenhum, e deixa a minoria como
+ * "foto sobre fundo branco", que e o normal de catalogo.
  */
 export function FotoProduto({
   src,
@@ -28,19 +31,5 @@ export function FotoProduto({
   sizes: string
   priority?: boolean
 }) {
-  return (
-    <>
-      <Image
-        src={src}
-        alt=""
-        fill
-        sizes={sizes}
-        aria-hidden
-        // scale-110: sem a folga, o desfoque revela as bordas transparentes
-        // da propria imagem e aparece uma moldura clara em volta.
-        className="scale-110 object-cover opacity-60 blur-lg"
-      />
-      <Image src={src} alt="" fill sizes={sizes} priority={priority} className="object-contain" />
-    </>
-  )
+  return <Image src={src} alt="" fill sizes={sizes} priority={priority} className="object-contain" />
 }

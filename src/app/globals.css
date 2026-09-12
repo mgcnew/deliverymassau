@@ -23,6 +23,17 @@
   --brand-foreground: #ffffff;
   --brand-ink: #bb1824;
 
+  /* Chapa da foto de produto: branca NOS DOIS TEMAS, de proposito.
+     As fotos do catalogo sao de estudio sobre branco puro - medi as bordas e
+     dao 255,255,255. Qualquer fundo diferente disso, inclusive um cinza de
+     4%, cria uma emenda visivel em volta da foto, porque a foto quase nunca
+     tem a mesma proporcao do quadro. Com a chapa branca a foto se funde com
+     ela e o limite some.
+     --foto-ink e a tinta que continua legivel ali: a chapa nao acompanha o
+     tema, entao selo e icone sobre ela nao podem usar --foreground. */
+  --foto: #ffffff;
+  --foto-ink: #14141a;
+
   --tone-info-bg: #eff6ff;
   --tone-info-fg: #1e3a8a;
   --tone-info-border: #bfdbfe;
@@ -72,6 +83,8 @@
   --color-brand-strong: var(--brand-strong);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-ink: var(--brand-ink);
+  --color-foto: var(--foto);
+  --color-foto-ink: var(--foto-ink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

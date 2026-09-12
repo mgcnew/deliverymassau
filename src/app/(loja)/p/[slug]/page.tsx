@@ -55,7 +55,7 @@ export default async function ProdutoPage({ params }: PageProps<'/p/[slug]'>) {
       </LinkVoltar>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-2xl border border-line bg-foreground/[0.04]">
+        <div className="relative aspect-square overflow-hidden rounded-2xl border border-line bg-foto">
           {imagem ? (
             <FotoProduto src={imagem} sizes="(max-width: 640px) 100vw, 50vw" priority />
           ) : (

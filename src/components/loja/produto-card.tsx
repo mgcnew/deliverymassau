@@ -30,7 +30,7 @@ export function ProdutoCard({
         mercado com milhares de itens. A pagina do produto (/p/[slug]) segue
         com a imagem quadrada, grande, para decidir a compra.
       */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-foreground/[0.04]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-foto">
         {/* A foto tambem abre o produto, mas fora da ordem do teclado: o link
             do nome logo abaixo ja leva ao mesmo lugar. */}
         <Link
@@ -42,14 +42,14 @@ export function ProdutoCard({
           {imagem ? (
             <FotoProduto src={imagem} sizes={sizes} />
           ) : (
-            <span className="flex size-full items-center justify-center text-muted">
+            <span className="flex size-full items-center justify-center text-foto-ink/35">
               <IconeCategoria slug={categoriaSlug} size={36} strokeWidth={1.5} />
             </span>
           )}
         </Link>
 
         {indisponivel ? (
-          <span className="absolute left-2 top-2 rounded-full bg-foreground px-2.5 py-1 text-xs font-bold text-background">
+          <span className="absolute left-2 top-2 rounded-full bg-foto-ink px-2.5 py-1 text-xs font-bold text-foto">
             Acabou
           </span>
         ) : oferta ? (
