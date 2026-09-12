@@ -75,7 +75,7 @@ export function CampoCodigoBarras({
         )}
         {/* Buscar pelo codigo acha a embalagem exata, com o gramagem certa -
             pelo nome vem o produto da linha, as vezes de outro tamanho. */}
-        <LinkImagens termo={valor}>Procurar imagem por este codigo</LinkImagens>
+        <LinkImagens termo={valor}>Procurar pelo codigo</LinkImagens>
       </div>
 
       {duplicado ? (
