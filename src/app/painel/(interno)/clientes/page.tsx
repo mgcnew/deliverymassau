@@ -4,7 +4,7 @@ import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardTitle, Empty } from '@/components/ui/card'
-import { dataHora, moeda, telefone } from '@/lib/format'
+import { dataHora, moeda, normalizarBusca, telefone } from '@/lib/format'
 
 export const metadata = { title: 'Clientes | Mercado Massa 24h' }
 
@@ -22,9 +22,17 @@ export default async function ClientesPage({ searchParams }: PageProps<'/painel/
     .limit(100)
 
   // Telefone e a referencia principal: busca por digitos cai direto nele.
+  // Por nome, compara pela coluna normalizada (0050): o cliente se cadastra
+  // como "João" e quem procura no balcao, com o telefone no ombro, digita
+  // "Joao". `like` e nao `ilike` porque a coluna ja e minuscula.
   if (busca) {
     const digitos = busca.replace(/\D/g, '')
-    query = digitos.length >= 3 ? query.ilike('phone', `%${digitos}%`) : query.ilike('name', `%${busca}%`)
+    if (digitos.length >= 3) {
+      query = query.ilike('phone', `%${digitos}%`)
+    } else {
+      const nome = normalizarBusca(busca)
+      if (nome) query = query.like('name_normalized', `%${nome}%`)
+    }
   }
 
   const { data: clientes } = await query
