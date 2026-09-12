@@ -3,11 +3,13 @@
 import { useActionState, useRef, useState, type FormEvent } from 'react'
 
 import { Abas, type Aba } from '@/components/ui/abas'
+import { Selecao } from '@/components/ui/selecao'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/card'
-import { Field, Input, Select, Textarea } from '@/components/ui/field'
+import { Field, Input, Textarea } from '@/components/ui/field'
 import { CampoCodigoBarras } from './campo-codigo-barras'
 import { CampoFoto } from './campo-foto'
+import { UNIT_LABEL } from '@/lib/format'
 import type { UnitType } from '@/lib/types'
 import { salvarProduto, type FormState } from './actions'
 
@@ -31,6 +33,9 @@ export type ProdutoFormValores = {
  *  (quem bipa o produto na gondola vem trocar preco). */
 const ABAS_DO_FORM = ['preco', 'dados', 'foto'] as const
 
+const UNIDADES_PESO: UnitType[] = ['kg', 'g']
+const UNIDADES_CONTAGEM: UnitType[] = ['unidade', 'pacote', 'caixa']
+
 export function ProdutoForm({
   valores,
   categorias,
@@ -52,6 +57,7 @@ export function ProdutoForm({
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(salvarProduto, {})
   const [nome, setNome] = useState(valores.name)
+  const [categoria, setCategoria] = useState(valores.category_id)
   const [porPeso, setPorPeso] = useState(valores.sold_by_weight)
   const [unidade, setUnidade] = useState<UnitType>(valores.unit_type)
 
@@ -110,16 +116,15 @@ export function ProdutoForm({
       </Field>
 
       <Field label="Categoria">
-        <Select name="category_id" defaultValue={valores.category_id} required disabled={somenteLeitura}>
-          <option value="" disabled>
-            Escolha...
-          </option>
-          {categorias.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </Select>
+        <Selecao
+          name="category_id"
+          rotuloLista="Categoria do produto"
+          opcoes={categorias.map((c) => ({ valor: c.id, rotulo: c.name }))}
+          valor={categoria}
+          onEscolher={setCategoria}
+          required
+          disabled={somenteLeitura}
+        />
       </Field>
 
       <Field label="Descricao curta" hint="Aparece embaixo do nome no portal.">
@@ -163,18 +168,17 @@ export function ProdutoForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Unidade de venda">
-          <Select
+          <Selecao
             name="unit_type"
-            value={unidade}
-            onChange={(e) => setUnidade(e.target.value as UnitType)}
+            rotuloLista="Unidade de venda"
+            opcoes={(porPeso ? UNIDADES_PESO : UNIDADES_CONTAGEM).map((u) => ({
+              valor: u,
+              rotulo: UNIT_LABEL[u],
+            }))}
+            valor={unidade}
+            onEscolher={(u) => setUnidade(u as UnitType)}
             disabled={somenteLeitura}
-          >
-            {(porPeso ? ['kg', 'g'] : ['unidade', 'pacote', 'caixa']).map((u) => (
-              <option key={u} value={u}>
-                {u}
-              </option>
-            ))}
-          </Select>
+          />
         </Field>
 
         <Field label={porPeso ? `Preco por ${unidade}` : 'Preco'}>
