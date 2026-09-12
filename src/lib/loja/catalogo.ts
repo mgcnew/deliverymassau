@@ -4,29 +4,8 @@ import { cache } from 'react'
 
 import type { DiaHorario, EstadoDelivery } from '@/lib/horario'
 
-import { normalizarBusca } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import type { UnitType } from '@/lib/types'
-
-/**
- * Filtro de busca por nome, para a vitrine e para a busca do cliente.
- *
- * Compara pelo nome normalizado (coluna gerada, 0049) e nao pelo nome cru: o
- * cadastro veio do PDV sem acento, entao "café" no ilike do nome original
- * achava zero produto enquanto "cafe" achava 43. Normalizando os dois lados,
- * tanto faz como o cliente escreve.
- *
- * `like` e nao `ilike` porque a coluna ja e minuscula - e assim o indice
- * trigrama e usado de verdade. O termo normalizado so tem letra, numero e
- * espaco, entao nao ha curinga para escapar.
- */
-function comBusca<T extends { like: (coluna: string, padrao: string) => T }>(
-  query: T,
-  busca: string | undefined,
-): T {
-  const termo = normalizarBusca(busca ?? '')
-  return termo ? query.like('name_normalized', `%${termo}%`) : query
-}
 
 export type ConfiguracaoPublica = {
   market_name: string
@@ -126,55 +105,39 @@ export const getProdutosPaginados = cache(
     porPagina: number
   }): Promise<{ itens: ProdutoVitrine[]; total: number }> => {
     const supabase = await createClient()
-    const de = (opcoes.pagina - 1) * opcoes.porPagina
 
-    // Categoria: mais pedidos primeiro (a ordenacao junta outra tabela, por
-    // isso vem de uma funcao do banco e nao do select direto).
-    if (opcoes.categoriaId && !opcoes.busca) {
-      const { data } = await supabase.rpc('get_categoria_pagina', {
-        p_categoria: opcoes.categoriaId,
-        p_limite: opcoes.porPagina,
-        p_offset: de,
-      })
-      const pagina = (data ?? { itens: [], total: 0 }) as { itens: ProdutoVitrine[]; total: number }
-      return { itens: pagina.itens ?? [], total: Number(pagina.total ?? 0) }
-    }
+    // Categoria e busca saem da MESMA funcao do banco (0051). Antes a
+    // categoria vinha de uma funcao e a busca de um select direto, e so a
+    // primeira sabia ordenar por mais pedidos - a busca, que e onde a
+    // intencao e mais alta, ficava alfabetica. Juntas, nao ha como uma
+    // ordenacao valer num lugar e nao no outro.
+    const { data } = await supabase.rpc('get_vitrine_pagina', {
+      p_categoria: opcoes.categoriaId ?? null,
+      p_busca: opcoes.busca ?? null,
+      p_limite: opcoes.porPagina,
+      p_offset: (opcoes.pagina - 1) * opcoes.porPagina,
+    })
 
-    let query = supabase
-      .from('products')
-      // count exato numa consulta so: sem ele a tela nao sabe se existe
-      // pagina seguinte, e "carregar mais" viraria adivinhacao.
-      .select(CAMPOS_PRODUTO, { count: 'exact' })
-      .order('is_available', { ascending: false })
-      .order('sort_order')
-      .order('name')
-      .range(de, de + opcoes.porPagina - 1)
-
-    if (opcoes.categoriaId) query = query.eq('category_id', opcoes.categoriaId)
-    query = comBusca(query, opcoes.busca)
-
-    const { data, count } = await query
-    return { itens: (data ?? []) as ProdutoVitrine[], total: count ?? 0 }
+    const pagina = (data ?? { itens: [], total: 0 }) as { itens: ProdutoVitrine[]; total: number }
+    return { itens: pagina.itens ?? [], total: Number(pagina.total ?? 0) }
   },
 )
 
-/** A RLS ja limita o anon a produtos ativos; indisponivel aparece marcado como "Acabou". */
+/**
+ * Lista simples, sem paginacao - hoje so o "Voce tambem pode gostar" da pagina
+ * do produto. Usa a mesma ordem da vitrine: nao faria sentido sugerir na ponta
+ * do alfabeto quando ha um campeao de vendas na mesma categoria.
+ */
 export const getProdutos = cache(
   async (opcoes?: { categoriaId?: string; busca?: string; limite?: number }): Promise<ProdutoVitrine[]> => {
     const supabase = await createClient()
-    let query = supabase
-      .from('products')
-      .select(CAMPOS_PRODUTO)
-      .order('is_available', { ascending: false })
-      .order('sort_order')
-      .order('name')
-
-    if (opcoes?.categoriaId) query = query.eq('category_id', opcoes.categoriaId)
-    query = comBusca(query, opcoes?.busca)
-    if (opcoes?.limite) query = query.limit(opcoes.limite)
-
-    const { data } = await query
-    return (data ?? []) as ProdutoVitrine[]
+    const { data } = await supabase.rpc('get_vitrine_pagina', {
+      p_categoria: opcoes?.categoriaId ?? null,
+      p_busca: opcoes?.busca ?? null,
+      p_limite: opcoes?.limite ?? 48,
+      p_offset: 0,
+    })
+    return ((data as { itens?: ProdutoVitrine[] } | null)?.itens ?? []) as ProdutoVitrine[]
   },
 )
 
