@@ -9,7 +9,7 @@ import { ButtonLink } from '@/components/ui/button'
 import { MenuMais } from '@/components/ui/menu-mais'
 import { Card, Empty } from '@/components/ui/card'
 import { precoPorUnidade } from '@/lib/format'
-import { variantesDoCodigo } from '@/lib/produtos/codigo-barras'
+import { comBuscaDeProduto } from '@/lib/produtos/busca'
 import { ancoraProduto, linkEdicao } from '@/lib/produtos/volta'
 import { urlImagemProduto } from '@/lib/supabase/storage'
 import type { UnitType } from '@/lib/types'
@@ -54,16 +54,7 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
 
   if (filtro === 'disponiveis') query = query.eq('is_available', true).eq('is_active', true)
   if (filtro === 'indisponiveis') query = query.eq('is_available', false)
-  if (busca) {
-    // Numero com cara de codigo de barras tambem acha pelo codigo (digitado ou
-    // vindo de leitor bluetooth). So entra no .or() quando a busca e so
-    // digitos (variantesDoCodigo devolve vazio para o resto), entao o texto
-    // nao tem como quebrar a sintaxe do filtro.
-    const codigos = variantesDoCodigo(busca)
-    query = codigos.length
-      ? query.or(`name.ilike.%${busca}%,barcode.in.(${codigos.join(',')})`)
-      : query.ilike('name', `%${busca}%`)
-  }
+  if (busca) query = comBuscaDeProduto(query, busca)
   if (categoria) query = query.eq('category_id', categoria)
 
   const [{ data: produtos, count: total }, { data: categorias }] = await Promise.all([

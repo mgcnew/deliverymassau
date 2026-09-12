@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 
 import { PERMISSIONS } from '@/lib/permissions'
 import { getStaff } from '@/lib/auth'
-import { variantesDoCodigo } from '@/lib/produtos/codigo-barras'
+import { comBuscaDeProduto } from '@/lib/produtos/busca'
 import { createClient } from '@/lib/supabase/server'
 import { BUCKET_PRODUTOS } from '@/lib/supabase/storage'
 
@@ -69,12 +69,7 @@ export async function buscarProdutosLote(
     .limit(LIMITE_BUSCA)
 
   const busca = termo.trim()
-  if (busca) {
-    const codigos = variantesDoCodigo(busca)
-    query = codigos.length
-      ? query.or(`name.ilike.%${busca}%,barcode.in.(${codigos.join(',')})`)
-      : query.ilike('name', `%${busca}%`)
-  }
+  if (busca) query = comBuscaDeProduto(query, busca)
   if (categoria) query = query.eq('category_id', categoria)
 
   const { data, count, error } = await query
