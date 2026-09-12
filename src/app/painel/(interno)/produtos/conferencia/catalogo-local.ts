@@ -1,5 +1,6 @@
 'use client'
 
+import { normalizarBusca } from '@/lib/format'
 import { chaveDoCodigo } from '@/lib/produtos/codigo-barras'
 
 /**
@@ -20,7 +21,8 @@ import { chaveDoCodigo } from '@/lib/produtos/codigo-barras'
 export type ProdutoCatalogo = {
   id: string
   nome: string
-  codigo: string
+  /** Nulo em ~120 produtos que nao tem codigo: padaria, fatiados, hortifruti. */
+  codigo?: string
   /** Inativo hoje: bipar traz de volta para a vitrine. So vem quando e true. */
   inativo?: boolean
 }
@@ -99,22 +101,85 @@ export function catalogoVencido(guardado: CatalogoGuardado | null): boolean {
 }
 
 /**
- * Indice de busca: chave do codigo -> produtos.
- *
- * Uma LISTA e nao um produto so porque o cadastro antigo tem o mesmo item
- * duas vezes, uma gravada com o zero da frente e outra sem - e as duas caem
- * na mesma chave (ver chaveDoCodigo). Sao poucos casos, mas entre eles ha
- * "PALMITO 300G" e "PALMITO 550G" dividindo codigo: escolher sozinho marcaria
- * o produto errado como conferido. Quem bipou decide.
+ * As duas maneiras de achar um produto no aparelho, montadas de uma vez so
+ * porque percorrer 5 mil itens duas vezes nao tem por que.
  */
-export function indexarCatalogo(produtos: ProdutoCatalogo[]): Map<string, ProdutoCatalogo[]> {
-  const indice = new Map<string, ProdutoCatalogo[]>()
+export type Indice = {
+  /** Chave do codigo -> produtos. */
+  porCodigo: Map<string, ProdutoCatalogo[]>
+  /** Nome ja normalizado, para a busca digitada. */
+  porNome: Array<{ produto: ProdutoCatalogo; busca: string }>
+}
+
+/**
+ * porCodigo guarda uma LISTA e nao um produto so porque o cadastro antigo tem
+ * o mesmo item duas vezes, uma gravada com o zero da frente e outra sem - e as
+ * duas caem na mesma chave (ver chaveDoCodigo). Sao poucos casos, mas entre
+ * eles ha "PALMITO 300G" e "PALMITO 550G" dividindo codigo: escolher sozinho
+ * marcaria o produto errado como conferido. Quem bipou decide.
+ */
+export function indexarCatalogo(produtos: ProdutoCatalogo[]): Indice {
+  const porCodigo = new Map<string, ProdutoCatalogo[]>()
+  const porNome: Indice['porNome'] = []
+
   for (const produto of produtos) {
-    const chave = chaveDoCodigo(produto.codigo)
-    if (!chave) continue
-    const iguais = indice.get(chave)
-    if (iguais) iguais.push(produto)
-    else indice.set(chave, [produto])
+    const chave = produto.codigo ? chaveDoCodigo(produto.codigo) : null
+    if (chave) {
+      const iguais = porCodigo.get(chave)
+      if (iguais) iguais.push(produto)
+      else porCodigo.set(chave, [produto])
+    }
+    // O nome e normalizado UMA vez, aqui, e nao a cada tecla digitada.
+    porNome.push({ produto, busca: normalizarBusca(produto.nome) })
   }
-  return indice
+
+  return { porCodigo, porNome }
+}
+
+/** Menos que isto devolveria meia loja e nao ajudaria ninguem a escolher. */
+const MINIMO_PARA_BUSCAR = 2
+
+/**
+ * Busca por nome, para conferir o que nao da para bipar - pao da padaria,
+ * mortadela fatiada, hortifruti, dose de bebida.
+ *
+ * Todas as palavras digitadas precisam aparecer, em qualquer ordem: "frances
+ * pao" acha "PAO FRANCES", e "leite ninho" nao traz todo leite da loja.
+ *
+ * Ordena por: produto ativo antes de inativo, depois por onde a palavra
+ * aparece (nome que COMECA com o digitado vem antes) e, empatando, pelo nome
+ * mais curto - entre "PAO FRANCES" e "MASSA DE PAO FRANCES CONGELADA", quem
+ * procurou "pao frances" quer o primeiro.
+ *
+ * Ativo primeiro porque o cadastro tem duplicata: "Pao frances" existe duas
+ * vezes, uma ativa e uma inativa sobrando de antes. As duas aparecem - conferir
+ * um inativo e como ele volta para a vitrine, e isso e util - mas a que a loja
+ * usa hoje vem em cima.
+ */
+export function buscarPorNome(indice: Indice, termo: string, limite = 8): ProdutoCatalogo[] {
+  const alvo = normalizarBusca(termo)
+  if (alvo.length < MINIMO_PARA_BUSCAR) return []
+
+  const palavras = alvo.split(' ')
+  const achados: Array<{ produto: ProdutoCatalogo; peso: number }> = []
+
+  for (const { produto, busca } of indice.porNome) {
+    let maisTarde = 0
+    let serve = true
+    for (const palavra of palavras) {
+      const onde = busca.indexOf(palavra)
+      if (onde < 0) {
+        serve = false
+        break
+      }
+      if (onde > maisTarde) maisTarde = onde
+    }
+    if (serve) {
+      const peso = (produto.inativo ? 1_000_000 : 0) + maisTarde * 1000 + busca.length
+      achados.push({ produto, peso })
+    }
+  }
+
+  achados.sort((a, b) => a.peso - b.peso)
+  return achados.slice(0, limite).map((a) => a.produto)
 }

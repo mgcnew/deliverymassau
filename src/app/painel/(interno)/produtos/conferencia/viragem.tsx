@@ -16,8 +16,9 @@ import { aplicarConferencia, desfazerViragem, verPrevia, type Previa } from './a
  * solto. Aqui ela tem tres travas, e as tres estao a vista:
  *
  *   1. a previa e obrigatoria - o botao de aplicar so aparece depois dela;
- *   2. produto sem codigo de barras nao pode ser bipado, entao por padrao ele
- *      nao sai (hortifruti, acougue, os 120 itens sem codigo do cadastro);
+ *   2. produto sem codigo de barras da para conferir pelo nome, mas nao de
+ *      passagem pela gondola; por padrao ele nao sai (padaria, fatiados,
+ *      hortifruti, dose - 120 itens ativos do cadastro);
  *   3. o que a viragem mudou fica guardado, e desfazer devolve tudo.
  *
  * E uma quarta, que e a mais perigosa das quatro: enquanto houver leitura na
@@ -80,8 +81,9 @@ export function Viragem({
         <span className="text-sm">
           <span className="font-semibold">Manter os produtos sem codigo de barras</span>
           <span className="block text-muted">
-            Eles nao podem ser bipados - hortifruti, acougue e o que veio do PDV sem codigo. Sem
-            isso, sairiam do catalogo por um motivo que nao tem a ver com a prateleira.
+            Padaria, fatiados, hortifruti, dose. Da para conferir pelo nome, mas nao da para bipar
+            passando pela gondola - entao, se esta conferencia foi so de bipagem, eles ficam em vez
+            de sair por um motivo que nao tem a ver com a prateleira.
           </span>
         </span>
       </label>

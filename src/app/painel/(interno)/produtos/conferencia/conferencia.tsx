@@ -9,7 +9,7 @@ import {
   useSyncExternalStore,
   useTransition,
 } from 'react'
-import { CloudOff, PackageX, RefreshCw, ScanBarcode } from 'lucide-react'
+import { Check, CloudOff, PackageX, RefreshCw, ScanBarcode } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Alert, Card, Empty } from '@/components/ui/card'
@@ -18,6 +18,7 @@ import { chaveDoCodigo } from '@/lib/produtos/codigo-barras'
 import { baixarCatalogo, carregarLeituras, enviarLeituras, apagarLeitura } from './actions'
 import {
   assinarCatalogo,
+  buscarPorNome,
   catalogoVencido,
   guardarCatalogo,
   indexarCatalogo,
@@ -215,7 +216,7 @@ export function Conferencia({
   const aoBipar = useCallback(
     (codigo: string) => {
       const chave = chaveDoCodigo(codigo)
-      const achados = chave ? (indice.get(chave) ?? []) : []
+      const achados = chave ? (indice.porCodigo.get(chave) ?? []) : []
 
       if (achados.length > 1) {
         setEscolha({ codigo, produtos: achados })
@@ -226,11 +227,31 @@ export function Conferencia({
     [indice, conferir],
   )
 
+  // Sugestoes por nome, para conferir o que nao tem codigo de barras - pao da
+  // padaria, mortadela fatiada, hortifruti, dose. Texto que ja e um codigo de
+  // barras nao vira busca: e o leitor bluetooth "digitando" e mandando Enter.
+  const digitadoEhCodigo = chaveDoCodigo(digitado.trim()) !== null
+  const sugestoes =
+    digitadoEhCodigo || !digitado.trim() ? [] : buscarPorNome(indice, digitado)
+
   function aoDigitar(e: React.FormEvent) {
     e.preventDefault()
-    const codigo = digitado.trim()
-    if (!codigo) return
-    aoBipar(codigo)
+    const texto = digitado.trim()
+    if (!texto) return
+
+    // Enter num nome confere a primeira sugestao; num codigo, bipa.
+    if (!digitadoEhCodigo) {
+      const primeira = sugestoes[0]
+      if (!primeira) return
+      conferir(primeira, primeira.codigo ?? '')
+    } else {
+      aoBipar(texto)
+    }
+    setDigitado('')
+  }
+
+  function escolherSugestao(produto: ProdutoCatalogo) {
+    conferir(produto, produto.codigo ?? '')
     setDigitado('')
   }
 
@@ -342,21 +363,65 @@ export function Conferencia({
           </Button>
         </div>
 
-        {/* Leitor bluetooth "digita" o codigo e da Enter - e o caminho mais
-            rapido de todos, e o unico que funciona no iPhone. */}
         {!lendo && seletorDeProduto ? seletorDeProduto : null}
 
-        <form onSubmit={aoDigitar} className="flex gap-2">
-          <input
-            value={digitado}
-            onChange={(e) => setDigitado(e.target.value)}
-            placeholder="Ou digite o codigo / use leitor bluetooth"
-            inputMode="numeric"
-            className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-base"
-          />
-          <Button type="submit" variant="secondary" disabled={!digitado.trim() || catalogo === null}>
-            Conferir
-          </Button>
+        {/* Uma entrada para os dois usos. Leitor bluetooth "digita" o codigo e
+            manda Enter - o caminho mais rapido de todos, e o unico que
+            funciona no iPhone. Texto que nao e codigo vira busca por nome,
+            que e como se confere o que nunca teve codigo: pao da padaria,
+            mortadela fatiada, hortifruti, dose de bebida.
+
+            inputMode fica 'text' porque um teclado so de numeros impediria
+            justamente essa segunda metade; leitor bluetooth nao usa teclado. */}
+        <form onSubmit={aoDigitar} className="space-y-2">
+          <div className="flex gap-2">
+            <input
+              value={digitado}
+              onChange={(e) => setDigitado(e.target.value)}
+              placeholder="Digite o nome ou o codigo / use leitor bluetooth"
+              autoComplete="off"
+              className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-base"
+            />
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={catalogo === null || (!digitadoEhCodigo && sugestoes.length === 0)}
+            >
+              Conferir
+            </Button>
+          </div>
+
+          {sugestoes.length > 0 ? (
+            <ul className="overflow-hidden rounded-xl border border-line">
+              {sugestoes.map((p) => {
+                const jaEsta = sessao.leituras[p.id] !== undefined
+                return (
+                  <li key={p.id} className="border-b border-line last:border-0">
+                    <button
+                      type="button"
+                      onClick={() => escolherSugestao(p)}
+                      className="flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-foreground/5"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold">{p.nome}</span>
+                        <span className="block truncate text-sm text-muted">
+                          {p.codigo ?? 'Sem codigo de barras'}
+                          {p.inativo ? ' - inativo, vai voltar para a vitrine' : ''}
+                        </span>
+                      </span>
+                      {jaEsta ? (
+                        <Check size={18} className="shrink-0 text-muted" aria-label="Ja conferido" />
+                      ) : null}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : null}
+
+          {digitado.trim() && !digitadoEhCodigo && sugestoes.length === 0 ? (
+            <p className="text-sm text-muted">Nenhum produto com esse nome no cadastro.</p>
+          ) : null}
         </form>
       </Card>
 
@@ -378,7 +443,7 @@ export function Conferencia({
             {todas.length === 0
               ? leitorDisponivel
                 ? 'Nada conferido ainda. Toque em "Bipar produtos" e passe pela prateleira.'
-                : 'Nada conferido ainda. Use o leitor bluetooth ou digite o codigo acima.'
+                : 'Nada conferido ainda. Use o leitor bluetooth, ou digite o nome ou o codigo acima.'
               : 'Nenhum item da lista bate com essa busca.'}
           </Empty>
         ) : (

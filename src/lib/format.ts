@@ -45,6 +45,30 @@ export function normalizarComparacao(texto: string): string {
     .replace(/\s+/g, ' ')
 }
 
+/**
+ * Chave de busca por nome: sem acento, sem caixa, pontuacao virando espaco.
+ *
+ * Espelha o normalize_text() do banco, do lado do navegador. O que faz a
+ * busca funcionar e normalizar OS DOIS lados - o que a pessoa digita e o nome
+ * cadastrado: dai "pao frances" acha "PAO FRANCES" e "pão francês" tambem.
+ *
+ * Na pratica o segundo caso e o que mais acontece por aqui, ao contrario do
+ * que parece: o cadastro veio do PDV em caixa alta e praticamente sem acento
+ * (um nome acentuado em 4.796), entao quem digita certo e quem nao acharia
+ * nada sem isto.
+ *
+ * A pontuacao vira espaco por causa de nomes como "SAB.DOVE 500ML" e
+ * "CARVAO NARGUILE SOL´TO", que vieram assim do sistema antigo.
+ */
+export function normalizarBusca(texto: string): string {
+  return texto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
 export function slugify(texto: string): string {
   return texto
     .normalize('NFD')

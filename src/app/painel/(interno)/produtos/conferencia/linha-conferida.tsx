@@ -34,7 +34,10 @@ export function LinhaConferida({
           {leitura.nome}
         </p>
         <p className="text-sm text-muted sm:truncate">
-          {desconhecido ? 'Nao esta no cadastro - cadastrar depois' : leitura.codigo}
+          {desconhecido
+            ? 'Nao esta no cadastro - cadastrar depois'
+            : // Conferido pelo nome: nunca teve codigo (padaria, fatiados, dose).
+              (leitura.codigo || 'Sem codigo de barras')}
           {leitura.inativo ? ' - inativo, vai voltar para a vitrine' : ''}
           {leitura.sincronizada ? '' : ' - no aparelho'}
         </p>
