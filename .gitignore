@@ -52,3 +52,7 @@ next-env.d.ts
 /importacao/*
 !/importacao/fotos.js
 !/importacao/fotos-pdv.js
+
+# relatorios da skill impeccable: saida de ferramenta, um arquivo datado por
+# rodada. Acumulam sem parar e nao dizem nada sobre o estado do projeto.
+/.impeccable
