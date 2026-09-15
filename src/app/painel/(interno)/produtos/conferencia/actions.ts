@@ -206,6 +206,8 @@ export type Previa = {
   acabou: number
   /** Nao conferidos que saem do catalogo. */
   sai: number
+  /** Nao conferidos preservados por serem "sempre tem": a loja sempre trabalha com eles. */
+  sempre_tem: number
   /** Nao conferidos preservados por nao terem codigo de barras para bipar. */
   mantidos_sem_codigo: number
   /** Conferidos que estavam inativos e voltam. */

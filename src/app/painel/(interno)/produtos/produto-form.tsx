@@ -20,6 +20,7 @@ export type ProdutoFormValores = {
   short_description: string
   unit_type: UnitType
   sold_by_weight: boolean
+  always_stocked: boolean
   price: string
   original_price: string
   weight_step_g: number
@@ -60,6 +61,7 @@ export function ProdutoForm({
   const [categoria, setCategoria] = useState(valores.category_id)
   const [porPeso, setPorPeso] = useState(valores.sold_by_weight)
   const [unidade, setUnidade] = useState<UnitType>(valores.unit_type)
+  const [sempreTem, setSempreTem] = useState(valores.always_stocked)
 
   const extras = emAbas?.extras ?? []
   const idsValidos = [...ABAS_DO_FORM, ...extras.map((e) => e.id)] as string[]
@@ -99,6 +101,11 @@ export function ProdutoForm({
     setPorPeso(marcado)
     if (marcado && unidade !== 'kg' && unidade !== 'g') setUnidade('kg')
     if (!marcado && (unidade === 'kg' || unidade === 'g')) setUnidade('unidade')
+    // Cortado ou pesado na hora: a loja trabalha com o item, nao com unidades
+    // dele - o mesmo criterio que marcou os 33 de peso quando o campo nasceu.
+    // So propoe; desmarcar continua valendo, e desmarcar "por peso" nao
+    // desprotege quem ja era protegido.
+    if (marcado) setSempreTem(true)
   }
 
   const secaoDados = (
@@ -126,6 +133,25 @@ export function ProdutoForm({
           disabled={somenteLeitura}
         />
       </Field>
+
+      <label className="flex items-start gap-3 rounded-xl border border-line bg-surface p-3">
+        <input
+          type="checkbox"
+          name="always_stocked"
+          className="mt-0.5 size-5 shrink-0 accent-[var(--brand)]"
+          checked={sempreTem}
+          onChange={(e) => setSempreTem(e.target.checked)}
+          disabled={somenteLeitura}
+        />
+        <span className="min-w-0">
+          <span className="block font-semibold">Sempre tem</span>
+          <span className="block text-sm text-muted">
+            Para o que a loja sempre trabalha e repoe no dia: pao, fatiados, hortifruti. A
+            conferencia de estoque deixa de exigir que ele seja bipado e nunca o tira do catalogo.
+            Quando acabar de verdade, quem marca e o balcao, no &quot;acabou&quot;.
+          </span>
+        </span>
+      </label>
 
       <Field label="Descricao curta" hint="Aparece embaixo do nome no portal.">
         <Textarea

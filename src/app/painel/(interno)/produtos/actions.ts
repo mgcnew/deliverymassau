@@ -56,31 +56,6 @@ export async function alternarDisponibilidade(id: string, disponivel: boolean): 
   return {}
 }
 
-/**
- * "Sempre tem": a conferencia deixa de tirar este produto do catalogo.
- *
- * Exige produtos.editar e nao alterar_disponibilidade, apesar de parecer
- * assunto de estoque: e decisao de cadastro, de quem monta o catalogo, e vale
- * para sempre. O que o balcao decide todo dia continua sendo "acabou"/"voltou".
- */
-export async function alternarSempreTem(id: string, sempre: boolean): Promise<FormState> {
-  const guard = await exigir(PERMISSIONS.produtosEditar)
-  if (guard.error) return guard
-
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('products')
-    .update({ always_stocked: sempre })
-    .eq('id', id)
-    .select('id')
-  if (error) return { error: error.message }
-  if (!data?.length) return { error: BLOQUEADO }
-
-  revalidatePath('/painel/produtos')
-  revalidatePath(`/painel/produtos/${id}`)
-  return {}
-}
-
 export async function alternarAtivo(id: string, ativo: boolean): Promise<FormState> {
   const guard = await exigir(PERMISSIONS.produtosDesativar)
   if (guard.error) return guard
@@ -213,6 +188,10 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
   const categoryId = String(formData.get('category_id') ?? '')
   const unitType = String(formData.get('unit_type') ?? 'unidade') as UnitType
   const porPeso = formData.get('sold_by_weight') === 'on'
+  // "Sempre tem" e decisao de cadastro, de quem monta o catalogo, e por isso
+  // vive no formulario junto do resto - e nao no botao de balcao, que decide
+  // todo dia se "acabou"/"voltou". O banco cobra produtos.editar para mexer.
+  const sempreTem = formData.get('always_stocked') === 'on'
   const preco = paraNumero(formData.get('price'))
   const passoGramas = Number(formData.get('weight_step_g') ?? 100)
   const minimoGramas = Number(formData.get('min_weight_g') ?? 100)
@@ -276,6 +255,7 @@ export async function salvarProduto(_prev: FormState, formData: FormData): Promi
     short_description: descricao || null,
     unit_type: unitType,
     sold_by_weight: porPeso,
+    always_stocked: sempreTem,
     price: preco,
     original_price: precoAntigo,
     weight_step: porPeso ? passoGramas / 1000 : null,

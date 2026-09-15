@@ -62,12 +62,10 @@ export default async function ProdutoPage({
                     id={produto.id}
                     ativo={produto.is_active}
                     disponivel={produto.is_available}
-                    sempreTem={produto.always_stocked}
                     podeDesativar={staff.permissions.has(PERMISSIONS.produtosDesativar)}
                     podeAlterarDisponibilidade={staff.permissions.has(
                       PERMISSIONS.produtosAlterarDisponibilidade,
                     )}
-                    podeEditar={staff.permissions.has(PERMISSIONS.produtosEditar)}
                     podeExcluir={staff.permissions.has(PERMISSIONS.produtosExcluir)}
                     jaVendeu={(vendas ?? 0) > 0}
                   />
@@ -82,6 +80,7 @@ export default async function ProdutoPage({
             short_description: produto.short_description ?? '',
             unit_type: produto.unit_type as UnitType,
             sold_by_weight: produto.sold_by_weight,
+            always_stocked: produto.always_stocked,
             price: Number(produto.price).toFixed(2).replace('.', ','),
             original_price: produto.original_price
               ? Number(produto.original_price).toFixed(2).replace('.', ',')

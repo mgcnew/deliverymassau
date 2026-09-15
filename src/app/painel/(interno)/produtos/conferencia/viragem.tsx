@@ -114,6 +114,12 @@ export function Viragem({
               />
             ) : null}
             <LinhaPrevia numero={previa.sai} texto="saem do catalogo" destaque />
+            {previa.sempre_tem > 0 ? (
+              <LinhaPrevia
+                numero={previa.sempre_tem}
+                texto={'ficam por estarem marcados como "sempre tem"'}
+              />
+            ) : null}
             {previa.mantidos_sem_codigo > 0 ? (
               <LinhaPrevia
                 numero={previa.mantidos_sem_codigo}

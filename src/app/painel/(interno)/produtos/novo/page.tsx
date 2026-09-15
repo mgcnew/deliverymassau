@@ -35,6 +35,7 @@ export default async function NovoProdutoPage({ searchParams }: PageProps<'/pain
             short_description: '',
             unit_type: 'unidade',
             sold_by_weight: false,
+            always_stocked: false,
             price: '',
             original_price: '',
             weight_step_g: 100,

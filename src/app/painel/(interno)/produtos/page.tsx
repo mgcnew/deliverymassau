@@ -45,9 +45,12 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
   // os botoes de navegar.
   let query = supabase
     .from('products')
-    .select('id, name, price, unit_type, sold_by_weight, is_active, is_available, image_path, category_id', {
-      count: 'exact',
-    })
+    .select(
+      'id, name, price, unit_type, sold_by_weight, always_stocked, is_active, is_available, image_path, category_id',
+      {
+        count: 'exact',
+      },
+    )
     .order('sort_order')
     .order('name')
     .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1)
@@ -204,6 +207,11 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
                           inativo
                         </span>
                       ) : null}
+                      {p.always_stocked ? (
+                        <span className="ml-2 rounded-full bg-foreground/10 px-2 py-0.5 text-xs font-bold">
+                          sempre tem
+                        </span>
+                      ) : null}
                     </p>
                     <p className="truncate text-sm text-muted">
                       {/* No comeco da linha: depois do nome, o "..." do nome
@@ -258,6 +266,8 @@ export default async function ProdutosPage({ searchParams }: PageProps<'/painel/
       <p className="text-sm text-muted">
         <strong>Acabou</strong> tira o produto do carrinho na hora, sem apagar o cadastro.
         <strong> Inativo</strong> some do catalogo por completo.
+        <strong> Sempre tem</strong> e o que a loja sempre trabalha: a conferencia de estoque nunca
+        o tira do catalogo. Marca-se na aba Dados do produto, ou em lote.
       </p>
     </div>
   )

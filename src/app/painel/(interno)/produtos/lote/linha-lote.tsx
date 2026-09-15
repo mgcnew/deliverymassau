@@ -77,10 +77,13 @@ export function LinhaLote({
           {produto.barcode ? <span>{produto.barcode}</span> : null}
           {!v.is_active && !mudou('is_active') ? <Selo>inativo</Selo> : null}
           {mudou('is_active') ? <Selo forte>{v.is_active ? 'reativar' : 'inativar'}</Selo> : null}
-          {v.always_stocked && !mudou('always_stocked') ? <Selo>sempre tem</Selo> : null}
-          {mudou('always_stocked') ? (
-            <Selo forte>{v.always_stocked ? 'sempre tem' : 'nao sempre'}</Selo>
-          ) : null}
+          <BotaoSempreTem
+            marcado={v.always_stocked}
+            mudou={mudou('always_stocked')}
+            travado={travado}
+            nome={produto.name}
+            aoAlternar={() => aoEditar('always_stocked', !v.always_stocked)}
+          />
           {excluir ? <Selo perigo>excluir</Selo> : null}
         </p>
       </div>
@@ -169,6 +172,55 @@ export function LinhaLote({
         </p>
       ) : null}
     </li>
+  )
+}
+
+/**
+ * "Sempre tem" da linha: um toque marca, outro desmarca.
+ *
+ * Existe alem da acao em grupo porque o caso comum nao e marcar uma categoria
+ * inteira - e passar o olho numa busca ("pao") e marcar os dois ou tres que
+ * a loja realmente sempre trabalha. Ir ate a ficha de cada um so para isso
+ * fazia a pessoa desistir no meio.
+ *
+ * Desmarcado ele continua a vista, apagado: senao nao haveria onde tocar, e
+ * a unica forma de descobrir que o campo existe seria ja ter marcado.
+ */
+function BotaoSempreTem({
+  marcado,
+  mudou,
+  travado,
+  nome,
+  aoAlternar,
+}: {
+  marcado: boolean
+  mudou: boolean
+  travado: boolean
+  nome: string
+  aoAlternar: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={aoAlternar}
+      disabled={travado}
+      aria-pressed={marcado}
+      title={
+        marcado
+          ? 'A conferencia nunca tira este produto do catalogo'
+          : 'Marcar: a conferencia nunca tira este produto do catalogo'
+      }
+      aria-label={`Sempre tem - ${nome}`}
+      className={`rounded-full px-2 py-0.5 font-bold disabled:opacity-60 ${
+        mudou
+          ? 'bg-brand text-brand-foreground'
+          : marcado
+            ? 'bg-foreground/10 text-foreground'
+            : 'border border-dashed border-line text-muted'
+      }`}
+    >
+      {marcado ? 'sempre tem' : 'nao sempre'}
+    </button>
   )
 }
 
