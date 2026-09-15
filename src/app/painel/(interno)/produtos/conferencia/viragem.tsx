@@ -7,7 +7,14 @@ import { Store, Undo2 } from 'lucide-react'
 import { Button, buttonClass } from '@/components/ui/button'
 import { Alert, Card, CardTitle } from '@/components/ui/card'
 import { ConfirmarAcao } from '@/components/ui/confirmar-acao'
-import { aplicarConferencia, desfazerViragem, verPrevia, type Previa } from './actions'
+import { haQuantoTempo } from '@/lib/format'
+import {
+  aplicarConferencia,
+  desfazerViragem,
+  verPrevia,
+  type Previa,
+  type QuemConferiu,
+} from './actions'
 
 /**
  * A viragem: a lista conferida passa a ser o catalogo da loja.
@@ -26,15 +33,25 @@ import { aplicarConferencia, desfazerViragem, verPrevia, type Previa } from './a
  * no SERVIDOR, a partir do que chegou la. Aplicar com a fila subindo trataria
  * o que ainda esta no celular como "nunca foi bipado" - e esses produtos
  * sairiam do catalogo justamente por terem sido conferidos por ultimo.
+ *
+ * Essa quarta trava tem um limite que nenhum codigo daqui alcanca: a fila do
+ * OUTRO aparelho. Com duas pessoas na loja, este botao nao tem como saber que
+ * o celular da outra esta sem sinal no deposito com duzentas leituras presas.
+ * O que da para fazer e dizer o nome de quem mais esta bipando e ha quanto
+ * tempo a ultima leitura dela chegou - e deixar a decisao com quem consegue
+ * olhar a outra tela.
  */
 export function Viragem({
   conferenciaId,
   conferidos,
   naFila,
+  outros,
 }: {
   conferenciaId: string
   conferidos: number
   naFila: number
+  /** Quem mais bipou nesta conferencia, fora quem esta olhando esta tela. */
+  outros: QuemConferiu[]
 }) {
   const router = useRouter()
   const [manterSemCodigo, setManterSemCodigo] = useState(true)
@@ -89,6 +106,17 @@ export function Viragem({
       </label>
 
       {erro ? <Alert tone="error">{erro}</Alert> : null}
+
+      {outros.length > 0 ? (
+        <Alert tone="info">
+          {outros.map((o) => `${o.nome} (ultima leitura ${haQuantoTempo(o.ultima)})`).join(', ')}{' '}
+          tambem {outros.length > 1 ? 'estao bipando' : 'esta bipando'} nesta conferencia. O aviso
+          de leituras guardadas so enxerga ESTE aparelho: antes de aplicar, confira que a tela{' '}
+          {outros.length > 1 ? 'de cada um diz' : 'do outro diz'} &quot;Tudo deste aparelho salvo no
+          servidor&quot;. O que ainda estiver preso num celular conta como nao bipado, e esses
+          produtos sairiam do catalogo.
+        </Alert>
+      ) : null}
 
       {naFila > 0 ? (
         <Alert tone="error">

@@ -148,6 +148,49 @@ export async function carregarLeituras(
   }
 }
 
+export type QuemConferiu = {
+  id: string
+  nome: string
+  /** E o proprio usuario desta tela: a linha vira "Voce". */
+  eu: boolean
+  conferidos: number
+  /** Hora da ultima leitura desta pessoa que chegou ao servidor. */
+  ultima: string
+}
+
+export type ResumoConferencia = {
+  conferidos: number
+  acabaram: number
+  desconhecidos: number
+  quem: QuemConferiu[]
+}
+
+/**
+ * O total que esta no servidor, e quem bipou.
+ *
+ * Cada aparelho so conhece as proprias leituras (elas moram no localStorage),
+ * entao com duas pessoas na loja os dois numeros na tela ficavam menores que o
+ * real. Este resumo e o numero que a viragem vai usar de verdade, e e por ele
+ * que a tela mostra o nome de quem mais esta bipando junto.
+ *
+ * Chamado de tempos em tempos, junto com a subida da fila: e informativo, e
+ * falhar so significa que o numero fica velho por mais um instante.
+ */
+export async function resumoDaConferencia(
+  conferenciaId: string,
+): Promise<{ resumo?: ResumoConferencia; erro?: string }> {
+  const erro = await exigir(PERMISSIONS.produtosVer)
+  if (erro) return { erro }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('resumo_conferencia', {
+    p_conferencia: conferenciaId,
+  })
+
+  if (error) return { erro: 'Nao foi possivel ver o total do servidor.' }
+  return { resumo: data as ResumoConferencia }
+}
+
 /** Tirou da lista: bipou sem querer, ou o item nao era da loja. */
 export async function apagarLeitura(
   conferenciaId: string,

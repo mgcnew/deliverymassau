@@ -92,6 +92,19 @@ export function dataHora(iso: string | null | undefined): string {
   return iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-'
 }
 
+/**
+ * "agora", "ha 12 min", "ha 2h" - para dizer se algo ainda esta acontecendo.
+ *
+ * Minuto e a menor unidade de proposito: a pergunta que isto responde e "o
+ * aparelho do outro ainda esta mandando?", e para ela segundo nenhum ajuda.
+ */
+export function haQuantoTempo(iso: string, agora: Date = new Date()): string {
+  const minutos = Math.floor((agora.getTime() - new Date(iso).getTime()) / 60_000)
+  if (minutos < 1) return 'agora'
+  if (minutos < 60) return `ha ${minutos} min`
+  return `ha ${Math.floor(minutos / 60)}h`
+}
+
 const CONECTIVOS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'com', 'sem', 'em', 'p/', 'c/', 's/'])
 // Siglas que ficam maiusculas ("Leite UHT", nao "Leite Uht").
 const SIGLAS = new Set(['UHT', 'PET', 'TP', 'DF', 'FPS', 'LED', 'USB', 'AA', 'AAA'])

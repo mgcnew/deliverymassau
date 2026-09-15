@@ -9,13 +9,21 @@ import {
   useSyncExternalStore,
   useTransition,
 } from 'react'
-import { Check, CloudOff, PackageX, RefreshCw, ScanBarcode } from 'lucide-react'
+import { Check, CloudOff, PackageX, RefreshCw, ScanBarcode, Users } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Alert, Card, Empty } from '@/components/ui/card'
 import { LeitorCodigoBarras, useLeitorDisponivel } from '@/components/ui/leitor-codigo-barras'
+import { haQuantoTempo } from '@/lib/format'
 import { chaveDoCodigo } from '@/lib/produtos/codigo-barras'
-import { baixarCatalogo, carregarLeituras, enviarLeituras, apagarLeitura } from './actions'
+import {
+  baixarCatalogo,
+  carregarLeituras,
+  enviarLeituras,
+  apagarLeitura,
+  resumoDaConferencia,
+  type ResumoConferencia,
+} from './actions'
 import {
   assinarCatalogo,
   buscarPorNome,
@@ -92,10 +100,14 @@ export function Conferencia({
   const [erroFila, setErroFila] = useState<string | null>(null)
   const [digitado, setDigitado] = useState('')
   const [busca, setBusca] = useState('')
+  // O que o servidor tem, somando os aparelhos de todo mundo (ver actions).
+  const [resumo, setResumo] = useState<ResumoConferencia | null>(null)
 
   const indice = useMemo(() => indexarCatalogo(catalogo ?? []), [catalogo])
   const numeros = contagem(sessao)
   const sessaoPronta = sessao.conferenciaId === conferencia.id
+  // Conferencia a dois: quem mais bipou nesta conferencia, alem de mim.
+  const outros = (resumo?.quem ?? []).filter((q) => !q.eu)
 
   // --- Catalogo ------------------------------------------------------------
 
@@ -151,17 +163,44 @@ export function Conferencia({
     }
   }, [conferencia.id])
 
+  // --- Total do servidor ---------------------------------------------------
+  //
+  // Conferencia a dois: o contador local so sabe do proprio aparelho. Este e o
+  // numero que a viragem vai usar, e e quem denuncia o outro celular que parou
+  // de mandar. Sem rede ele apenas nao atualiza - a linha da fila, logo abaixo,
+  // e que explica o porque.
+  //
+  // Com intervalo minimo proprio: esta rodada tambem dispara a cada bipada
+  // (a fila cresceu), e quem bipa dispara uma por segundo no corredor. A fila
+  // TEM que subir nessa hora; o total da loja, nao - ele so precisa nao ficar
+  // velho.
+  const ultimoResumo = useRef(0)
+  const atualizarResumo = useCallback(async () => {
+    if (!navigator.onLine) return
+    if (Date.now() - ultimoResumo.current < INTERVALO_SINCRONIA) return
+    ultimoResumo.current = Date.now()
+    const r = await resumoDaConferencia(conferencia.id)
+    if (r.resumo) setResumo(r.resumo)
+  }, [conferencia.id])
+
   // Sobe quando a fila cresce, quando o sinal volta e de tempos em tempos -
-  // esta ultima cobre o caso de o envio ter falhado com a fila parada.
+  // esta ultima cobre o caso de o envio ter falhado com a fila parada. O
+  // resumo vem logo depois de subir, que e quando ele mudou.
   useEffect(() => {
-    sincronizar()
-    const relogio = setInterval(sincronizar, INTERVALO_SINCRONIA)
-    window.addEventListener('online', sincronizar)
-    return () => {
-      clearInterval(relogio)
-      window.removeEventListener('online', sincronizar)
+    let vivo = true
+    const rodada = async () => {
+      await sincronizar()
+      if (vivo) await atualizarResumo()
     }
-  }, [sincronizar, numeros.naFila])
+    rodada()
+    const relogio = setInterval(rodada, INTERVALO_SINCRONIA)
+    window.addEventListener('online', rodada)
+    return () => {
+      vivo = false
+      clearInterval(relogio)
+      window.removeEventListener('online', rodada)
+    }
+  }, [sincronizar, atualizarResumo, numeros.naFila])
 
   // --- Retomar de outro aparelho -------------------------------------------
   //
@@ -308,10 +347,13 @@ export function Conferencia({
   return (
     <div className="space-y-4">
       <Card className="space-y-3">
+        {/* O numero grande e o DESTE aparelho: e ele que sobe a cada bipada,
+            inclusive sem sinal no corredor. O total da loja fica logo abaixo,
+            quando ha mais alguem bipando - so ele depende de rede. */}
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <p className="text-3xl font-black">{numeros.conferidos}</p>
           <p className="text-muted">
-            conferidos
+            conferidos {outros.length > 0 ? 'neste aparelho' : ''}
             {numeros.acabaram > 0
               ? ` - ${numeros.acabaram} marcado${numeros.acabaram > 1 ? 's' : ''} como acabou`
               : ''}
@@ -324,12 +366,32 @@ export function Conferencia({
             <>
               <CloudOff size={16} aria-hidden />
               {numeros.naFila} leitura{numeros.naFila > 1 ? 's' : ''} guardada
-              {numeros.naFila > 1 ? 's' : ''} no aparelho, subindo quando houver sinal
+              {numeros.naFila > 1 ? 's' : ''} neste aparelho, subindo quando houver sinal
             </>
           ) : (
-            'Tudo salvo no servidor.'
+            'Tudo deste aparelho salvo no servidor.'
           )}
         </p>
+
+        {/* Duas pessoas na loja: o numero que a viragem vai usar e a soma, e
+            nenhum dos dois aparelhos a conhece sozinho. A hora da ultima
+            leitura de cada um e o que denuncia o celular que parou de mandar. */}
+        {outros.length > 0 && resumo ? (
+          <div className="rounded-xl border border-line p-3">
+            <p className="flex items-center gap-2 font-semibold">
+              <Users size={18} aria-hidden />
+              {resumo.conferidos} conferidos na loja, somando os aparelhos
+            </p>
+            <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
+              {resumo.quem.map((q) => (
+                <li key={q.id}>
+                  <span className="font-semibold text-foreground">{q.eu ? 'Voce' : q.nome}</span>{' '}
+                  {q.conferidos} - ultima {haQuantoTempo(q.ultima)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         {erroFila ? <Alert tone="error">{erroFila}</Alert> : null}
 
@@ -465,6 +527,7 @@ export function Conferencia({
           conferenciaId={conferencia.id}
           conferidos={numeros.conferidos}
           naFila={numeros.naFila}
+          outros={outros}
         />
       ) : null}
 
