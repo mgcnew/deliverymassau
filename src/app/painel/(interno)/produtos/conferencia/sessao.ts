@@ -169,9 +169,19 @@ export function marcarSincronizadas(sessao: Sessao, enviadas: Array<[string, Lei
   return { ...sessao, leituras }
 }
 
-/** Lista para a tela: bipado por ultimo em cima. */
+/**
+ * Lista para a tela, na ordem em que foi bipada: primeiro item bipado em cima.
+ *
+ * E a ordem da caminhada pela loja, e a conferencia e feita em duas passadas -
+ * anda-se bipando tudo, depois senta-se e conta. Do mais novo para o mais
+ * velho, a segunda passada percorria as prateleiras de tras para frente.
+ *
+ * Quem bipa nao perde nada com isso: a confirmacao de que a leitura pegou e a
+ * vibracao e o item no rodape da camera, nao a lista - e quem confere pelo
+ * nome ve o "ja conferido" na propria sugestao.
+ */
 export function emOrdem(sessao: Sessao): Array<[string, Leitura]> {
-  return Object.entries(sessao.leituras).sort(([, a], [, b]) => b.em.localeCompare(a.em))
+  return Object.entries(sessao.leituras).sort(([, a], [, b]) => a.em.localeCompare(b.em))
 }
 
 export function contagem(sessao: Sessao) {

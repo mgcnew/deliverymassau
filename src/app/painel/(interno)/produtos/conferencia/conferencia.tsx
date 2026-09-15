@@ -72,6 +72,17 @@ const LOTE = 200
 /** De quanto em quanto tempo a fila tenta subir sozinha, alem do disparo por leitura. */
 const INTERVALO_SINCRONIA = 15_000
 
+/**
+ * Quantos itens da lista entram de cada vez, conforme a pessoa rola.
+ *
+ * Uma conferencia da loja inteira passa de 4 mil linhas, cada uma com campo de
+ * quantidade e dois botoes. Renderizadas todas de uma vez, o celular engasga
+ * justamente no aparelho mais fraco e na hora mais longa do trabalho. Quarenta
+ * enche mais de uma tela em qualquer celular, entao nunca se ve o fim da
+ * lista chegar.
+ */
+const PAGINA = 40
+
 export type ConferenciaAberta = { id: string; name: string; started_at: string }
 
 export function Conferencia({
@@ -102,6 +113,8 @@ export function Conferencia({
   const [busca, setBusca] = useState('')
   // O que o servidor tem, somando os aparelhos de todo mundo (ver actions).
   const [resumo, setResumo] = useState<ResumoConferencia | null>(null)
+  // Quantos itens da lista estao na tela agora - cresce rolando (ver PAGINA).
+  const [mostrados, setMostrados] = useState(PAGINA)
 
   const indice = useMemo(() => indexarCatalogo(catalogo ?? []), [catalogo])
   const numeros = contagem(sessao)
@@ -301,6 +314,88 @@ export function Conferencia({
   const visiveis = filtro
     ? todas.filter(([, l]) => l.nome.toLowerCase().includes(filtro) || l.codigo.includes(filtro))
     : todas
+  const naTela = visiveis.slice(0, mostrados)
+  const faltam = visiveis.length - naTela.length
+
+  // Busca nova e lista nova: continuar na altura da anterior mostraria um
+  // pedaco do meio de uma lista que a pessoa nunca rolou.
+  useEffect(() => {
+    setMostrados(PAGINA)
+  }, [filtro])
+
+  // Carrega antes de a pessoa chegar no fim (400px): rolando devagar, a lista
+  // nunca "acaba" na frente dela - e o comportamento que se espera hoje de
+  // qualquer lista de celular.
+  const sentinela = useRef<HTMLLIElement>(null)
+  useEffect(() => {
+    const alvo = sentinela.current
+    if (!alvo) return
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        if (entradas[0]?.isIntersecting) setMostrados((m) => m + PAGINA)
+      },
+      { rootMargin: '400px' },
+    )
+    observador.observe(alvo)
+    return () => observador.disconnect()
+  }, [faltam])
+
+  // Enter no ultimo campo carregado guarda aqui de onde continuar, para
+  // retomar assim que a lista crescer (efeito no fim deste bloco).
+  const continuarDe = useRef<HTMLInputElement | null>(null)
+
+  function irParaCampo(campo: HTMLInputElement) {
+    campo.focus({ preventScroll: true })
+    // No meio da tela: embaixo, o teclado do celular cobriria o campo.
+    campo.scrollIntoView({ behavior: 'instant', block: 'center' })
+  }
+
+  /** O campo depois deste na tela. Produto marcado como "acabou" nao tem campo
+   *  de quantidade, entao ele fica de fora naturalmente. */
+  function campoApos(referencia: HTMLInputElement): HTMLInputElement | undefined {
+    const campos = [...document.querySelectorAll<HTMLInputElement>('[data-conferencia-qtd]')]
+    const i = campos.indexOf(referencia)
+    return i < 0 ? undefined : campos[i + 1]
+  }
+
+  /**
+   * Enter na quantidade vai para a quantidade do proximo produto da lista.
+   *
+   * O jeito como a conferencia e feita de verdade sao duas passadas: primeiro
+   * anda-se a loja bipando tudo, depois senta-se e conta. Na segunda, cada
+   * item custava fechar o teclado, procurar a linha seguinte e tocar nela -
+   * com centenas de itens, isso e a maior parte do trabalho. E o mesmo Enter
+   * do preco na edicao em lote.
+   *
+   * Vale a ordem da TELA, incluindo o filtro da busca: quem procurou "iogurte"
+   * anda so pelos iogurtes. No ultimo o teclado fecha, que e como se ve que a
+   * lista acabou.
+   */
+  function proximaQuantidade(atual: HTMLInputElement) {
+    const proximo = campoApos(atual)
+    if (proximo) {
+      irParaCampo(proximo)
+      return
+    }
+    // Fim do que esta carregado, mas a lista continua: cresce e segue no
+    // proximo. A contagem nao pode parar numa fronteira que so existe por
+    // causa de como a tela e desenhada.
+    if (faltam > 0) {
+      continuarDe.current = atual
+      setMostrados((m) => m + PAGINA)
+      return
+    }
+    atual.blur()
+  }
+
+  // Cresceu por causa do Enter acima: agora o proximo campo existe.
+  useEffect(() => {
+    const anterior = continuarDe.current
+    if (!anterior) return
+    continuarDe.current = null
+    const proximo = campoApos(anterior)
+    if (proximo) irParaCampo(proximo)
+  }, [mostrados])
 
   async function tirarDaLista(chave: string, leitura: Leitura) {
     gravarSessao(remover(lerSessao(conferencia.id), chave))
@@ -500,7 +595,7 @@ export function Conferencia({
           ) : null}
         </div>
 
-        {visiveis.length === 0 ? (
+        {naTela.length === 0 ? (
           <Empty>
             {todas.length === 0
               ? leitorDisponivel
@@ -510,14 +605,20 @@ export function Conferencia({
           </Empty>
         ) : (
           <ul>
-            {visiveis.map(([chave, leitura]) => (
+            {naTela.map(([chave, leitura]) => (
               <LinhaConferida
                 key={chave}
                 leitura={leitura}
                 onQuantidade={(q) => gravarSessao(definirQuantidade(lerSessao(conferencia.id), chave, q))}
                 onRemover={() => tirarDaLista(chave, leitura)}
+                aoEnter={proximaQuantidade}
               />
             ))}
+            {faltam > 0 ? (
+              <li ref={sentinela} className="py-4 text-center text-sm text-muted">
+                Carregando mais {faltam > PAGINA ? PAGINA : faltam} de {faltam}...
+              </li>
+            ) : null}
           </ul>
         )}
       </Card>

@@ -15,10 +15,13 @@ export function LinhaConferida({
   leitura,
   onQuantidade,
   onRemover,
+  aoEnter,
 }: {
   leitura: Leitura
   onQuantidade: (quantidade: number | null) => void
   onRemover: () => void
+  /** Enter na quantidade: vai para a quantidade do proximo da lista. */
+  aoEnter: (campo: HTMLInputElement) => void
 }) {
   const acabou = leitura.quantidade === 0
   const desconhecido = leitura.produtoId === null
@@ -57,10 +60,16 @@ export function LinhaConferida({
           </button>
         ) : (
           <>
+            {/* Contar a loja e digitar, Enter, digitar, Enter - quem bipou tudo
+                primeiro desce esta lista de uma vez. Sem isso, cada item
+                custava fechar o teclado, achar a proxima linha e tocar nela.
+                Mesmo caminho do preco na edicao em lote. */}
             <input
+              data-conferencia-qtd
               type="number"
               min={0}
               inputMode="numeric"
+              enterKeyHint="next"
               aria-label={`Quantidade de ${leitura.nome}`}
               placeholder="qtd"
               value={leitura.quantidade ?? ''}
@@ -68,6 +77,14 @@ export function LinhaConferida({
                 const texto = e.target.value.trim()
                 const numero = Number(texto)
                 onQuantidade(texto === '' || !Number.isFinite(numero) ? null : Math.max(0, numero))
+              }}
+              // Entrou no campo que ja tem numero: digitar troca o valor, em
+              // vez de emendar no que estava (5 viraria 15).
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                e.preventDefault()
+                aoEnter(e.currentTarget)
               }}
               className="h-11 w-16 shrink-0 rounded-xl border border-line bg-surface px-2 text-center text-base"
             />
