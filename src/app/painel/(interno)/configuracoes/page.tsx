@@ -1,3 +1,4 @@
+import { algumProvedorConfigurado } from '@/lib/entrega/rota'
 import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
@@ -110,7 +111,7 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps<'/pa
       lat: config.market_lat,
       lng: config.market_lng,
       // So o servidor conhece a chave: a tela recebe apenas se ela existe.
-      googleConfigurado: Boolean(process.env.GOOGLE_MAPS_API_KEY),
+      mapaConfigurado: algumProvedorConfigurado(),
     }
     abas.push({
       // id mantido ("bairros") para os links antigos de ?aba= continuarem valendo.

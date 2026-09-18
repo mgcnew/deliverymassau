@@ -31,7 +31,7 @@ export type ConfigTaxa = {
   mercadoCidade: string | null
   lat: number | null
   lng: number | null
-  googleConfigurado: boolean
+  mapaConfigurado: boolean
 }
 
 function Resultado({ estado }: { estado: ConfigState }) {
@@ -98,7 +98,7 @@ function ModoTaxa({ config }: { config: ConfigTaxa }) {
           semFaixas && config.modo !== 'distancia',
         )}
       </div>
-      {config.modo === 'distancia' && !config.googleConfigurado ? (
+      {config.modo === 'distancia' && !config.mapaConfigurado ? (
         <Alert tone="error">
           A chave do Google ainda nao esta configurada no servidor. Enquanto isso, o checkout usa a
           taxa do bairro (quando o bairro esta na lista) ou pede para o cliente chamar no WhatsApp.
@@ -275,6 +275,20 @@ function TestarEndereco() {
             {teste.faixa
               ? `${rotuloFaixa(teste.faixa.up_to_km)}: ${moeda(teste.faixa.fee)}`
               : 'fora da area de entrega'}
+            {/*
+              O cliente nao ve nada disso; aqui a equipe precisa saber se o
+              numero foi achado ou estimado, porque e o que explica uma taxa
+              diferente da esperada em uma reclamacao de balcao.
+            */}
+            {teste.preciso === false ? (
+              <span className="mt-1 block text-sm font-normal">
+                Numero estimado pela numeracao da rua
+                {teste.cep ? ` (CEP ${teste.cep})` : ', e o provedor nao devolveu CEP para conferir'}
+                {teste.cep
+                  ? '. No checkout, so vale se bater com o CEP do cliente; perto da borda, sobe uma faixa.'
+                  : '. No checkout, cairia na taxa do bairro.'}
+              </span>
+            ) : null}
           </Alert>
         ) : null}
       </div>

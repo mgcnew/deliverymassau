@@ -64,33 +64,32 @@ export function BairrosAtendidos({ bairros }: { bairros: Array<{ bairro: string;
 }
 
 /**
- * "Onde entregamos" quando a taxa e por distancia: no lugar dos bairros, as
- * faixas de km - e o que decide o preco. O km exato so aparece no checkout,
- * depois do endereco.
+ * "Onde entregamos" quando a taxa e por distancia.
+ *
+ * Mostra o alcance, nao a tabela de precos. A tabela saiu de proposito: a
+ * taxa agora e arredondada para cima quando a posicao do endereco e
+ * estimada, entao publicar "ate 2 km -> R$ 3" ao lado de uma cobranca de
+ * R$ 4 criaria uma contradicao aparente na propria vitrine. O cliente ve o
+ * valor exato no fechamento do pedido, antes de confirmar.
  */
 export function FaixasDeEntrega({ faixas }: { faixas: Array<{ up_to_km: number; fee: number }> }) {
   if (!faixas.length) return null
   const ordenadas = [...faixas].sort((a, b) => a.up_to_km - b.up_to_km)
+
+  const alcance = ordenadas.at(-1)!.up_to_km
+  const menor = ordenadas[0].fee
 
   return (
     <section className="pt-2">
       <div className="rounded-2xl border border-line bg-surface p-4">
         <h2 className="text-lg font-black">Onde entregamos</h2>
         <p className="text-sm text-muted">
-          Ate {kmTexto(ordenadas.at(-1)!.up_to_km)} km do mercado. A taxa depende da distancia:
+          Entregamos em ate {kmTexto(alcance)} km do mercado. A taxa depende da distancia e comeca
+          em {menor === 0 ? 'zero' : moeda(menor)}.
         </p>
-        <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {ordenadas.map((f, i) => (
-            <li key={f.up_to_km} className="rounded-xl bg-foreground/5 px-3 py-2">
-              <p className="text-xs text-muted">
-                {i === 0 ? 'Ate' : `${kmTexto(ordenadas[i - 1].up_to_km)} a`} {kmTexto(f.up_to_km)} km
-              </p>
-              <p className="font-black text-brand-ink">{f.fee === 0 ? 'Gratis' : moeda(f.fee)}</p>
-            </li>
-          ))}
-        </ul>
         <p className="mt-3 text-xs text-muted">
-          A distancia e a taxa exatas aparecem no fechamento do pedido.
+          O valor da entrega aparece no fechamento do pedido, depois do endereco, antes de voce
+          confirmar.
         </p>
       </div>
     </section>

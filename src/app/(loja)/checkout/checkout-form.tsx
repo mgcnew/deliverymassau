@@ -28,7 +28,7 @@ type FormaPagamento = { code: string; label: string; brands?: string[] }
 const ETAPAS = ['Seus dados', 'Endereco', 'Pagamento', 'Revisao'] as const
 
 /** Cotacao de entrega por distancia, presa ao endereco para o qual foi feita. */
-type CotacaoTela = { id: string; taxa: number; rotulo: string; km?: number; reserva?: boolean; chave: string }
+type CotacaoTela = { id: string; taxa: number; rotulo: string; reserva?: boolean; chave: string }
 
 function chaveEndereco(rua: string, numero: string, bairro: string, cep: string) {
   const n = (t: string) => normalizarComparacao(t.trim())
@@ -295,7 +295,7 @@ export function CheckoutForm({
     iniciarCotacao(async () => {
       const r = await cotarEntregaDoCheckout({ rua, numero, bairro, cep })
       if ('ok' in r) {
-        setCotacao({ id: r.cotacao, taxa: r.taxa, rotulo: r.rotulo, km: r.km, reserva: r.reserva, chave: chaveAtual })
+        setCotacao({ id: r.cotacao, taxa: r.taxa, rotulo: r.rotulo, reserva: r.reserva, chave: chaveAtual })
         setEtapa(2)
       } else if ('fora' in r) {
         setAvisoEntrega(
@@ -631,11 +631,13 @@ export function CheckoutForm({
               </div>
               <div className="flex justify-between">
                 <dt>
-                  {porDistancia && cotacaoValida
-                    ? `Entrega (${cotacaoValida.rotulo}${
-                        cotacaoValida.km !== undefined ? ` - ${kmTexto(cotacaoValida.km)} km` : ''
-                      })`
-                    : `Taxa de entrega (${bairro})`}
+                  {/*
+                    So "Entrega", sem km e sem o nome da faixa. O rotulo
+                    ("Ate 2 km") continua gravado na cotacao e aparece no
+                    painel e nos relatorios - o cliente e que nao ve
+                    distancia nenhuma.
+                  */}
+                  {porDistancia && cotacaoValida ? 'Entrega' : `Taxa de entrega (${bairro})`}
                 </dt>
                 <dd>{moeda(taxa)}</dd>
               </div>

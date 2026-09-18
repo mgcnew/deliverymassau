@@ -499,15 +499,23 @@ export async function salvarOrigem(lat: string, lng: string): Promise<ConfigStat
   return { ok: vazio ? 'Saida pelo endereco do mercado.' : 'Ponto de saida salvo.' }
 }
 
-export type TesteEndereco = { erro?: string; km?: number; faixa?: { up_to_km: number; fee: number } | null }
+export type TesteEndereco = {
+  erro?: string
+  km?: number
+  faixa?: { up_to_km: number; fee: number } | null
+  /** Numero da casa achado na base (true) ou estimado pela numeracao (false). */
+  preciso?: boolean
+  /** CEP de onde o provedor pos o ponto - so a HERE devolve. */
+  cep?: string | null
+  provedor?: string
+}
 
 const MOTIVO_TESTE: Record<string, string> = {
-  'sem-chave': 'A chave do Google (GOOGLE_MAPS_API_KEY) ainda nao esta configurada no servidor.',
+  'sem-chave': 'Nenhuma chave configurada no servidor (HERE_API_KEY ou GOOGLE_MAPS_API_KEY).',
   'sem-origem': 'Preencha o endereco do mercado (aba Mercado) ou as coordenadas do ponto de saida.',
-  'nao-encontrado': 'O Google nao encontrou este endereco.',
-  impreciso: 'O Google so achou o endereco aproximado (sem o numero). No checkout, cairia na taxa do bairro.',
-  'sem-rota': 'O Google nao encontrou rota de carro ate este endereco.',
-  erro: 'O Google nao respondeu. Confira a chave e as cotas no Google Cloud.',
+  'nao-encontrado': 'Nao foi possivel localizar este endereco. Confira a rua e o numero.',
+  'sem-rota': 'Nao ha rota de carro ate este endereco.',
+  erro: 'O servico de mapas nao respondeu. Confira a chave e as cotas do provedor.',
 }
 
 /** "Testar endereco": mostra km e faixa sem gravar cotacao. Conta na cota do Google. */
@@ -518,5 +526,11 @@ export async function testarEndereco(rua: string, numero: string, bairro: string
 
   const [rota, { faixas }] = await Promise.all([medirEndereco({ rua, numero, bairro }), lerConfigEntrega()])
   if (!rota.ok) return { erro: MOTIVO_TESTE[rota.motivo] ?? 'Nao foi possivel calcular.' }
-  return { km: rota.km, faixa: faixaPara(rota.km, faixas) }
+  return {
+    km: rota.km,
+    faixa: faixaPara(rota.km, faixas),
+    preciso: rota.preciso,
+    cep: rota.cep,
+    provedor: rota.provedor,
+  }
 }

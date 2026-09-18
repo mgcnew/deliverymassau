@@ -3,16 +3,17 @@ import 'server-only'
 import { createHash } from 'node:crypto'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { faixaPara, rotuloFaixa, type FaixaDistancia } from './faixas'
-import { kmDeCarro, type OrigemRota, type ResultadoRota } from './rota-google'
+import { decidirFaixa, rotuloFaixa, type FaixaDistancia } from './faixas'
+import { kmDeCarro, type OrigemRota, type ResultadoRota } from './rota'
 
 /**
  * Cotacao da entrega por distancia (migration 0041).
  *
  * 1. Mesmo endereco ja cotado ha pouco: reaproveita (sem nova chamada).
- * 2. Dentro dos limites de uso: pergunta os km ao Google e acha a faixa.
- * 3. Google indisponivel, sem chave, limite batido ou endereco impreciso:
- *    reserva pela taxa do bairro, se o bairro estiver cadastrado.
+ * 2. Dentro dos limites de uso: pergunta os km ao provedor e acha a faixa.
+ * 3. Provedor indisponivel, sem chave, limite batido ou endereco estimado
+ *    que nao da para conferir: reserva pela taxa do bairro, se ele estiver
+ *    cadastrado.
  * 4. Grava a cotacao (so o servidor pode) e devolve o id que vai no pedido -
  *    o banco confere a taxa pela cotacao, nao pelo que o navegador mandar.
  */
@@ -21,12 +22,17 @@ export type EnderecoCotacao = { rua: string; numero: string; bairro: string; cep
 
 export type Cotacao =
   | { modo: 'bairro' }
-  | { ok: true; cotacao: string; taxa: number; rotulo: string; km?: number; reserva?: boolean }
+  // Sem km: a distancia decide a faixa no servidor e para por ai. Mandar o
+  // numero para o navegador o deixaria visivel no inspetor mesmo escondido
+  // da tela, e ele nao serve para nada do lado do cliente.
+  | { ok: true; cotacao: string; taxa: number; rotulo: string; reserva?: boolean }
+  // Aqui o km fica: e uma recusa, nao uma cobranca, e explicar "a 12 km, fora
+  // da area de 9 km" evita o cliente insistir sem entender o motivo.
   | { fora: true; km?: number; limiteKm?: number }
   | { erro: string }
 
-// Chamadas ao Google: 250 em 24 h cabem folgado nas 10.000 gratis do mes;
-// 20 por hora por aparelho barra quem tenta esgotar a cota de proposito.
+// Chamadas ao provedor de mapas: 250 em 24 h cabem folgado nas cotas
+// gratuitas; 20 por hora por aparelho barra quem tenta esgotar de proposito.
 const LIMITE_24H = Number(process.env.ENTREGA_LIMITE_DIA ?? 250)
 const LIMITE_IP_HORA = 20
 
@@ -151,15 +157,20 @@ export async function cotarEntrega(endereco: EnderecoCotacao, ip: string): Promi
     chamou = rota.ok || rota.motivo !== 'sem-chave'
 
     if (rota.ok) {
-      const faixa = faixaPara(rota.km, faixas)
-      if (!faixa) {
+      const decisao = decidirFaixa(rota.km, rota.preciso, rota.cep, endereco.cep, faixas)
+
+      if (decisao.tipo === 'fora') {
         await registrar('fora', null, null, null, true)
         return { fora: true, km: rota.km, limiteKm: faixas.at(-1)?.up_to_km }
       }
-      const rotulo = rotuloFaixa(faixa.up_to_km)
-      const id = await registrar('distancia', faixa.fee, null, rotulo, true)
-      if (!id) return { erro: 'Nao foi possivel calcular a entrega agora. Tente de novo.' }
-      return { ok: true, cotacao: id, taxa: faixa.fee, rotulo, km: rota.km }
+
+      if (decisao.tipo === 'faixa') {
+        const rotulo = rotuloFaixa(decisao.faixa.up_to_km)
+        const id = await registrar('distancia', decisao.faixa.fee, null, rotulo, true)
+        if (!id) return { erro: 'Nao foi possivel calcular a entrega agora. Tente de novo.' }
+        return { ok: true, cotacao: id, taxa: decisao.faixa.fee, rotulo }
+      }
+      // 'sem-confirmacao': segue para a reserva por bairro, logo abaixo.
     }
   }
 

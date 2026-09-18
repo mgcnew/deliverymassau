@@ -1,5 +1,7 @@
 import 'server-only'
 
+import type { OrigemRota, ResultadoRota } from '../rota'
+
 /**
  * Km de carro entre o mercado e o endereco do cliente, pela Routes API do
  * Google (computeRoutes).
@@ -10,19 +12,18 @@ import 'server-only'
  *   o de 10.000 chamadas gratis por mes. Transito em tempo real ou rota de
  *   moto mudariam para Pro/Enterprise.
  * - Endereco achado so "mais ou menos" (partialMatch, ou so a rua sem o
- *   numero) vira 'impreciso': taxa calculada para o lugar errado seria pior
- *   que cair na taxa do bairro.
+ *   numero) volta com preciso:false. Quem decide o que fazer com isso e o
+ *   cotar.ts, nao este modulo.
+ * - `cep` sai sempre null: a Routes devolve, sobre o endereco, apenas
+ *   status, tipo e partialMatch - nao ha CEP nem endereco formatado. Obter
+ *   o CEP exigiria uma segunda chamada, a Geocoding API, que e outro SKU.
+ *   Sem CEP nao ha como conferir o trecho da rua, e por isso o caminho do
+ *   Google recusa endereco estimado em vez de aceita-lo.
  *
  * A chave (GOOGLE_MAPS_API_KEY) so existe no servidor. Pelos termos do Google,
  * o resultado nao pode ser guardado para reaproveitar - quem chama usa os km
  * na hora e guarda so a taxa.
  */
-
-export type OrigemRota = { lat: number; lng: number } | { endereco: string }
-
-export type ResultadoRota =
-  | { ok: true; km: number }
-  | { ok: false; motivo: 'sem-chave' | 'nao-encontrado' | 'impreciso' | 'sem-rota' | 'erro' }
 
 type WaypointGeocodificado = { geocoderStatus?: { code?: number }; type?: string[]; partialMatch?: boolean }
 
@@ -30,11 +31,6 @@ type WaypointGeocodificado = { geocoderStatus?: { code?: number }; type?: string
 const TIPOS_PRECISOS = ['street_address', 'premise', 'subpremise', 'establishment', 'point_of_interest']
 
 export async function kmDeCarro(origem: OrigemRota, destino: string): Promise<ResultadoRota> {
-  // Desenvolvimento sem chave: ENTREGA_KM_FALSO=3.2 no .env.local simula a
-  // resposta para testar o checkout. Nunca vale em producao.
-  const falso = process.env.ENTREGA_KM_FALSO
-  if (falso && process.env.NODE_ENV !== 'production') return { ok: true, km: Number(falso) }
-
   const chave = process.env.GOOGLE_MAPS_API_KEY
   if (!chave) return { ok: false, motivo: 'sem-chave' }
 
@@ -79,15 +75,13 @@ export async function kmDeCarro(origem: OrigemRota, destino: string): Promise<Re
   } | null
 
   const geo = dados?.geocodingResults?.destination
-  if (geo) {
-    if (geo.geocoderStatus?.code && geo.geocoderStatus.code !== 0) return { ok: false, motivo: 'nao-encontrado' }
-    if (geo.partialMatch || !geo.type?.some((t) => TIPOS_PRECISOS.includes(t))) {
-      return { ok: false, motivo: 'impreciso' }
-    }
+  if (geo?.geocoderStatus?.code && geo.geocoderStatus.code !== 0) {
+    return { ok: false, motivo: 'nao-encontrado' }
   }
+  const preciso = !geo || (!geo.partialMatch && !!geo.type?.some((t) => TIPOS_PRECISOS.includes(t)))
 
   const metros = dados?.routes?.[0]?.distanceMeters
   if (typeof metros !== 'number') return { ok: false, motivo: 'sem-rota' }
 
-  return { ok: true, km: metros / 1000 }
+  return { ok: true, km: metros / 1000, preciso, cep: null, provedor: 'google' }
 }
