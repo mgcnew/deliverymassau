@@ -1,0 +1,30 @@
+-- =============================================================================
+-- 0056 - A vitrine volta a listar produto para quem nao esta logado
+--
+-- Sintoma: na loja, clicar numa categoria mostrava "Nenhum produto nesta
+-- categoria", mesmo com a contagem na tela dizendo 7. A busca tambem vinha
+-- vazia. No painel, logado, funcionava - e foi por isso que passou tanto
+-- tempo sem ser notado.
+--
+-- Causa: get_vitrine_pagina (0051) chama public.normalize_text por dentro, e
+-- nao e SECURITY DEFINER - roda com o privilegio de quem chama. A 0051
+-- concedeu EXECUTE da propria get_vitrine_pagina para anon, mas nao da
+-- normalize_text, que desde a 0013 so estava liberada para authenticated,
+-- quando so o painel a usava. Resultado para o cliente anonimo:
+--
+--     42501: permission denied for function normalize_text
+--
+-- O erro nem aparecia: o app faz `data ?? { itens: [], total: 0 }`, entao a
+-- falha virava lista vazia em vez de mensagem de erro.
+--
+-- Correcao: conceder a normalize_text para anon. Nao ha risco em expor a
+-- funcao - ela so tira acento e baixa a caixa de um texto, nao le tabela
+-- nenhuma. A alternativa seria marcar get_vitrine_pagina como SECURITY
+-- DEFINER, o que daria a ela privilegio de dono para tudo que faz; conceder
+-- uma funcao de texto puro e o menor privilegio entre os dois.
+--
+-- normalize_phone fica de fora de proposito: quem nao esta logado nao chama
+-- nada que dependa dela.
+-- =============================================================================
+
+grant execute on function public.normalize_text(text) to anon;
