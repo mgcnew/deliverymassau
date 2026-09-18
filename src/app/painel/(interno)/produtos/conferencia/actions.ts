@@ -314,6 +314,42 @@ export async function verPrevia(
   return { previa: data as Previa }
 }
 
+/**
+ * Publica na vitrine o que ja foi bipado, sem encerrar a conferencia.
+ *
+ * Existe para o dono comecar a vender antes de terminar de andar a loja:
+ * bipa os campeoes de venda, publica, e continua bipando nos dias seguintes.
+ * Nao serve "aplicar" para isso - aquela PODA, e desligaria todo produto
+ * ativo que ainda nao passou pelo leitor.
+ *
+ * Aditiva: so liga o que foi bipado, nao mexe em mais nada, e pode ser
+ * repetida quantas vezes for preciso.
+ */
+export async function publicarParcial(
+  conferenciaId: string,
+): Promise<{ publicados?: number; jaEstavam?: number; erro?: string }> {
+  const erro = await exigir(PERMISSIONS.conferenciaAplicar)
+  if (erro) return { erro }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('publicar_parcial_conferencia', {
+    p_conferencia: conferenciaId,
+  })
+
+  if (error) {
+    // A mensagem geral fala em "tiraria a loja do ar", que e verdade so para a
+    // viragem. A parcial nao tira nada: aqui vazio e so nao haver o que subir.
+    if (error.message.trim() === 'CONFERENCIA_VAZIA') {
+      return { erro: 'Bipe pelo menos um produto antes de publicar.' }
+    }
+    return { erro: traduzirViragem(error.message) }
+  }
+
+  revalidarLoja()
+  const r = data as { publicados: number; ja_estavam: number }
+  return { publicados: r.publicados, jaEstavam: r.ja_estavam }
+}
+
 /** A viragem: a lista conferida passa a ser o catalogo da loja. */
 export async function aplicarConferencia(
   conferenciaId: string,

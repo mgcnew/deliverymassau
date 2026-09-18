@@ -3,7 +3,7 @@ import { Card, CardTitle, Empty } from '@/components/ui/card'
 import { PERMISSIONS } from '@/lib/permissions'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
-import { AbrirConferencia, EncerrarConferencia } from './abrir-conferencia'
+import { AbrirConferencia, EncerrarConferencia, PublicarParcial } from './abrir-conferencia'
 import { Conferencia } from './conferencia'
 import { DesfazerViragem } from './viragem'
 
@@ -59,7 +59,13 @@ export default async function ConferenciaPage() {
               <p className="truncate text-lg font-bold">{aberta.name}</p>
               <p className="text-sm text-muted">Aberta em {dataHora(aberta.started_at)}</p>
             </div>
-            <EncerrarConferencia conferenciaId={aberta.id} />
+            {/* Publicar aos poucos: o dono ja vende o que bipou enquanto
+                continua andando a loja. Quem nao pode aplicar tambem nao
+                publica - e a mesma permissao, porque as duas mexem na vitrine. */}
+            <div className="flex flex-wrap items-start gap-2">
+              {podeAplicar ? <PublicarParcial conferenciaId={aberta.id} /> : null}
+              <EncerrarConferencia conferenciaId={aberta.id} />
+            </div>
           </Card>
 
           <Conferencia

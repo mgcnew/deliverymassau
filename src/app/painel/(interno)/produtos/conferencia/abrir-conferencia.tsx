@@ -7,7 +7,7 @@ import { ClipboardCheck } from 'lucide-react'
 import { Button, buttonClass } from '@/components/ui/button'
 import { Alert } from '@/components/ui/card'
 import { ConfirmarAcao } from '@/components/ui/confirmar-acao'
-import { cancelarConferencia, criarConferencia } from './actions'
+import { cancelarConferencia, criarConferencia, publicarParcial } from './actions'
 
 /** Nome que ja vem preenchido: a data resolve o caso comum sem ninguem digitar. */
 function nomeSugerido() {
@@ -71,5 +71,50 @@ export function EncerrarConferencia({ conferenciaId }: { conferenciaId: string }
     >
       Encerrar
     </ConfirmarAcao>
+  )
+}
+
+/**
+ * Publica na vitrine o que ja foi bipado, sem encerrar a conferencia.
+ *
+ * Fica ao lado de "Encerrar" porque as duas sao acoes da conferencia inteira,
+ * nao da bipagem. A diferenca entre elas e o que o dono precisa entender:
+ * publicar ACRESCENTA (liga o que foi bipado e nao toca no resto) e pode ser
+ * repetido; a viragem PODA (tira da vitrine o que nao foi encontrado) e
+ * acontece uma vez, no fim.
+ */
+export function PublicarParcial({ conferenciaId }: { conferenciaId: string }) {
+  const router = useRouter()
+  const [pendente, iniciar] = useTransition()
+  const [resultado, setResultado] = useState<{ ok?: string; erro?: string } | null>(null)
+
+  return (
+    <div className="space-y-2">
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={pendente}
+        onClick={() =>
+          iniciar(async () => {
+            const r = await publicarParcial(conferenciaId)
+            if (r.erro) {
+              setResultado({ erro: r.erro })
+              return
+            }
+            setResultado({
+              ok:
+                r.publicados === 0
+                  ? 'Tudo que voce bipou ja estava na vitrine.'
+                  : `${r.publicados} ${r.publicados === 1 ? 'produto entrou' : 'produtos entraram'} na vitrine.`,
+            })
+            router.refresh()
+          })
+        }
+      >
+        {pendente ? 'Publicando...' : 'Publicar o que ja conferi'}
+      </Button>
+      {resultado?.erro ? <Alert tone="error">{resultado.erro}</Alert> : null}
+      {resultado?.ok ? <Alert tone="success">{resultado.ok}</Alert> : null}
+    </div>
   )
 }
