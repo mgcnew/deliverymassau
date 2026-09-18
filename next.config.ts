@@ -27,11 +27,26 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    // Fotos de produto/logo vem do Storage do Supabase. Com isso o
-    // next/image passa a redimensionar, converter formato (webp/avif) e
-    // fazer lazy loading sozinho - sem isso toda imagem ia crua e no
-    // tamanho original (uma foto tirada pelo celular chega a 300+ KB para
-    // aparecer num quadrado de 60px).
+    // Otimizacao de imagem DESLIGADA de proposito.
+    //
+    // A vitrine paginada expos o catalogo inteiro (1.500 fotos), e cada foto
+    // distinta conta uma transformacao na Vercel. A cota do plano gratuito
+    // estourou e o /_next/image passou a responder 402
+    // (OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED) - foto quebrada na loja,
+    // que e pior que foto grande. O arquivo cru no Storage continua 200.
+    //
+    // Sai barato porque as fotos ja nascem pequenas: mediana de 23 KB, p90
+    // de 41 KB, e so 5 arquivos passam de 150 KB. As da base publica vem em
+    // 400 px e as da equipe passam pelo comprimir-imagem.ts no navegador.
+    // Uma pagina de 20 produtos fica em ~520 KB sem otimizacao nenhuma.
+    //
+    // O next/image continua valendo a pena: lazy loading, reserva de espaco
+    // (sem pulo de layout) e o mesmo componente em todo lugar. O que deixa
+    // de acontecer e so o redimensionamento no servidor.
+    //
+    // Para religar: plano pago na Vercel, ou transformacao de imagem do
+    // proprio Supabase (que tambem e recurso de plano pago).
+    unoptimized: true,
     remotePatterns: supabaseHost
       ? [
           {
