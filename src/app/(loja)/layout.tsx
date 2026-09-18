@@ -4,7 +4,6 @@ import { BarraCarrinho } from '@/components/carrinho/barra-carrinho'
 import { BotaoSair } from '@/components/loja/botao-sair'
 import { LinkMeusPedidos } from '@/components/loja/link-meus-pedidos'
 import { MedirCabecalho } from '@/components/loja/medir-cabecalho'
-import { RodapeEquipe } from '@/components/loja/rodape-equipe'
 import { ConviteInstalar } from '@/components/pwa/convite-instalar'
 import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -57,34 +56,49 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
 
       <div className="flex-1">{children}</div>
 
+      {/*
+        Rodape enxuto de proposito. Antes eram oito linhas empilhadas, com
+        titulo proprio para o horario e uma frase inteira para o pedido
+        minimo -- informacao que o cliente ja encontra onde precisa dela: o
+        horario aparece embaixo da logo ("Aberto ate as 22h") e o pedido
+        minimo aparece na barra do carrinho, na hora de fechar. Aqui embaixo
+        basta o contato e o essencial, numa linha cada.
+      */}
       <footer className="mt-8 border-t border-line bg-surface">
         <div className="mx-auto w-full max-w-5xl space-y-1 px-4 py-6 text-sm text-muted">
           <p className="font-bold text-foreground">{config?.market_name ?? 'Mercado Massa 24h'}</p>
-          {config?.market_address ? <p>{config.market_address}</p> : null}
-          {config?.market_phone ? <p>WhatsApp {config.market_phone}</p> : null}
-          {horarioSemana.length ? (
-            <div className="pt-1">
-              <p className="font-semibold text-foreground">Horario do delivery</p>
-              {horarioSemana.map((l) => (
-                <p key={l.dias}>
-                  {l.dias}: {l.horario}
-                </p>
-              ))}
-            </div>
+
+          {/* Endereco e WhatsApp na mesma linha, separados por ponto medio;
+              no celular estreito o flex-wrap quebra sozinho. */}
+          {config?.market_address || config?.market_phone ? (
+            <p className="flex flex-wrap gap-x-2">
+              {config?.market_address ? <span>{config.market_address}</span> : null}
+              {config?.market_address && config?.market_phone ? <span aria-hidden>·</span> : null}
+              {config?.market_phone ? <span>WhatsApp {config.market_phone}</span> : null}
+            </p>
           ) : null}
-          <p>
-            Pedido minimo de {moeda(config?.min_order_value ?? 0)} em produtos, sem contar a taxa de
-            entrega.
+
+          {/* Horario e pedido minimo condensados: os grupos de dias viram
+              "Seg a Dom 8h as 22h · Sab 9h as 20h" em vez de um bloco. */}
+          <p className="flex flex-wrap gap-x-2">
+            {horarioSemana.map((l) => (
+              <span key={l.dias}>
+                {l.dias} {l.horario}
+              </span>
+            ))}
+            {horarioSemana.length ? <span aria-hidden>·</span> : null}
+            <span>Pedido minimo {moeda(config?.min_order_value ?? 0)}</span>
           </p>
+
           {/*
             Exigencia de licenca, nao enfeite: as fotos de produto que vieram
             das bases abertas Open Food Facts / Beauty / Products estao sob
             CC BY-SA, que permite uso comercial desde que a fonte seja
-            creditada. O credito fica aqui, uma vez, em vez de poluir cada
-            card da vitrine.
+            creditada. Fica discreto, mas fica -- tirar seria descumprir a
+            licenca das fotos que ja estao no catalogo.
           */}
-          <p className="text-xs">
-            Algumas fotos de produtos:{' '}
+          <p className="pt-1 text-xs opacity-70">
+            Fotos:{' '}
             <a
               href="https://world.openfoodfacts.org"
               target="_blank"
@@ -93,10 +107,8 @@ export default async function LojaLayout({ children }: LayoutProps<'/'>) {
             >
               Open Food Facts
             </a>{' '}
-            (CC BY-SA).
+            (CC BY-SA)
           </p>
-
-          <RodapeEquipe />
         </div>
       </footer>
 
