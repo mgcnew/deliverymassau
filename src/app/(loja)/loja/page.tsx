@@ -46,6 +46,25 @@ export default async function VitrinePage() {
     <main className="mx-auto w-full max-w-5xl space-y-7 p-4">
       <CampoBusca />
 
+      {/*
+        Oferta antes de categoria, de proposito: categoria e navegacao, oferta
+        e mercadoria. Quem chega pelo link do WhatsApp esta a um passo da
+        compra, e enterrar a promocao embaixo de sete cards de corredor
+        desperdica justamente o que tem mais chance de virar pedido. O card
+        ja traz o botao de adicionar, entao da para comprar sem abrir o
+        produto.
+
+        A fileira e de rolagem lateral, nao um carrossel que gira sozinho:
+        slide que se move troca o alvo do dedo na hora do toque, e quase
+        ninguem chega ao segundo.
+
+        Sem oferta cadastrada a secao inteira some - nao fica titulo orfao no
+        topo da loja.
+      */}
+      {ofertas.length > 0 ? (
+        <FileiraProdutos id="titulo-ofertas" titulo="Ofertas" produtos={ofertas} />
+      ) : null}
+
       {comProdutos.length === 0 ? (
         <Empty>Ainda nao ha produtos no catalogo.</Empty>
       ) : (
@@ -89,8 +108,6 @@ export default async function VitrinePage() {
           </ul>
         </section>
       )}
-
-      {ofertas.length > 0 ? <FileiraProdutos id="titulo-ofertas" titulo="Ofertas" produtos={ofertas} /> : null}
 
       {maisPedidos.length >= MINIMO_MAIS_PEDIDOS ? (
         <FileiraProdutos id="titulo-mais-pedidos" titulo="Mais pedidos no bairro" produtos={maisPedidos} />
