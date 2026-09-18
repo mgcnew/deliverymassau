@@ -83,5 +83,5 @@ export async function kmDeCarro(origem: OrigemRota, destino: string): Promise<Re
   const metros = dados?.routes?.[0]?.distanceMeters
   if (typeof metros !== 'number') return { ok: false, motivo: 'sem-rota' }
 
-  return { ok: true, km: metros / 1000, preciso, cep: null, provedor: 'google' }
+  return { ok: true, km: metros / 1000, preciso, cep: null, provedor: 'google', cepConfere: null }
 }

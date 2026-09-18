@@ -220,7 +220,16 @@ export function CheckoutForm({
 
   const podeAvancar =
     (etapa === 0 && nome.trim().length > 1 && telefone.replace(/\D/g, '').length >= 10) ||
-    (etapa === 1 && bairro && rua.trim() && numero.trim()) ||
+    // Por distancia o CEP e obrigatorio: e ele que confere se o geocodificador
+    // acertou o trecho da rua. Sem essa conferencia, um fornecedor pode
+    // devolver outra rua com cara de certa e a taxa sai errada - aconteceu em
+    // producao. Por bairro ele segue opcional: ali a taxa nao depende de
+    // onde exatamente a casa fica.
+    (etapa === 1 &&
+      bairro &&
+      rua.trim() &&
+      numero.trim() &&
+      (!porDistancia || digitosCep.length === 8)) ||
     (etapa === 2 &&
       pagamento &&
       (pagamento !== 'voucher' || bandeira) &&
@@ -381,8 +390,12 @@ export function CheckoutForm({
               </div>
             ) : null}
             <Field
-              label="CEP (opcional)"
-              hint="Preenchendo o CEP a gente tenta achar o bairro e a rua sozinho."
+              label={porDistancia ? 'CEP' : 'CEP (opcional)'}
+              hint={
+                porDistancia
+                  ? 'Precisamos do CEP para calcular a entrega. Ele ja preenche a rua e o bairro sozinho.'
+                  : 'Preenchendo o CEP a gente tenta achar o bairro e a rua sozinho.'
+              }
             >
               <div className="relative">
                 <Input

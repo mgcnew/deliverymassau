@@ -239,6 +239,7 @@ function TestarEndereco() {
   const [rua, setRua] = useState('')
   const [numero, setNumero] = useState('')
   const [bairro, setBairro] = useState('')
+  const [cepTeste, setCepTeste] = useState('')
   const [pendente, startTransition] = useTransition()
   const [teste, setTeste] = useState<TesteEndereco | null>(null)
 
@@ -246,9 +247,13 @@ function TestarEndereco() {
     <Card>
       <CardTitle>Testar um endereco</CardTitle>
       <p className="-mt-1 mb-3 text-sm text-muted">
-        Confira a distancia e a faixa antes de ativar. Cada teste conta na cota gratis do Google.
+        Confira a distancia e a faixa antes de ativar. Cada teste consome uma
+        consulta da cota gratis do provedor de mapas.
       </p>
-      <div className="grid gap-3 sm:grid-cols-[1fr_7rem_1fr]">
+      {/* O CEP fica aqui porque o checkout tambem o exige: e ele que confere
+          se o provedor acertou o trecho da rua. Sem ele, este teste mostraria
+          um numero que o cliente nunca veria. */}
+      <div className="grid gap-3 sm:grid-cols-[1fr_6rem_1fr_9rem]">
         <Field label="Rua">
           <Input value={rua} onChange={(e) => setRua(e.target.value)} />
         </Field>
@@ -258,13 +263,22 @@ function TestarEndereco() {
         <Field label="Bairro">
           <Input value={bairro} onChange={(e) => setBairro(e.target.value)} />
         </Field>
+        <Field label="CEP">
+          <Input
+            value={cepTeste}
+            onChange={(e) => setCepTeste(e.target.value)}
+            inputMode="numeric"
+            placeholder="00000-000"
+            maxLength={9}
+          />
+        </Field>
       </div>
       <div className="mt-3 space-y-3">
         <Button
           type="button"
           variant="secondary"
           disabled={pendente}
-          onClick={() => startTransition(async () => setTeste(await testarEndereco(rua, numero, bairro)))}
+          onClick={() => startTransition(async () => setTeste(await testarEndereco(rua, numero, bairro, cepTeste)))}
         >
           {pendente ? 'Calculando...' : 'Calcular'}
         </Button>

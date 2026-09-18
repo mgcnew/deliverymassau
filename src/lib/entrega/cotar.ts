@@ -94,7 +94,7 @@ export async function medirEndereco(endereco: EnderecoCotacao): Promise<Resultad
   const { config } = await lerConfigEntrega()
   const origem = config ? origemDa(config) : null
   if (!config || !origem) return { ok: false, motivo: 'sem-origem' }
-  return kmDeCarro(origem, textoDestino(endereco, config.market_city))
+  return kmDeCarro(origem, textoDestino(endereco, config.market_city), endereco.cep)
 }
 
 export async function cotarEntrega(endereco: EnderecoCotacao, ip: string): Promise<Cotacao> {
@@ -151,13 +151,20 @@ export async function cotarEntrega(endereco: EnderecoCotacao, ip: string): Promi
   const usoAtual = (uso as { dia: number; ip_hora: number } | null) ?? { dia: 0, ip_hora: 0 }
   const podeChamar = origem !== null && usoAtual.dia < LIMITE_24H && usoAtual.ip_hora < LIMITE_IP_HORA
 
+  // Sem CEP nao ha como conferir se o geocodificador acertou o trecho da rua,
+  // e sem conferencia a taxa por distancia nao e confiavel - o formulario ja
+  // exige o CEP, isto aqui e a mesma regra no servidor, que e onde ela vale.
+  // Pular a chamada tambem economiza cota: nao adianta perguntar os km de um
+  // endereco que nao poderemos validar.
+  const temCep = (endereco.cep ?? '').replace(/\D/g, '').length === 8
+
   let chamou = false
-  if (podeChamar && faixas.length) {
-    const rota = await kmDeCarro(origem, textoDestino(endereco, config.market_city))
+  if (podeChamar && temCep && faixas.length) {
+    const rota = await kmDeCarro(origem, textoDestino(endereco, config.market_city), endereco.cep)
     chamou = rota.ok || rota.motivo !== 'sem-chave'
 
     if (rota.ok) {
-      const decisao = decidirFaixa(rota.km, rota.preciso, rota.cep, endereco.cep, faixas)
+      const decisao = decidirFaixa(rota.km, rota.preciso, rota.cepConfere, faixas)
 
       if (decisao.tipo === 'fora') {
         await registrar('fora', null, null, null, true)

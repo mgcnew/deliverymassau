@@ -109,7 +109,7 @@ export async function kmDeCarro(origem: OrigemRota, destino: string): Promise<Re
       km: metros / 1000,
       preciso: item.houseNumberType === 'PA',
       cep: item.address?.postalCode ?? null,
-      provedor: 'here',
+      provedor: 'here', cepConfere: null,
     }
   } catch {
     // Prazo estourado ou rede fora: o chamador tenta o outro provedor.

@@ -519,12 +519,23 @@ const MOTIVO_TESTE: Record<string, string> = {
 }
 
 /** "Testar endereco": mostra km e faixa sem gravar cotacao. Conta na cota do Google. */
-export async function testarEndereco(rua: string, numero: string, bairro: string): Promise<TesteEndereco> {
+export async function testarEndereco(
+  rua: string,
+  numero: string,
+  bairro: string,
+  cep?: string,
+): Promise<TesteEndereco> {
   const guard = await exigir(PERMISSIONS.configTaxaEntrega)
   if (guard.erro) return { erro: guard.erro }
   if (!rua.trim() || !numero.trim() || !bairro.trim()) return { erro: 'Preencha rua, numero e bairro.' }
 
-  const [rota, { faixas }] = await Promise.all([medirEndereco({ rua, numero, bairro }), lerConfigEntrega()])
+  // Com o CEP, o teste percorre exatamente o caminho do cliente - inclusive
+  // a conferencia que reprova endereco de outro trecho da rua. Sem ele, o
+  // painel mostraria um numero que o checkout nunca produziria.
+  const [rota, { faixas }] = await Promise.all([
+    medirEndereco({ rua, numero, bairro, cep }),
+    lerConfigEntrega(),
+  ])
   if (!rota.ok) return { erro: MOTIVO_TESTE[rota.motivo] ?? 'Nao foi possivel calcular.' }
   return {
     km: rota.km,

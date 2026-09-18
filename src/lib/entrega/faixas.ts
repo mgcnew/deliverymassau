@@ -55,23 +55,52 @@ export type Decisao =
  * nao sobe: subir jogaria o cliente para fora da area, recusando uma venda
  * por causa de uma estimativa.
  */
+/**
+ * Compara o CEP que o provedor devolveu com o que o cliente digitou.
+ * true = batem | false = sao diferentes | null = faltou um dos dois.
+ *
+ * Distinguir "diferentes" de "nao deu para conferir" importa: diferente e
+ * prova de erro e reprova o resultado; ausente so significa que esta
+ * verificacao nao se aplica (o Google nunca devolve CEP, por exemplo).
+ */
+export function conferirCep(
+  cepProvedor: string | null | undefined,
+  cepCliente: string | null | undefined,
+): boolean | null {
+  const a = soDigitos(cepProvedor)
+  const b = soDigitos(cepCliente)
+  if (!a || !b) return null
+  return a === b
+}
+
 export function decidirFaixa(
   km: number,
   preciso: boolean,
-  cepProvedor: string | null,
-  cepCliente: string | null | undefined,
+  cepConfere: boolean | null,
   faixas: FaixaDistancia[],
 ): Decisao {
+  // O CEP reprova ANTES de tudo, inclusive antes de medir a faixa.
+  //
+  // Duas razoes, as duas aprendidas errando. A primeira: a versao anterior
+  // saia com `if (preciso) return faixa` antes de olhar o CEP, e por isso
+  // nao pegou o caso de producao em que a HERE devolveu uma rua de outro
+  // bairro marcada como ponto exato - "confiante" nao e sinonimo de "certo".
+  //
+  // A segunda: se a checagem de area viesse antes, um endereco errado que
+  // caisse longe demais seria recusado com "fora da area de entrega". Foi o
+  // que aconteceu no teste - a distancia inventada de 14,1 km passava do
+  // limite de 9 km e a loja recusaria a venda. Endereco que nao confere nao
+  // e cliente distante: e endereco que nao confere.
+  if (cepConfere === false) return { tipo: 'sem-confirmacao' }
+
   const faixa = faixaPara(km, faixas)
   if (!faixa) return { tipo: 'fora' }
+
   if (preciso) return { tipo: 'faixa', faixa }
 
-  const doCliente = soDigitos(cepCliente)
-  const doProvedor = soDigitos(cepProvedor)
-  // Sem os dois CEPs nao ha o que conferir, e sem conferir nao aceitamos
-  // estimativa. E por isso que o caminho do Google, que nunca devolve CEP,
-  // segue caindo na taxa do bairro como antes desta mudanca.
-  if (!doCliente || !doProvedor || doCliente !== doProvedor) return { tipo: 'sem-confirmacao' }
+  // Estimado exige conferencia positiva: sem CEP para comparar, a posicao e
+  // um chute ao longo da rua e vale mais a taxa do bairro.
+  if (cepConfere !== true) return { tipo: 'sem-confirmacao' }
 
   const ordenadas = [...faixas].sort((a, b) => a.up_to_km - b.up_to_km)
   const proxima = ordenadas[ordenadas.findIndex((f) => f.up_to_km === faixa.up_to_km) + 1]
