@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useSyncExternalStore, useTransition } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
 
 import { useCarrinho } from '@/components/carrinho/use-carrinho'
 import { Button } from '@/components/ui/button'
@@ -14,9 +14,10 @@ import {
   guardarPedido,
   lerDadosCheckout,
   lerDadosCheckoutNoServidor,
-  salvarDadosCheckout,
+  guardarEnderecoUsado,
+  removerEnderecoSalvo,
 } from '@/lib/carrinho/store'
-import { subtotalItem } from '@/lib/carrinho/tipos'
+import { subtotalItem, type EnderecoSalvo } from '@/lib/carrinho/tipos'
 import { kmTexto } from '@/lib/entrega/faixas'
 import { buscarEnderecoPorCep } from '@/lib/loja/cep'
 import type { PaymentMethod } from '@/lib/types'
@@ -66,6 +67,7 @@ export function CheckoutForm({
   const [complemento, setComplemento] = useState('')
   const [referencia, setReferencia] = useState('')
   const [cep, setCep] = useState('')
+  const [apelido, setApelido] = useState('')
   const [resultadoCep, setResultadoCep] = useState<{
     digitos: string
     status: 'encontrado' | 'sem_cobertura' | 'nao_encontrado' | 'erro'
@@ -100,23 +102,47 @@ export function CheckoutForm({
     setNome(dadosSalvos.nome)
     setTelefone(dadosSalvos.telefone)
   }
-  if (dadosSalvos?.endereco && !enderecoPreenchido) {
-    // Por distancia qualquer bairro serve (o que vale e o km); por bairro, so
-    // um que ainda esteja na lista.
-    const bairroValido = porDistancia || bairros.some((b) => b.bairro === dadosSalvos.endereco.bairro)
+  // O aparelho pode ter varios enderecos guardados (casa, trabalho...). Abre
+  // no ultimo usado; os outros ficam a um toque na lista, mais abaixo.
+  const enderecosSalvos = dadosSalvos?.enderecos ?? []
+  const ultimoSalvo =
+    enderecosSalvos.find((e) => e.id === dadosSalvos?.ultimoId) ?? enderecosSalvos[0] ?? null
+
+  if (ultimoSalvo && !enderecoPreenchido) {
     setEnderecoPreenchido(true)
-    setCep(dadosSalvos.endereco.cep)
-    setRua(dadosSalvos.endereco.rua)
-    setNumero(dadosSalvos.endereco.numero)
-    setBairro(bairroValido ? dadosSalvos.endereco.bairro : '')
-    setComplemento(dadosSalvos.endereco.complemento)
-    setReferencia(dadosSalvos.endereco.referencia)
-    // O bairro salvo ja foi conferido contra a lista atual (acima) -- nao
-    // precisa consultar o CEP de novo so porque o campo foi preenchido.
-    const digitosSalvos = dadosSalvos.endereco.cep.replace(/\D/g, '')
-    if (digitosSalvos.length === 8) {
-      setResultadoCep({ digitos: digitosSalvos, status: bairroValido ? 'encontrado' : 'sem_cobertura' })
+    aplicarEndereco(ultimoSalvo)
+  }
+
+  // Um endereco salvo -> os campos. Usada no preenchimento inicial e quando o
+  // cliente troca de endereco na lista.
+  function aplicarEndereco(e: EnderecoSalvo) {
+    // Por distancia qualquer bairro serve (o que vale e o km); por bairro, so
+    // um que ainda esteja na lista de atendidos.
+    const bairroValido = porDistancia || bairros.some((b) => b.bairro === e.bairro)
+    setApelido(e.apelido)
+    setCep(e.cep)
+    setRua(e.rua)
+    setNumero(e.numero)
+    setBairro(bairroValido ? e.bairro : '')
+    setComplemento(e.complemento)
+    setReferencia(e.referencia)
+    // O bairro salvo ja foi conferido contra a lista atual -- nao precisa
+    // consultar o CEP de novo so porque o campo foi preenchido.
+    const digitos = e.cep.replace(/\D/g, '')
+    if (digitos.length === 8) {
+      setResultadoCep({ digitos, status: bairroValido ? 'encontrado' : 'sem_cobertura' })
     }
+  }
+
+  function limparEndereco() {
+    setApelido('')
+    setCep('')
+    setRua('')
+    setNumero('')
+    setBairro('')
+    setComplemento('')
+    setReferencia('')
+    setResultadoCep(null)
   }
 
   // A cotacao so vale para o endereco em que foi feita: mexeu em rua, numero,
@@ -265,10 +291,10 @@ export function CheckoutForm({
 
       if (resultado.pedido) {
         guardarPedido(resultado.pedido.token, resultado.pedido.numero)
-        salvarDadosCheckout({
-          nome: nome.trim(),
-          telefone,
-          endereco: {
+        guardarEnderecoUsado(
+          { nome: nome.trim(), telefone },
+          {
+            apelido: apelido.trim(),
             cep,
             rua: rua.trim(),
             numero: numero.trim(),
@@ -276,7 +302,7 @@ export function CheckoutForm({
             complemento: complemento.trim(),
             referencia: referencia.trim(),
           },
-        })
+        )
         limpar()
         router.push(`/pedido/${resultado.pedido.token}?novo=1`)
         return
@@ -370,22 +396,65 @@ export function CheckoutForm({
 
         {etapa === 1 ? (
           <>
-            {enderecoPreenchido ? (
-              <div className="flex items-center justify-between gap-2 rounded-lg bg-foreground/5 px-3 py-2 text-xs text-muted">
-                <span>Endereco do seu ultimo pedido.</span>
+            {/*
+              Enderecos guardados NESTE aparelho. Quem pede sempre para casa ve
+              um cartao so e segue; quem alterna entre casa, trabalho e a casa
+              da mae troca com um toque, em vez de redigitar tudo.
+              O selecionado e o que casa com o que esta nos campos agora -
+              assim, editar a rua na mao solta a selecao sozinha, sem estado
+              paralelo para manter em sincronia.
+            */}
+            {enderecosSalvos.length > 0 ? (
+              <div className="space-y-2">
+                <span className="block text-sm font-semibold">Entregar em</span>
+                <ul className="space-y-2">
+                  {enderecosSalvos.map((e) => {
+                    const escolhido =
+                      e.rua.trim().toLowerCase() === rua.trim().toLowerCase() &&
+                      e.numero.trim().toLowerCase() === numero.trim().toLowerCase()
+                    return (
+                      <li key={e.id}>
+                        <div
+                          className={`flex items-center gap-2 rounded-xl border p-2 ${
+                            escolhido ? 'border-brand-ink bg-brand-ink/5' : 'border-line bg-surface'
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => aplicarEndereco(e)}
+                            className="min-w-0 flex-1 text-left"
+                          >
+                            <span className="block truncate text-sm font-bold">
+                              {e.apelido || `${e.rua}, ${e.numero}`}
+                            </span>
+                            <span className="block truncate text-xs text-muted">
+                              {e.apelido ? `${e.rua}, ${e.numero} - ` : ''}
+                              {e.bairro}
+                              {e.complemento ? ` - ${e.complemento}` : ''}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              removerEnderecoSalvo(e.id)
+                              if (escolhido) limparEndereco()
+                            }}
+                            className="shrink-0 rounded-lg p-2 text-muted hover:text-foreground"
+                            aria-label={`Remover ${e.apelido || e.rua}`}
+                          >
+                            <X size={16} aria-hidden />
+                          </button>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
                 <button
                   type="button"
-                  className="shrink-0 font-semibold text-brand-ink underline"
-                  onClick={() => {
-                    setCep('')
-                    setRua('')
-                    setNumero('')
-                    setBairro('')
-                    setComplemento('')
-                    setReferencia('')
-                  }}
+                  className="text-sm font-semibold text-brand-ink underline"
+                  onClick={limparEndereco}
                 >
-                  Usar outro endereco
+                  Entregar em outro endereco
                 </button>
               </div>
             ) : null}
@@ -466,6 +535,16 @@ export function CheckoutForm({
             </Field>
             <Field label="Ponto de referencia">
               <Input value={referencia} onChange={(e) => setReferencia(e.target.value)} />
+            </Field>
+            {/* Apelido e opcional e vem por ultimo: so serve para quem vai
+                guardar mais de um endereco reconhecer qual e qual depois. */}
+            <Field label="Apelido deste endereco (opcional)" hint="Ex.: Casa, Trabalho, Mae.">
+              <Input
+                value={apelido}
+                onChange={(e) => setApelido(e.target.value)}
+                placeholder="Casa"
+                maxLength={24}
+              />
             </Field>
 
             {porDistancia ? (

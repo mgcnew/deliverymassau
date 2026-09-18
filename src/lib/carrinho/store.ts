@@ -1,8 +1,12 @@
 import {
   CHAVE_CARRINHO,
   CHAVE_DADOS_CHECKOUT,
+  CHAVE_DADOS_CHECKOUT_V2,
   CHAVE_PEDIDOS,
+  mesmoEndereco,
   type DadosCheckoutSalvos,
+  type DadosCheckoutV1,
+  type EnderecoSalvo,
   type ItemCarrinho,
 } from './tipos'
 
@@ -134,10 +138,34 @@ export function guardarPedido(token: string, numero: number) {
 let dadosCheckout: DadosCheckoutSalvos | null | undefined
 const ouvintesDadosCheckout = new Set<() => void>()
 
+function novoId() {
+  return Math.random().toString(36).slice(2, 10)
+}
+
 function lerDadosCheckoutDoAparelho(): DadosCheckoutSalvos | null {
   try {
-    const bruto = localStorage.getItem(CHAVE_DADOS_CHECKOUT)
-    return bruto ? (JSON.parse(bruto) as DadosCheckoutSalvos) : null
+    const novo = localStorage.getItem(CHAVE_DADOS_CHECKOUT_V2)
+    if (novo) {
+      const d = JSON.parse(novo) as DadosCheckoutSalvos
+      // Defesa contra JSON estragado ou de versao futura: sem lista utilizavel
+      // e melhor comecar do zero que quebrar o checkout.
+      return Array.isArray(d?.enderecos) ? d : null
+    }
+
+    // Aparelho que so tem o formato antigo: converte o unico endereco em uma
+    // lista de um. Roda uma vez - a proxima gravacao ja sai na v2.
+    const velho = localStorage.getItem(CHAVE_DADOS_CHECKOUT)
+    if (!velho) return null
+    const v1 = JSON.parse(velho) as DadosCheckoutV1
+    if (!v1?.endereco) return null
+    const convertido: DadosCheckoutSalvos = {
+      nome: v1.nome,
+      telefone: v1.telefone,
+      enderecos: [{ id: novoId(), apelido: '', ...v1.endereco }],
+      ultimoId: null,
+    }
+    convertido.ultimoId = convertido.enderecos[0].id
+    return convertido
   } catch {
     return null
   }
@@ -147,7 +175,7 @@ export function assinarDadosCheckout(avisar: () => void) {
   ouvintesDadosCheckout.add(avisar)
 
   const aoMudarStorage = (evento: StorageEvent) => {
-    if (evento.key === CHAVE_DADOS_CHECKOUT) {
+    if (evento.key === CHAVE_DADOS_CHECKOUT_V2 || evento.key === CHAVE_DADOS_CHECKOUT) {
       dadosCheckout = lerDadosCheckoutDoAparelho()
       ouvintesDadosCheckout.forEach((f) => f())
     }
@@ -175,9 +203,47 @@ export function lerDadosCheckoutNoServidor(): DadosCheckoutSalvos | null {
 export function salvarDadosCheckout(dados: DadosCheckoutSalvos) {
   dadosCheckout = dados
   try {
-    localStorage.setItem(CHAVE_DADOS_CHECKOUT, JSON.stringify(dados))
+    localStorage.setItem(CHAVE_DADOS_CHECKOUT_V2, JSON.stringify(dados))
+    // A chave antiga sai de cena: deixa-la para tras faria um aparelho que
+    // limpasse a v2 voltar a um endereco desatualizado.
+    localStorage.removeItem(CHAVE_DADOS_CHECKOUT)
   } catch {
     // sem storage nao da pra lembrar no proximo pedido, sem problema
   }
   ouvintesDadosCheckout.forEach((f) => f())
+}
+
+/**
+ * Guarda o endereco do pedido que acabou de dar certo. Se ja existir um com a
+ * mesma rua, numero e bairro, atualiza no lugar em vez de duplicar - senao a
+ * lista enche de repeticoes de quem sempre pede para casa.
+ *
+ * O limite de 6 evita a lista virar rolagem infinita num celular; o mais
+ * antigo que nao esta em uso sai.
+ */
+export function guardarEnderecoUsado(
+  base: { nome: string; telefone: string },
+  endereco: Omit<EnderecoSalvo, 'id'>,
+) {
+  const atual = lerDadosCheckout()
+  const lista = atual?.enderecos ?? []
+  const existente = lista.find((e) => mesmoEndereco(e, endereco))
+  const id = existente?.id ?? novoId()
+
+  const atualizada = existente
+    ? lista.map((e) => (e.id === id ? { ...e, ...endereco, id } : e))
+    : [{ ...endereco, id }, ...lista].slice(0, 6)
+
+  salvarDadosCheckout({ nome: base.nome, telefone: base.telefone, enderecos: atualizada, ultimoId: id })
+}
+
+export function removerEnderecoSalvo(id: string) {
+  const atual = lerDadosCheckout()
+  if (!atual) return
+  const enderecos = atual.enderecos.filter((e) => e.id !== id)
+  salvarDadosCheckout({
+    ...atual,
+    enderecos,
+    ultimoId: atual.ultimoId === id ? (enderecos[0]?.id ?? null) : atual.ultimoId,
+  })
 }
